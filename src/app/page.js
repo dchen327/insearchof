@@ -1,6 +1,7 @@
 "use client";
 import "bulma/css/bulma.css";
-import Image from "next/image";
+import { auth, googleProvider } from "./firebase/config";
+import { signInWithPopup, signOut } from "firebase/auth";
 
 export default function Home() {
   const signInWithGoogle = async () => {
