@@ -8,6 +8,7 @@
     "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\""
   },
   "dependencies": {
+    "bulma": "^0.9.4",
     "concurrently": "^8.2.2",
     "next": "14.1.0",
     "react": "^18",
