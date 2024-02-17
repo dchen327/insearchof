@@ -2,10 +2,15 @@
 import "bulma/css/bulma.css";
 import { auth, googleProvider } from "./firebase/config";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import { ref, uploadBytes } from "firebase/storage";
 import { useState, useEffect } from "react";
+import { storage } from "./firebase/config";
+import { v4 } from "uuid";
 
 export default function Home() {
   const [user, setUser] = useState(null);
+  const imagesRef = ref(storage, "images");
+  const [imageUpload, setImageUpload] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -15,6 +20,12 @@ export default function Home() {
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
+
+  const uploadFile = () => {
+    if (imageUpload == null) return;
+    const imageRef = ref(storage, `images/${imageUpload.name + v4()}`);
+    uploadBytes(imageRef, imageUpload);
+  };
 
   const signInWithGoogle = async () => {
     try {
@@ -37,6 +48,28 @@ export default function Home() {
     const res = await fetch("/api/helloworld");
     const data = await res.json();
     console.log(data);
+  };
+
+  const uploadImage = async (e) => {
+    const file = e.target.files[0];
+    const metadata = {
+      contentType: "image/jpeg",
+    };
+
+    const uploadTask = await imagesRef.put(file, metadata);
+    console.log("uploading...");
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        console.log(snapshot);
+      },
+      (error) => {
+        console.error(error);
+      },
+      () => {
+        console.log("uploaded");
+      }
+    );
   };
 
   return (
@@ -68,6 +101,19 @@ export default function Home() {
             <button className="navbar-item" onClick={testAPI}>
               test api
             </button>
+            {/* upload file */}
+            <div className="navbar-item">
+              <input
+                type="file"
+                onChange={(event) => {
+                  setImageUpload(event.target.files[0]);
+                }}
+              />
+              <button className="button is-primary" onClick={uploadFile}>
+                {" "}
+                Upload Image
+              </button>
+            </div>
           </div>
           <div className="navbar-end">
             <div className="navbar-item">
