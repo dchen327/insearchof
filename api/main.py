@@ -1,6 +1,15 @@
 from fastapi import FastAPI
-from .routers.catalog import router as catalog_router
+from .routers import catalog, profiles
 
-app = FastAPI()
+tags_metadata = [
+    {
+        'name': 'catalog',
+        'description': '''
+These are items ''',
+    }
+]
 
-app.include_router(catalog_router)
+app = FastAPI(openapi_tags=tags_metadata)
+
+app.include_router(catalog.router)
+app.include_router(profiles.router)

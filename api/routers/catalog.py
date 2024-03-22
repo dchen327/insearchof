@@ -3,7 +3,10 @@ from typing import Optional, List
 from pydantic import BaseModel, Field
 
 
-router = APIRouter()
+router = APIRouter(
+    prefix='/catalog',
+    tags=['catalog'],
+)
 
 
 class ListingsFilters(BaseModel):
@@ -18,13 +21,13 @@ class ListingsFilters(BaseModel):
         None, description="Categories to filter by")
 
 
-@router.get("/api/listings")
+@router.get("/listings")
 def get_listings(filters: ListingsFilters):
     ''' Get item listings based on search parameters '''
     return {"listings": []}
 
 
-@router.get("/api/purchase")
+@router.get("/purchase")
 def purchase_item():
     ''' A buyer indicates to a seller that they'd want to purchase an item'''
     return {"message": "Seller notified"}
