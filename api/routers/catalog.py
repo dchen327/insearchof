@@ -23,7 +23,7 @@ class ListingsFilters(BaseModel):
 
 @router.get("/listings")
 def get_listings(filters: ListingsFilters) -> Dict[str, List]:
-    ''' Get item listings based on search parameters '''
+    ''' Get item listings based on search parameters. '''
     return {"listings": []}
 
 
@@ -34,5 +34,5 @@ def purchase_item():
 
 
 def get_image(img_id):
-    ''' Retrive image from Cloud Storage based on ID '''
+    ''' Retrive image from Cloud Storage based on ID. '''
     return {"image": "image"}

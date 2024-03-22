@@ -12,7 +12,7 @@ It also handles when a user chooses to purchase an item, working with the profil
 ]
 
 app = FastAPI(openapi_tags=tags_metadata,
-              swagger_ui_parameters={'tryItOutEnabled': False})
+              swagger_ui_parameters={'defaultModelsExpandDepth': -1})
 
 app.include_router(catalog.router)
 app.include_router(profiles.router)
