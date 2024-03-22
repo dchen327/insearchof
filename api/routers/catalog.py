@@ -62,6 +62,9 @@ def get_listings(filters: ListingsFilters) -> ListingsResponse:
     # - categories: filter the items based on the categories provided
     # If any of the searching/sorting/filtering can't be done in the query itself, can also run one more Python iteration below to filter/sort the results
 
+    # Return: a list of objects that represent a listing, corresponds to the database schema
+    # Has fields like Title, Description, Price, Image, Seller, etc.
+
     return {"listings": []}
 
 
