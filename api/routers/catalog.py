@@ -43,20 +43,31 @@ class PurchaseRequest(BaseModel):
 class PurchaseResponse(BaseModel):
     seller_email: str = Field(
         ..., description="The seller's email address.")
+    seller_phone: Optional[str] = Field(
+        None, description="The seller's phone number.")
+    seller_discord: Optional[str] = Field(
+        None, description="The seller's Discord username.")
+    seller_messenger: Optional[str] = Field(
+        None, description="The seller's Facebook Messenger profile.")
 
 
 @router.get("/listings")
 def get_listings(filters: ListingsFilters) -> ListingsResponse:
     ''' Get item listings based on search parameters. '''
+    # Query the database for items that match the search parameters
+    # - sorting: if provided by the user, sort the items based on the specified criteria (indexes are already created for these types of queries)
+    # - types: based on listing type (buy, rent, request), query the respective collections in the database (ItemsForSale, ItemsForRent, Requests)
+    # - price: filter the items based on the price range (assume 0 and infinity as the default values for min and max prices)
+    # - categories: filter the items based on the categories provided
+    # If any of the searching/sorting/filtering can't be done in the query itself, can also run one more Python iteration below to filter/sort the results
+
     return {"listings": []}
 
 
 @router.get("/purchase")
 def purchase_item(purchase_request: PurchaseRequest) -> PurchaseResponse:
     ''' A buyer indicates to a seller that they'd want to purchase an item. Query profiles backend for seller\'s contact information and return for the frontend. '''
-    return {"message": "Seller notified"}
+    # Query the profiles backend to get the seller's contact information from the User collection
+    # Use the seller's email to find their profile and any other contact information (e.g. phone number, Discord, Messenger)
 
-
-def get_image(img_id):
-    ''' Retrive image from Cloud Storage based on ID. '''
-    return {"image": "image"}
+    return {"seller_email": "email@email.com", "seller_phone": "123-456-7890", "seller_discord": "username#1234", "seller_messenger": "profile"}
