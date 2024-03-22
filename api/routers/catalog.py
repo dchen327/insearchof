@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from typing import Optional, List
+from typing import Optional, List, Dict
 from pydantic import BaseModel, Field
 
 
@@ -14,15 +14,15 @@ class ListingsFilters(BaseModel):
     type_: Optional[str] = Field(
         None, description="The type of listing (buy, rent, or request)")
     min_price: Optional[float] = Field(
-        None, description="Minimum price of returned items")
+        0, description="Minimum price of returned items. Must be a non-negative float with max 2 decimal places.")
     max_price: Optional[float] = Field(
-        None, description="Maximum price of returned items")
+        None, description="Maximum price of returned items. Must be a non-negative float with max 2 decimal places.")
     categories: Optional[List[str]] = Field(
         None, description="Categories to filter by")
 
 
 @router.get("/listings")
-def get_listings(filters: ListingsFilters):
+def get_listings(filters: ListingsFilters) -> Dict[str, List]:
     ''' Get item listings based on search parameters '''
     return {"listings": []}
 
