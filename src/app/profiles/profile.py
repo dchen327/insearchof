@@ -1,35 +1,34 @@
 class UserProfile:
     """
-    The UserProfile class allows users to grab a user's contact information and their location for 
-    picking up the item they want to buy. It also allows users to view the currently listed items 
-    and past items sold. 
+    The UserProfile class allows users to manage their profile information, view transaction history,
+    and interact with the platform. It also provides a user's location to pick up the item they want to buy. 
 
     Attributes:
         email (str): The user's email.
         name (str): The user's name.
-        profilePicture (Image, optional): A profile picture representing the user.
+        profile_picture (Image, optional): A profile picture representing the user.
         location (str): The user's location on campus specifically).
-	    phoneNumber (int, optional): The user's phone number (not necessary; can be optional).
+	    phone_number (int, optional): The user's phone number (not necessary; can be optional).
 
     Methods:
         upload_contactInfo(): Uploads the users contact information to the database.
         get_transaction_history(): Provides users with a list of recent transaction history including
-	buys, sells, and ISOs.
+	    buys, sells, and ISOs.
     """
     
-    def __init__(self, email, name, profilePicture=None, location=None, phoneNumber=0):
+    def __init__(self, email, name, profile_picture=None, location=None, phone_number=0):
         """
         Initializes a new User Profile instance with the given parameters.
 
         Parameters:
             email (str): The user's email.
             name (str): The user's name.
-            profilePicture (Image, optional): A profile picture representing the user.
+            profile_picture (Image, optional): A profile picture representing the user.
             location (str): The user's location on campus specifically).
-	    phoneNumber (int, optional): The user's phone number (not necessary; can be optional).
+	        phone_number (int, optional): The user's phone number (not necessary; can be optional).
 
         Raises:
-            ValueError: 
+            ValueError: If the provided phone number is negative.
         """
     
     def upload_contactInfo(self):
