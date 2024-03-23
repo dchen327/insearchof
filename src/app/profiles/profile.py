@@ -11,7 +11,8 @@ class UserProfile:
 	    phone_number (int, optional): The user's phone number (not necessary; can be optional).
 
     Methods:
-        upload_contactInfo(): Uploads the users contact information to the database.
+        upload_contact_info(): Uploads the users contact information to the database.
+        get_list_of_items(): Provides a list of items associated with a given user.
         get_transaction_history(): Provides users with a list of recent transaction history including
 	    buys, sells, and ISOs.
     """
@@ -31,10 +32,16 @@ class UserProfile:
             ValueError: If the provided phone number is negative.
         """
     
-    def upload_contactInfo(self):
+    def upload_contact_info(self):
         """
         Uploads a users contact information, including their name, email, profile picture, optional
 	    phone number, to the database, making it visible to buyers.
+        """
+
+    def get_list_of_items(self):
+        """
+        Retrieves a list of items associated with a given user stores it within the database, 
+        making it visible to buyers.
         """
 
     def get_transaction_history(self):
