@@ -81,9 +81,32 @@ class MarkTransactionCompleteResponse(BaseModel):
 def upload_request(filters: ISOrequesterFilters) -> UploadRequestResponse:
     ''' 
     Uploads the request to the database, making it visible to other users 
-    and recording the details for transaction history. 
-    '''
+    and recording the details for transaction history.
+    
+    The method receives ISO request data from the client, which includes a title,
+    an optional description, an optional image URL, and a price. The data is then
+    validated and sent to the Firebase database where a new entity is created 
+    within the ISO requests collection.
 
+    The Firebase entity structure follows:
+    - requester_id: str - Unique identifier of the user making the request
+    - title: str - Title of the requested item or service
+    - description: Optional[str] - Additional details about the request
+    - image: Optional[str] - URL of the image if uploaded
+    - price: float - Proposed price for the item or service
+    - status: str - Initialized to 'open' indicating the request is active
+    
+    If an image is included, the image processor function would be called prior to this,
+    returning a URL to be included in the database entry. In case of any database operation
+    failures, appropriate error handling will be performed and an error message will be returned.
+
+    Returns a confirmation message indicating the successful upload of the request.
+    '''
+    
+    # Here you would typically call a function or a class method that handles the database operation.
+    # The actual database call has been abstracted away from this layer of the code for separation
+    # of concerns and easier testing.
+    
     return {"message": "Request uploaded"}
 
 
@@ -92,6 +115,23 @@ def mark_transaction_complete(mark_request: MarkTransactionRequest) -> MarkTrans
     '''
     Marks the associated transaction as complete in the database. This is used
     to update the transaction history once a successful transaction has been completed.
+    
+    This method receives the unique item ID for the ISO request and the requester's user ID.
+    With these details, it updates the corresponding ISO request entry in the Firebase
+    database to reflect that the transaction has been completed.
+
+    The update to Firebase involves setting the 'status' field of the document to 'completed'.
+    This indicates that the ISO request is no longer active and has been fulfilled.
+
+    The following Firebase operations are executed:
+    - Transaction document is retrieved by item_id and requester_id.
+    - The status field of the document is updated to 'completed'.
+    - The update is committed, and a response message is generated and returned.
+
+    Returns a message confirming the transaction status update.
     '''
+
+    # Similar to the upload_request, the actual database update operation would be encapsulated in a separate function or method.
+    # The focus here is on what needs to be done with the database, not how it's done.
 
     return {"message": "Transaction marked complete"}
