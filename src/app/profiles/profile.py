@@ -35,20 +35,33 @@ class UserProfile:
     def upload_contact_info(self):
         """
         Uploads a users contact information, including their name, email, profile picture, optional
-	    phone number, to the database, making it visible to buyers.
+	    phone number, to the user database, making it visible to buyers.
         """
 
-    def get_list_of_items(self):
+    def get_list_of_items(self, user_id):
         """
-        Retrieves a list of items associated with a given user stores it within the database, 
-        making it visible to buyers. This allows potential buyers to view items listed by the user.
+        Retrieves a list of items associated with a given user from the itemsForSale and itemsForRent 
+        database and stores it within the user database, making it visible to buyers. 
+        This allows potential buyers to view items listed by the user.
+
+        Parameters:
+            user_id (int): The unique identifier of the user whose items are to be retrieved.
+        
+        Returns:
+            list: A list of items associated with the specified user.
         """
 
-    def get_transaction_history(self):
+    def get_transaction_history(self, user_id):
         """
-        Retrieves a list of the user's transaction history and stores it within the database. This includes 
+        Retrieves a list of the user's transaction history and stores it within the user database. This includes 
         recent transactions such as buys, sells, and ISOs. Users can use this method to review their own 
         transaction history and other users' transaction history.
+        
+        Parameters:
+        user_id (int): The unique identifier of the user whose transaction history is to be retrieved.
+        
+        Returns:
+            list: A list of the user's transaction history, including buys, sells, and ISOs.
         """
 
 ######################
@@ -100,13 +113,13 @@ class UserProfile:
     def upload_contact_info(self):
         """
         Uploads a users contact information, including their name, email, profile picture, optional
-	    phone number, to the database, making it visible to buyers.
+	    phone number, to the user database, making it visible to buyers.
         """
 
     def get_list_of_items(self, user_id):
         """
         This method retrieves the list of items associated with the user specified by the provided 
-        user_id from the database and returns it for further processing or display to potential buyers.
+        user_id from the user database and returns it for further processing or display to potential buyers.
 
         Parameters:
             user_id (int): The unique identifier of the user whose items are to be retrieved.
