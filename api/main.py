@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routers import catalog, profiles, ISOrequest
+from .routers import catalog, profiles, ISOrequest, sellList
 
 tags_metadata = [
     {
@@ -13,6 +13,11 @@ It also handles when a user chooses to purchase an item, working with the profil
         'name': 'ISOrequest',
         'description': """The ISORequester backend component allows users to request items or services through the application, functioning similarly to current ISO management practices.
         """
+    },
+    {
+        'name': 'sellList',
+        'description': """The sellList backend component is responsible for creating selling and listing functionality within our marketplace.
+         Users are able to do the following: add, update, and delete posts."""
     }
 ]
 
@@ -22,3 +27,4 @@ app = FastAPI(openapi_tags=tags_metadata,
 app.include_router(catalog.router)
 app.include_router(profiles.router)
 app.include_router(ISOrequest.router)
+app.include_router(sellList.router)
