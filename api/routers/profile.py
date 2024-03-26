@@ -1,3 +1,12 @@
+from fastapi import APIRouter
+from typing import Optional, List
+from pydantic import BaseModel, Field
+
+router = APIRouter(
+    prefix='/profile',
+    tags=['profile'],
+)
+
 class UserProfile:
     """
     The UserProfile class allows users to manage their profile information, view transaction history,
@@ -63,3 +72,9 @@ class UserProfile:
         Returns:
             list: A list of the user's transaction history, including buys, sells, and ISOs.
         """
+
+# This is a sample GET request. Add others based on your functions!
+@router.get("/api/profile")
+def get_profile():
+    '''  '''
+    return {"listings": []}

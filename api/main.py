@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routers import catalog, profiles, ISOrequest, sellList
+from .routers import catalog, profile, ISOrequest, sellList
 
 tags_metadata = [
     {
@@ -14,12 +14,12 @@ It also handles when a user chooses to purchase an item, working with the profil
         """
     },
     {
-        'name': 'sellList',
+        'name': 'sell-list',
         'description': """The sellList backend component is responsible for creating selling and listing functionality within our marketplace.
          Users are able to do the following: add, update, and delete posts."""
     },
     {
-         'name': 'Profiles',
+         'name': 'profile',
         'description': """The User backend component allows users users to view and manage their profile information, view transaction history,
     and interact with the platform.
         """
@@ -30,6 +30,6 @@ app = FastAPI(openapi_tags=tags_metadata,
               swagger_ui_parameters={'defaultModelsExpandDepth': -1})
 
 app.include_router(catalog.router)
-app.include_router(profiles.router)
+app.include_router(profile.router)
 app.include_router(ISOrequest.router)
 app.include_router(sellList.router)
