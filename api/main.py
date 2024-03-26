@@ -3,10 +3,11 @@ from .routers import catalog, profiles
 
 tags_metadata = [
     {
-        'name': 'catalog',
-        'description': '''
-These are items ''',
-    }
+        'name': 'Profiles',
+        'description': """The User backend component allows users users to view and manage their profile information, view transaction history,
+    and interact with the platform.
+        """
+    },
 ]
 
 app = FastAPI(openapi_tags=tags_metadata)
