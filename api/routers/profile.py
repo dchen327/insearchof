@@ -44,7 +44,7 @@ class UserProfile(BaseModel):
             phone_number (int, optional): The user's phone number (not necessary; can be optional).
         """
     
-    @router.post("/upload_contact_info")
+    @router.put("/upload_contact_info")
     def upload_contact_info():
         """
         Uploads a users contact information, including their name, email, profile picture, optional
