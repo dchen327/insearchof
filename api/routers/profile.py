@@ -15,7 +15,7 @@ class UserProfile(BaseModel):
     Attributes:
         email (str): The user's email.
         name (str): The user's name.
-        profile_picture (Image, optional): A profile picture representing the user.
+        profile_picture (str, optional): A profile picture representing the user.
         location (str): The user's location on campus specifically.
         phone_number (str, optional): The user's phone number (not necessary; can be optional).
 
@@ -28,7 +28,7 @@ class UserProfile(BaseModel):
 
     email: str = Field(None, description="The user's email.")
     name: str = Field(None, description="The user's name.")
-    profile_picture: Optional[Image] = Field(None, description="A profile picture representing the user.")
+    profile_picture: Optional[str] = Field(None, description="A profile picture representing the user.")
     location: str = Field(None, description="The user's location on campus specifically")
     phone_number: Optional[str] = Field(None, description="The user's phone number")
     
