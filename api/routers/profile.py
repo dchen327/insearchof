@@ -7,7 +7,7 @@ router = APIRouter(
     tags=['profile'],
 )
 
-class UserProfile:
+class UserProfile(BaseModel):
     """
     The UserProfile class allows users to manage their profile information, view transaction history,
     and interact with the platform. It also provides a user's location to pick up the item they want to buy. 
@@ -16,8 +16,8 @@ class UserProfile:
         email (str): The user's email.
         name (str): The user's name.
         profile_picture (Image, optional): A profile picture representing the user.
-        location (str): The user's location on campus specifically).
-        phone_number (int, optional): The user's phone number (not necessary; can be optional).
+        location (str): The user's location on campus specifically.
+        phone_number (str, optional): The user's phone number (not necessary; can be optional).
 
     Methods:
         upload_contact_info(): Uploads the users contact information to the database.
@@ -25,6 +25,12 @@ class UserProfile:
         get_transaction_history(): Provides users with a list of recent transaction history including
         buys, sells, and ISOs.
     """
+
+    email: str = Field(None, description="The user's email.")
+    name: str = Field(None, description="The user's name.")
+    profile_picture: Optional[Image] = Field(None, description="A profile picture representing the user.")
+    location: str = Field(None, description="The user's location on campus specifically")
+    phone_number: Optional[str] = Field(None, description="The user's phone number")
     
     def __init__(self, email, name, profile_picture=None, location=None, phone_number=0):
         """
@@ -36,45 +42,48 @@ class UserProfile:
             profile_picture (Image, optional): A profile picture representing the user.
             location (str): The user's location on campus specifically).
             phone_number (int, optional): The user's phone number (not necessary; can be optional).
-
-        Raises:
-            ValueError: If the provided phone number is negative.
         """
     
-    def upload_contact_info(self):
+    @router.post("/upload_contact_info")
+    def upload_contact_info():
         """
         Uploads a users contact information, including their name, email, profile picture, optional
         phone number, to the user database, making it visible to buyers.
         """
+        return {"message": "Uploads users contact info successfully"}
 
-    def get_list_of_items(self, user_id):
+    @router.put("/get_list_of_items/{user_id}")
+    def get_list_of_items(user_id: str) -> list:
         """
         Retrieves a list of items associated with a given user from the itemsForSale and itemsForRent 
         database and stores it within the user database, making it visible to buyers. 
         This allows potential buyers to view items listed by the user.
 
         Parameters:
-            user_id (int): The unique identifier of the user whose items are to be retrieved.
+            user_id (str): The unique identifier of the user whose items are to be retrieved.
         
         Returns:
             list: A list of items associated with the specified user.
         """
+        return {"message": "List of items shown successfully", "list": []}
 
-    def get_transaction_history(self, user_id):
+    @router.put("/get_transaction_history/{user_id}")
+    def get_transaction_history(user_id: str) -> list:
         """
         Retrieves a list of the user's transaction history and stores it within the user database. This includes 
         recent transactions such as buys, sells, and ISOs. Users can use this method to review their own 
         transaction history and other users' transaction history.
         
         Parameters:
-        user_id (int): The unique identifier of the user whose transaction history is to be retrieved.
+        user_id (str): The unique identifier of the user whose transaction history is to be retrieved.
         
         Returns:
             list: A list of the user's transaction history, including buys, sells, and ISOs.
         """
+        return {"message": "Transaction history shown successfully", "list": []}
 
-# This is a sample GET request. Add others based on your functions!
-@router.get("/api/profile")
-def get_profile():
-    '''  '''
-    return {"listings": []}
+# # This is a sample GET request. Add others based on your functions!
+# @router.get("/api/profile")
+# def get_profile():
+#     '''  '''
+#     return {"listings": []}
