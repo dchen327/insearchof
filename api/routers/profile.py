@@ -43,9 +43,60 @@ class UserProfile(BaseModel):
             location (str): The user's location on campus specifically).
             phone_number (int, optional): The user's phone number (not necessary; can be optional).
         """
-    
+    class ISOrequester(BaseModel):
+        pass
+
+
+    class UploadContactInfoResponse(BaseModel):
+        """
+        Response model for uploading one's contact info to the database.
+        """
+
+        message: str = Field(
+            ..., description="Response message confirming the user's contact info has been uploaded.")
+
+
+    class GetListOfItemsRequest(BaseModel):
+        """
+        Model for getting a list of items from the database.
+        """
+
+        user_id: str = Field(...,
+                         description="The ID of the user whose list of items is being requested.")
+        requester_id: str = Field(..., description="The requester's email.")
+        # seller_id: str = Field(..., description="The seller's email.")
+
+
+    class GetListOfItemsResponse(BaseModel):
+        """
+        Response model for getting a list of items from the database.    
+        """
+
+        message: str = Field(
+            ..., description="Response message confirming the user's list of items has been requested.")
+
+    class GetTransactionHistoryRequest(BaseModel):
+        """
+        Model for getting a user's transaction history from the database.
+        """
+
+        user_id: str = Field(...,
+                         description="The ID of the user whose transaction history is being requested.")
+        # requester_id: str = Field(..., description="The requester's email.")
+        # seller_id: str = Field(..., description="The seller's email.")
+
+
+    class GetTransactionHistoryResponse(BaseModel):
+        """
+        Response model for getting a user's transaction history in the database.    
+        """
+
+        message: str = Field(
+            ..., description="Response message confirming the user's transaction history been requested.")
+
+
     @router.put("/upload_contact_info")
-    def upload_contact_info():
+    def upload_contact_info() -> UploadContactInfoResponse:
         """
         Uploads a users contact information, including their name, email, profile picture, optional
         phone number, to the user database, making it visible to buyers.
@@ -53,7 +104,7 @@ class UserProfile(BaseModel):
         return {"message": "Uploads users contact info successfully"}
 
     @router.get("/get_list_of_items/{user_id}")
-    def get_list_of_items(user_id: str) -> list:
+    def get_list_of_items(get_list: GetListOfItemsRequest, user_id: str) -> GetListOfItemsResponse:
         """
         Retrieves a list of items associated with a given user from the itemsForSale and itemsForRent 
         database and stores it within the user database, making it visible to buyers. 
@@ -68,7 +119,7 @@ class UserProfile(BaseModel):
         return {"message": "List of items shown successfully", "list": []}
 
     @router.get("/get_transaction_history/{user_id}")
-    def get_transaction_history(user_id: str) -> list:
+    def get_transaction_history(get_transactions: GetTransactionHistoryRequest, user_id: str) -> GetTransactionHistoryResponse:
         """
         Retrieves a list of the user's transaction history and stores it within the user database. This includes 
         recent transactions such as buys, sells, and ISOs. Users can use this method to review their own 
