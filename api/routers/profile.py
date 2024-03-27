@@ -52,7 +52,7 @@ class UserProfile(BaseModel):
         """
         return {"message": "Uploads users contact info successfully"}
 
-    @router.put("/get_list_of_items/{user_id}")
+    @router.get("/get_list_of_items/{user_id}")
     def get_list_of_items(user_id: str) -> list:
         """
         Retrieves a list of items associated with a given user from the itemsForSale and itemsForRent 
@@ -67,7 +67,7 @@ class UserProfile(BaseModel):
         """
         return {"message": "List of items shown successfully", "list": []}
 
-    @router.put("/get_transaction_history/{user_id}")
+    @router.get("/get_transaction_history/{user_id}")
     def get_transaction_history(user_id: str) -> list:
         """
         Retrieves a list of the user's transaction history and stores it within the user database. This includes 
