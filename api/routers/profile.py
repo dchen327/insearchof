@@ -43,8 +43,6 @@ class UserProfile(BaseModel):
             location (str): The user's location on campus specifically).
             phone_number (int, optional): The user's phone number (not necessary; can be optional).
         """
-    class ISOrequester(BaseModel):
-        pass
 
 
     class UploadContactInfoResponse(BaseModel):
@@ -72,7 +70,7 @@ class UserProfile(BaseModel):
         Response model for getting a list of items from the database.    
         """
 
-        message: str = Field(
+        listingOfItems: List[list] = Field(
             ..., description="Response message confirming the user's list of items has been requested.")
 
     class GetTransactionHistoryRequest(BaseModel):
@@ -82,16 +80,13 @@ class UserProfile(BaseModel):
 
         user_id: str = Field(...,
                          description="The ID of the user whose transaction history is being requested.")
-        # requester_id: str = Field(..., description="The requester's email.")
-        # seller_id: str = Field(..., description="The seller's email.")
-
 
     class GetTransactionHistoryResponse(BaseModel):
         """
         Response model for getting a user's transaction history in the database.    
         """
 
-        message: str = Field(
+        listingOfTransactionHistory: List[list] = Field(
             ..., description="Response message confirming the user's transaction history been requested.")
 
 
@@ -116,7 +111,7 @@ class UserProfile(BaseModel):
         Returns:
             list: A list of items associated with the specified user.
         """
-        return {"message": "List of items shown successfully", "list": []}
+        return {"listingOfItems": []}
 
     @router.get("/get_transaction_history/{user_id}")
     def get_transaction_history(get_transactions: GetTransactionHistoryRequest, user_id: str) -> GetTransactionHistoryResponse:
@@ -131,7 +126,7 @@ class UserProfile(BaseModel):
         Returns:
             list: A list of the user's transaction history, including buys, sells, and ISOs.
         """
-        return {"message": "Transaction history shown successfully", "list": []}
+        return {"listingOfTransactionHistory": []}
 
 # # This is a sample GET request. Add others based on your functions!
 # @router.get("/api/profile")
