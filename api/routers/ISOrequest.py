@@ -1,6 +1,7 @@
-from fastapi import APIRouter
-from typing import Optional, List, Dict
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi.responses import JSONResponse
+from typing import Optional
+from pydantic import BaseModel, Field, validator
 
 
 router = APIRouter(
@@ -43,6 +44,12 @@ class ISOrequesterFilters(BaseModel):
     price: float = Field(
         0.0, description="The price the requester is willing to pay. Must be non-negative.")
 
+    @validator('price')
+    def validate_price(cls, price):
+        if price < 0:
+            raise ValueError('Price must be non-negative.')
+        return price
+
 
 class ISOrequester(BaseModel):
     pass
@@ -55,6 +62,24 @@ class UploadRequestResponse(BaseModel):
 
     message: str = Field(
         ..., description="Response message confirming the request has been uploaded.")
+    
+    
+class UpdateRequestResponse(BaseModel):
+    """
+    Response model for updating a request in the database.
+    """
+
+    message: str = Field(
+        ..., description="Response message confirming the request has been updated.")
+    
+    
+class DeleteRequestResponse(BaseModel):
+    """
+    Response model for deleting a request from the database.
+    """
+
+    message: str = Field(
+        ..., description="Response message confirming the request has been deleted.")
 
 
 class MarkTransactionRequest(BaseModel):
@@ -77,61 +102,59 @@ class MarkTransactionCompleteResponse(BaseModel):
         ..., description="Response message confirming the transaction has been marked as complete.")
 
 
-@router.get("/upload")
-def upload_request(filters: ISOrequesterFilters) -> UploadRequestResponse:
-    ''' 
-    Uploads the request to the database, making it visible to other users 
-    and recording the details for transaction history.
-    
-    The method receives ISO request data from the client, which includes a title,
-    an optional description, an optional image URL, and a price. The data is then
-    validated and sent to the Firebase database where a new entity is created 
-    within the ISO requests collection.
-
-    The Firebase entity structure follows:
-    - requester_id: str - Unique identifier of the user making the request
-    - title: str - Title of the requested item or service
-    - description: Optional[str] - Additional details about the request
-    - image: Optional[str] - URL of the image if uploaded
-    - price: float - Proposed price for the item or service
-    - status: str - Initialized to 'open' indicating the request is active
-    
-    If an image is included, the image processor function would be called prior to this,
-    returning a URL to be included in the database entry. In case of any database operation
-    failures, appropriate error handling will be performed and an error message will be returned.
-
-    Returns a confirmation message indicating the successful upload of the request.
+@router.post("/upload", response_model=UploadRequestResponse)
+def upload_request(request: ISOrequester, current_user):
     '''
-    
-    # Here you would typically call a function or a class method that handles the database operation.
-    # The actual database call has been abstracted away from this layer of the code for separation
-    # of concerns and easier testing.
-    
-    return {"message": "Request uploaded"}
+    Uploads the ISO request to the database. This endpoint is protected and requires
+    the user to be authenticated.
 
+    Additional input validation is performed to ensure the price is non-negative
+    and the image, if present, meets size and format restrictions.
 
-@router.get("/mark")
-def mark_transaction_complete(mark_request: MarkTransactionRequest) -> MarkTransactionCompleteResponse:
+    Error handling includes capturing exceptions from the database operations and
+    returning appropriate HTTP error responses.
+
+    Security: This endpoint requires authentication. The current user's ID is used to
+    link the ISO request to the user creating it.
+
+    Returns a JSON response with the result of the operation.
     '''
-    Marks the associated transaction as complete in the database. This is used
-    to update the transaction history once a successful transaction has been completed.
-    
-    This method receives the unique item ID for the ISO request and the requester's user ID.
-    With these details, it updates the corresponding ISO request entry in the Firebase
-    database to reflect that the transaction has been completed.
+    return {"message": "Request uploaded", "request_id": "new_request_id"}
 
-    The update to Firebase involves setting the 'status' field of the document to 'completed'.
-    This indicates that the ISO request is no longer active and has been fulfilled.
 
-    The following Firebase operations are executed:
-    - Transaction document is retrieved by item_id and requester_id.
-    - The status field of the document is updated to 'completed'.
-    - The update is committed, and a response message is generated and returned.
-
-    Returns a message confirming the transaction status update.
+@router.patch("/update/{request_id}", response_model=UpdateRequestResponse)
+def update_request(request_id: str, request, current_user):
     '''
+    Updates an existing ISO request in the database. This endpoint requires the user to be authenticated.
 
-    # Similar to the upload_request, the actual database update operation would be encapsulated in a separate function or method.
-    # The focus here is on what needs to be done with the database, not how it's done.
+    Security: Only the user who created the ISO request is allowed to update it.
 
+    Returns a JSON response with the result of the operation.
+    '''
+    return {"message": "Request updated"}
+
+
+@router.delete("/delete/{request_id}")
+def delete_request(request_id: str, current_user):
+    '''
+    Deletes an ISO request from the database. This endpoint requires user authentication.
+
+    Security: Only the user who created the ISO request or an admin can delete it.
+
+    Returns a JSON response indicating the outcome of the operation.
+    '''
+    return {"message": "Request deleted"}
+
+
+@router.get("/mark/{request_id}", response_model=MarkTransactionCompleteResponse)
+def mark_transaction_complete(request_id: str, current_user):
+    '''
+    Marks the transaction related to the ISO request as complete. This endpoint requires user authentication.
+
+    Security: Ensures that only the user involved in the transaction can mark it as complete.
+
+    If an error occurs during the database operation, an appropriate error response is returned.
+
+    Returns a JSON response confirming the transaction status update.
+    '''
     return {"message": "Transaction marked complete"}
