@@ -69,6 +69,9 @@ def get_listings(filters: ListingsFilters) -> ListingsResponse:
     # Return: a list of objects that represent a listing, corresponds to the database schema
     # Has fields like Title, Description, Price, Image, Seller, etc.
 
+    # If there are errors in the input, generates a descriptive error message and fails the API call
+    # This allows the frontend to display the error to the users
+
     return {"listings": []}
 
 
