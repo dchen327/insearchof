@@ -36,8 +36,10 @@ class ListingsResponse(BaseModel):
 class PurchaseRequest(BaseModel):
     item_id: str = Field(...,
                          description="The ID of the item being purchased.")
-    buyer_id: str = Field(..., description="The buyer's email.")
-    seller_id: str = Field(..., description="The seller's email.")
+    buyer_id: str = Field(...,
+                          description="The buyer's email, must be validated.")
+    seller_id: str = Field(...,
+                           description="The seller's email, must be validated.")
 
 
 class PurchaseResponse(BaseModel):
@@ -55,6 +57,7 @@ class PurchaseResponse(BaseModel):
 def get_listings(filters: ListingsFilters) -> ListingsResponse:
     ''' Get item listings based on search parameters. '''
     # First check that input is valid, then query the database for items that match the search parameters
+    # For the default blank search, we return all items and sort by most recent
     # Check that max_price >= min_price
     # Firebase docs: https://firebase.google.com/docs/firestore/query-data/queries#python
     # - sorting: if provided by the user, sort the items based on the specified criteria (indexes are already created for these types of queries)
@@ -72,6 +75,7 @@ def get_listings(filters: ListingsFilters) -> ListingsResponse:
 @router.get("/purchase")
 def purchase_item(purchase_request: PurchaseRequest) -> PurchaseResponse:
     ''' A buyer indicates to a seller that they'd want to purchase an item. Query profiles backend for seller\'s contact information and return for the frontend. '''
+    # First validates inputs
     # Query the profiles backend to get the seller's contact information from the User collection
     # Use the seller's email to find their profile and any other contact information (e.g. phone number, Discord, Messenger)
 
