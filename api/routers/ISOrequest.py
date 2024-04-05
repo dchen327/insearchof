@@ -198,7 +198,7 @@ async def upload_image(file: UploadFile = File()):
 
 
 '''
-ISSUES DISCOVERED:
+ISSUES PROVIDED BY REVIEW:
 
 Non-negative Price Validation:
 Issue: The initial code did not validate the non-negative price on the backend.
