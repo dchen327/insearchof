@@ -54,7 +54,8 @@ class PurchaseResponse(BaseModel):
 @router.get("/listings")
 def get_listings(filters: ListingsFilters) -> ListingsResponse:
     ''' Get item listings based on search parameters. '''
-    # Query the database for items that match the search parameters
+    # First check that input is valid, then query the database for items that match the search parameters
+    # Check that max_price >= min_price
     # Firebase docs: https://firebase.google.com/docs/firestore/query-data/queries#python
     # - sorting: if provided by the user, sort the items based on the specified criteria (indexes are already created for these types of queries)
     # - types: based on listing type (buy, rent, request), query the respective collections in the database (ItemsForSale, ItemsForRent, Requests)
