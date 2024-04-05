@@ -17,7 +17,7 @@ class ListingsFilters(BaseModel):
     listing_types: List[str] = Field(
         ['buy', 'rent', 'request'], description="The types of listing to return (buy, rent, or request)")
     min_price: float = Field(
-        0, description="Minimum price of returned items. Must be a non-negative float with max 2 decimal places.")
+        0, description="Minimum price of returned items. Must be at most the maximum price, and be a non-negative float with max 2 decimal places. ")
     max_price: float = Field(
         None, description="Maximum price of returned items. Must at least the minimum price, and be a non-negative float with max 2 decimal places.")
     categories: List[str] = Field(
