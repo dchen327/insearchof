@@ -220,6 +220,10 @@ Security Measures:
 Issue: The preliminary design did not address security measures such as authentication and authorization for accessing and modifying requests.
 Risk: Neglecting security could lead to unauthorized access and manipulation of user data.
 
+Testing Framework
+Issue: No standard (off the shelf) testing framework.
+Risk: Tests are formatted in many different ways, creating confusion
+
 SUMMARY OF CHANGES MADE:
 
 Non-negative Price Validation:
@@ -241,4 +245,8 @@ Reason: To improve user engagement by keeping users updated about the status of 
 Security Measures:
 Change: Ensured all sensitive endpoints require user authentication, and only appropriate users can perform actions.
 Reason: To protect user data and prevent unauthorized actions, upholding the application’s integrity and trustworthiness.
+
+Testing Framework
+Change: Utilize python unittest as the testing framework.
+Reason: Standardized tests will be easier to understand for yourself and others.
 '''
