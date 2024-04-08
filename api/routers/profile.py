@@ -30,7 +30,8 @@ class UserProfile(BaseModel):
     name: str = Field(None, description="The user's name.")
     profile_picture: Optional[str] = Field(None, description="An image of the profile picture representing the user.")
     location: str = Field(None, description="The user's location on campus specifically")
-    phone_number: Optional[constr(regex=r'^\(\d{3}\)\s\d{3}-\d{4}$')] = Field(None, description="The user's phone number")
+    phone_number: Optional[str] = Field(None, description="The user's phone number")
+    # phone_number: Optional[constr(regex=r'^\(\d{3}\)\s\d{3}-\d{4}$')] = Field(None, description="The user's phone number") # <-- buggy code?
     
 
     class UploadContactInfoResponse(BaseModel):
@@ -72,7 +73,9 @@ class UserProfile(BaseModel):
 
 
     @router.put("/upload_contact_info")
-    def upload_contact_info(user_profile: UserProfile) -> UploadContactInfoResponse:
+    def upload_contact_info(user_profile: UploadContactInfoResponse) -> UploadContactInfoResponse: 
+    # def upload_contact_info(user_profile: Profile) -> UploadContactInfoResponse: <-- Prev buggy code?
+
         """
         Uploads a users contact information, including their name, email, profile picture, optional
         phone number, to the user database, making it visible to buyers.
