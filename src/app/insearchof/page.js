@@ -19,7 +19,7 @@ export default function Page() {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   return <div>Hello World</div>;
 }

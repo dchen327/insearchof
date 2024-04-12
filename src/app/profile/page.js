@@ -19,7 +19,7 @@ export default function Page() {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   const logOut = async () => {
     try {
