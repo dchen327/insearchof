@@ -78,7 +78,15 @@ export default function Home() {
         {user ? (
           <p>Welcome {user.displayName}</p>
         ) : (
-          <p>Please sign in with Google</p>
+          <>
+            <p>Please sign in with Google</p>
+            <button
+              className="button mt-2 is-primary is-hidden-desktop"
+              onClick={signInWithGoogle}
+            >
+              <strong>Sign In</strong>
+            </button>
+          </>
         )}
       </div>
     </div>
