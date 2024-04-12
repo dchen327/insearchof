@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faList, faShop, faUser } from "@fortawesome/free-solid-svg-icons";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
+import { faCircleUser } from "@fortawesome/free-regular-svg-icons";
 
 export const Navbar = () => {
   const [user, setUser] = useState(null);
@@ -40,59 +41,48 @@ export const Navbar = () => {
   return (
     <>
       <nav
-        className="navbar is-hidden-mobile"
+        className="navbar is-fixed-top is-hidden-touch flex justify-center items-center"
         role="navigation"
         aria-label="main navigation"
       >
-        <div className="navbar-brand">
-          <a className="navbar-item" href="https://bulma.io">
-            <img
-              src="https://bulma.io/images/bulma-logo.png"
-              width={112}
-              height={28}
-              alt="logo"
-            />
-          </a>
-          <button
-            className="navbar-burger"
-            aria-label="menu"
-            aria-expanded="false"
-            data-target="navbarBasicExample"
-          >
-            <span aria-hidden="true" />
-            <span aria-hidden="true" />
-            <span aria-hidden="true" />
-          </button>
-        </div>
-        <div id="navbarBasicExample" className="navbar-menu">
+        <div className="navbar-menu is-active ">
           <div className="navbar-start">
-            {/* add button or a tag that when clicked calls /api/helloworld */}
-            <button className="navbar-item" onClick={console.log("hi")}>
-              console log
-            </button>
+            <Link href="/" className="navbar-item has-text-centered">
+              <p className="text-lg">Market</p>
+            </Link>
+            <Link href="/listings" className="navbar-item has-text-centered">
+              <p className="text-lg">Listings</p>
+            </Link>
+            <Link href="/insearchof" className="navbar-item has-text-centered">
+              <p className="text-lg">ISO</p>
+            </Link>
           </div>
           <div className="navbar-end">
             <div className="navbar-item">
-              <div className="buttons">
-                {user ? (
-                  <button className="button is-light" onClick={logOut}>
-                    Log out
-                  </button>
-                ) : (
-                  <button
-                    className="button is-primary"
-                    onClick={signInWithGoogle}
-                  >
-                    <strong>Sign In</strong>
-                  </button>
-                )}
-              </div>
+              {user ? (
+                <Link
+                  href="/profile"
+                  className="navbar-item is-block has-text-centered"
+                >
+                  <FontAwesomeIcon
+                    icon={faCircleUser}
+                    className="w-[30px] h-[30px] text-black"
+                  />
+                </Link>
+              ) : (
+                <button
+                  className="button is-primary"
+                  onClick={signInWithGoogle}
+                >
+                  <strong>Sign In</strong>
+                </button>
+              )}
             </div>
           </div>
         </div>
       </nav>
       <nav
-        className="navbar is-fixed-bottom is-hidden-tablet"
+        className="navbar is-fixed-bottom is-hidden-desktop"
         role="navigation"
       >
         <hr className="my-1" />

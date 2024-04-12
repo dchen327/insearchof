@@ -19,6 +19,8 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={inter.className}>
         <Navbar />
+        {/* Hacky invisible div to offset navbar on desktop but not mobile */}
+        <div className="h-[3.25rem] is-hidden-touch"></div>
         <main>{children}</main>
       </body>
     </html>
