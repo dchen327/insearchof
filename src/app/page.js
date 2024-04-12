@@ -1,11 +1,11 @@
 "use client";
-import "bulma/css/bulma.css";
 import { auth, googleProvider } from "./firebase/config";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { ref, uploadBytes } from "firebase/storage";
 import { useState, useEffect } from "react";
 import { storage } from "./firebase/config";
 import { v4 } from "uuid";
+import { Navbar } from "./components/navbar";
 
 export default function Home() {
   const [user, setUser] = useState(null);
@@ -74,72 +74,19 @@ export default function Home() {
 
   return (
     <div>
-      <nav className="navbar" role="navigation" aria-label="main navigation">
-        <div className="navbar-brand">
-          <a className="navbar-item" href="https://bulma.io">
-            <img
-              src="https://bulma.io/images/bulma-logo.png"
-              width={112}
-              height={28}
-              alt="logo"
-            />
-          </a>
-          <button
-            className="navbar-burger"
-            aria-label="menu"
-            aria-expanded="false"
-            data-target="navbarBasicExample"
-          >
-            <span aria-hidden="true" />
-            <span aria-hidden="true" />
-            <span aria-hidden="true" />
-          </button>
-        </div>
-        <div id="navbarBasicExample" className="navbar-menu">
-          <div className="navbar-start">
-            {/* add button or a tag that when clicked calls /api/helloworld */}
-            <button className="navbar-item" onClick={testAPI}>
-              test api
-            </button>
-            {/* upload file */}
-            <div className="navbar-item">
-              <input
-                type="file"
-                onChange={(event) => {
-                  setImageUpload(event.target.files[0]);
-                }}
-              />
-              <button className="button is-primary" onClick={uploadFile}>
-                {" "}
-                Upload Image
-              </button>
-            </div>
-          </div>
-          <div className="navbar-end">
-            <div className="navbar-item">
-              <div className="buttons">
-                {user ? (
-                  <button className="button is-light" onClick={logOut}>
-                    Log out
-                  </button>
-                ) : (
-                  <button
-                    className="button is-primary"
-                    onClick={signInWithGoogle}
-                  >
-                    <strong>Sign In</strong>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
       <div className="box">
         {user ? (
           <p>Welcome {user.displayName}</p>
         ) : (
-          <p>Please sign in with Google</p>
+          <>
+            <p>Please sign in with Google</p>
+            <button
+              className="button mt-2 is-primary is-hidden-desktop"
+              onClick={signInWithGoogle}
+            >
+              <strong>Sign In</strong>
+            </button>
+          </>
         )}
       </div>
     </div>
