@@ -6,6 +6,15 @@ import { ref, uploadBytes } from "firebase/storage";
 import { useState, useEffect } from "react";
 import { storage } from "./firebase/config";
 import { v4 } from "uuid";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faList,
+  faRepeat,
+  faShop,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import Link from "next/link";
 
 export default function Home() {
   const [user, setUser] = useState(null);
@@ -74,7 +83,11 @@ export default function Home() {
 
   return (
     <div>
-      <nav className="navbar" role="navigation" aria-label="main navigation">
+      <nav
+        className="navbar is-hidden-mobile"
+        role="navigation"
+        aria-label="main navigation"
+      >
         <div className="navbar-brand">
           <a className="navbar-item" href="https://bulma.io">
             <img
@@ -133,6 +146,42 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+      </nav>
+      <nav
+        className="navbar is-fixed-bottom is-hidden-tablet"
+        role="navigation"
+      >
+        <hr className="my-1" />
+        <div className="navbar-brand">
+          <Link
+            href="/"
+            className="navbar-item is-expanded is-block has-text-centered"
+          >
+            <FontAwesomeIcon icon={faShop} />
+            <p className="is-size-7">Market</p>
+          </Link>
+          <Link
+            href="/listings"
+            className="navbar-item is-expanded is-block has-text-centered"
+          >
+            <FontAwesomeIcon icon={faList} />
+            <p className="is-size-7">Listings</p>
+          </Link>
+          <Link
+            href="/insearchof"
+            className="navbar-item is-expanded is-block has-text-centered"
+          >
+            <FontAwesomeIcon icon={faMagnifyingGlass} />
+            <p className="is-size-7">ISO</p>
+          </Link>
+          <Link
+            href="/profile"
+            className="navbar-item is-expanded is-block has-text-centered"
+          >
+            <FontAwesomeIcon icon={faUser} />
+            <p className="is-size-7">Profile</p>
+          </Link>
         </div>
       </nav>
       <div className="box">

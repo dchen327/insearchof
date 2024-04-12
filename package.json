@@ -8,6 +8,10 @@
     "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\""
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.5.2",
+    "@fortawesome/free-brands-svg-icons": "^6.5.2",
+    "@fortawesome/free-regular-svg-icons": "^6.5.2",
+    "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "bulma": "^0.9.4",
     "concurrently": "^8.2.2",
     "firebase": "^10.9.0",
