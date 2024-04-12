@@ -5,7 +5,7 @@ import { ref, uploadBytes } from "firebase/storage";
 import { useState, useEffect } from "react";
 import { storage } from "./firebase/config";
 import { v4 } from "uuid";
-import { Navbar } from "./components/navbar";
+import { ItemCard } from "./components/itemCard";
 
 export default function Home() {
   const [user, setUser] = useState(null);
@@ -72,11 +72,49 @@ export default function Home() {
     );
   };
 
+  const generateRandomItem = () => {
+    const categories = [
+      "Electronics",
+      "Books",
+      "Clothing",
+      "Home",
+      "Sports",
+      "Toys",
+    ];
+    const statuses = ["Available", "Sold", "Reserved"];
+
+    const item = {
+      itemID: Math.floor(Math.random() * 1000000), // Random number for itemId
+      sellerUserID: "davidchen@hmc.edu",
+      title: "Microwave",
+      description: `This is a description for item ${Math.floor(
+        Math.random() * 1000
+      )}`, // Random description
+      category: categories[Math.floor(Math.random() * categories.length)], // Random category
+      price: (Math.random() * 100).toFixed(2), // Random price
+      images: ["/images/microwave.jpg"], // Random image URL
+      status: statuses[Math.floor(Math.random() * statuses.length)], // Random status
+      timestamp: new Date().toISOString(), // Current timestamp
+    };
+
+    return item;
+  };
+
+  const testItem = generateRandomItem();
+  const items = [testItem, testItem, testItem];
+
   return (
     <div>
-      <div className="box">
+      <div>
         {user ? (
-          <p>Welcome {user.displayName}</p>
+          <>
+            {items.map((item, idx) => (
+              <>
+                <ItemCard key={idx} item={item} />
+                {idx !== items.length - 1 && <hr className="py-[1px]" />}
+              </>
+            ))}
+          </>
         ) : (
           <>
             <p>Please sign in with Google</p>
