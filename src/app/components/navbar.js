@@ -66,7 +66,8 @@ export const Navbar = () => {
                 >
                   <FontAwesomeIcon
                     icon={faCircleUser}
-                    className="w-[30px] h-[30px] text-black"
+                    size="lg"
+                    className="text-black"
                   />
                 </Link>
               ) : (
