@@ -1,5 +1,4 @@
 "use client";
-import "bulma/css/bulma.css";
 import { auth, googleProvider } from "./firebase/config";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { ref, uploadBytes } from "firebase/storage";
@@ -75,7 +74,6 @@ export default function Home() {
 
   return (
     <div>
-      <Navbar />
       <div className="box">
         {user ? (
           <p>Welcome {user.displayName}</p>

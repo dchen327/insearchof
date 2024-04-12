@@ -1,3 +1,5 @@
+"use client";
+
 import { auth, googleProvider } from "../firebase/config";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { useState, useEffect } from "react";
