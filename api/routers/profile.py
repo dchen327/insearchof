@@ -30,7 +30,7 @@ class UserProfile(BaseModel):
     name: str = Field(None, description="The user's name.")
     profile_picture: Optional[str] = Field(None, description="An image of the profile picture representing the user.")
     location: str = Field(None, description="The user's location on campus specifically")
-    phone_number: Optional[str] = Field(None, description="The user's phone number")
+    # phone_number: Optional[constr(regex=r'^\(\d{3}\)\s\d{3}-\d{4}$')]  = Field(None, description="The user's phone number") # type: ignore
     
 
     class UploadContactInfoResponse(BaseModel):
