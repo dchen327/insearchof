@@ -1,8 +1,12 @@
 "use client";
-import { auth } from "../firebase/config";
+import { auth, storage } from "../firebase/config";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
+
+import { getFirestore, collection, addDoc } from "firebase/firestore";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { v4 as uuidv4 } from "uuid";
 
 
 export default function Page() {
@@ -17,6 +21,11 @@ export default function Page() {
   const [showDescriptionTooltip, setShowDescriptionTooltip] = useState(false);
   const [showPriceTooltip, setShowPriceTooltip] = useState(false);
   const [showImageTooltip, setShowImageTooltip] = useState(false);
+
+  // Firestore reference
+  const db = getFirestore();
+  const itemsCollectionRef = collection(db, "items");
+
 
 
   useEffect(() => {
@@ -63,37 +72,48 @@ export default function Page() {
       alert('Title is required.');
       return;
     }
+
     if (price < 0) {
       alert('Price cannot be negative.');
       return;
     }
+
     if (!user) {
       alert('You need to be logged in to submit a request.');
       return;
     }
 
-    const token = await user.getIdToken();
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('description', description);
-    formData.append('price', price === '' ? '0' : price);
+    // First, upload the image to Firebase Storage if it exists
+    let imageUrl = '';
     if (image) {
-      formData.append('image', image);
+      const imageId = uuidv4();
+      const imageStorageRef = storageRef(storage, `images/${imageId}`);
+      const snapshot = await uploadBytes(imageStorageRef, image);
+      imageUrl = await getDownloadURL(snapshot.ref);
     }
 
-    const config = {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data'
-      }
+    // Then, create a document in Firestore with the item data
+    const itemData = {
+      title,
+      description,
+      price: price || '0',
+      imageUrl, // Include the image URL from Storage
+      userId: user.uid,
+      timestamp: new Date() // You can use Firebase server timestamps as well
     };
 
     try {
-      // attempt upload
-      alert('Request uploaded successfully: ' + title + ' ' + description + ' ' + price);
+      await addDoc(itemsCollectionRef, itemData);
+      alert('Request uploaded successfully!');
+
+      // Clear the form
+      setTitle('');       // Assuming setTitle is the setter function for title
+      setDescription(''); // Assuming setDescription is the setter function for description
+      setPrice(0);        // Assuming setPrice is the setter function for price
+      setImage(null);     // Assuming setImage is the setter function for image
     } catch (error) {
       console.error('Error uploading request:', error);
-      alert('Failed to upload request: ' + (error.response?.data?.detail || 'Unknown error') + ': ' + title + ' ' + description + ' ' + price);
+      alert('Failed to upload request: ' + error.message);
     }
   };
 
