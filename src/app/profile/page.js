@@ -3,15 +3,26 @@ import { auth } from "../firebase/config";
 import { useEffect, useState } from "react";
 import { signOut, onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
+//import signInWithGoogle;
 
 export default function Page() {
   const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState([]);
+  const [transactionHistory, setTransactionHistory] = useState([]);
   const router = useRouter();
 
+  // performs side effects in function components. subscribes authentication
+  // state changes when the component mounts. when authentication state changes
+  // the user state is updates and fetches the list of items and transaction
+  // history based on the specific user
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
+        fetchListOfItems(currentUser.email);
+        fetchTransactionHistory(currentUser.email);
       } else {
         router.push("/");
       }
@@ -21,6 +32,7 @@ export default function Page() {
     return () => unsubscribe();
   }, [router]);
 
+  // logs the user out by using the firebase's signOut method
   const logOut = async () => {
     try {
       await signOut(auth);
@@ -30,6 +42,8 @@ export default function Page() {
     }
   };
 
+  // updates the user's profile data by taking new profile data as input
+  // and then uses updateProfile from firebase to update a user's profile
   const updateUserProfile = async (newProfileData) => {
     try {
       // Update user profile data
@@ -42,7 +56,7 @@ export default function Page() {
     }
   };
 
-  const handleProfileUpdate = (event) => {
+  const handleProfileUpdate = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
     const newProfileData = {
@@ -54,6 +68,36 @@ export default function Page() {
     updateUserProfile(newProfileData);
   };
 
+  const fetchListOfItems = async (email) => {
+    try {
+      setLoading(true);
+      const response = await axios.get('/profile/get_list_of_items', {
+        params: { requester_id: email }
+      });
+      setItems(response.data.listingOfItems);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch list of items");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const fetchTransactionHistory= async (email) => {
+    try {
+      setLoading(true);
+      const response = await axios.get('/profile/get_transaction_history', {
+        params: { user_id: email }
+      });
+      setTransactionHistory(response.data.listingOfTransactionHistory);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch transaction history");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <>
       <div className="buttons">
@@ -64,7 +108,7 @@ export default function Page() {
                 ) : (
                   <button
                     className="button is-primary"
-                    onClick={signInWithGoogle}
+                    //onClick={signInWithGoogle}
                   >
                     <strong>Sign In</strong>
                   </button>
@@ -87,7 +131,6 @@ export default function Page() {
         <ul>
           <li><a href="/dashboard">Dashboard</a></li>
           <li><a href="/settings">Settings</a></li>
-          {/* Add more navigation links as needed */}
         </ul>
       </div>
       {user && (
@@ -136,5 +179,4 @@ export default function Page() {
       </div>
     </>
   );
-              
 }
