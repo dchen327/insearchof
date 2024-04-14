@@ -109,7 +109,7 @@ export default function Page() {
       // Clear the form
       setTitle('');       // Assuming setTitle is the setter function for title
       setDescription(''); // Assuming setDescription is the setter function for description
-      setPrice(0);        // Assuming setPrice is the setter function for price
+      setPrice('');        // Assuming setPrice is the setter function for price
       setImage(null);     // Assuming setImage is the setter function for image
     } catch (error) {
       console.error('Error uploading request:', error);
