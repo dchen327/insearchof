@@ -6,11 +6,14 @@ import { useState, useEffect } from "react";
 import { storage } from "./firebase/config";
 import { v4 } from "uuid";
 import { ItemCard } from "./components/itemCard";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSearch } from "@fortawesome/free-solid-svg-icons";
 
 export default function Home() {
   const [user, setUser] = useState(null);
   const imagesRef = ref(storage, "images");
   const [imageUpload, setImageUpload] = useState(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -72,6 +75,14 @@ export default function Home() {
     );
   };
 
+  const searchItems = async (e) => {
+    e.preventDefault();
+    console.log(search);
+    // const res = await fetch(`/api/search?query=${search}`);
+    // const data = await res.json();
+    // console.log(data);
+  };
+
   const generateRandomItem = () => {
     const categories = [
       "Electronics",
@@ -90,7 +101,7 @@ export default function Home() {
       description:
         "Upgrade your kitchen with the Chef's Choice 900W Digital Microwave Oven, the perfect blend of style, efficiency, and convenience. This sleek stainless steel microwave is designed to meet all your cooking needs with ease and precision.",
       category: categories[Math.floor(Math.random() * categories.length)], // Random category
-      price: (Math.random() * 100).toFixed(2), // Random price
+      price: 25, // Random price
       images: ["/images/microwave.jpg"], // Random image URL
       status: statuses[Math.floor(Math.random() * statuses.length)], // Random status
       timestamp: new Date().toISOString(), // Current timestamp
@@ -108,6 +119,22 @@ export default function Home() {
       <div>
         {user ? (
           <>
+            <form className="flex justify-center mt-2" onSubmit={searchItems}>
+              <div className="field w-full mx-5">
+                <div className="control is-expanded flex flex-row">
+                  <input
+                    className="input"
+                    type="text"
+                    placeholder="I'm looking for..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                  <button type="submit" className="button is-primary">
+                    <FontAwesomeIcon icon={faSearch} />
+                  </button>
+                </div>
+              </div>
+            </form>
             {items.map((item, idx) => (
               <>
                 <ItemCard key={idx} item={item} />
