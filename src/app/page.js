@@ -123,8 +123,8 @@ export default function Home() {
         {user ? (
           <>
             <form className="flex justify-center mt-2" onSubmit={searchItems}>
-              <div className="field w-full mx-2">
-                <div className="control is-expanded flex flex-row">
+              <div className="field has-addons w-full mx-2">
+                <div className="control is-expanded">
                   <input
                     className="input"
                     type="text"
@@ -132,6 +132,8 @@ export default function Home() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
+                </div>
+                <div className="control">
                   <button type="submit" className="button is-warning">
                     <FontAwesomeIcon icon={faSearch} />
                   </button>
