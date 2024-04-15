@@ -1,3 +1,4 @@
+"use client";
 import { useEffect, useState } from "react";
 import { auth, googleProvider } from "../firebase/config";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
@@ -53,56 +54,55 @@ export default function Page() {
 
   const uploadContactInformation = async () => {
     if (!name) {
-      alert('Name is required');
+      alert("Name is required");
       return;
     }
 
     if (!email) {
-      alert('Email is required');
+      alert("Email is required");
       return;
     }
 
     if (!location) {
-      alert('Location is required');
+      alert("Location is required");
       return;
     }
-
 
     // Then, create a document in Firestore with the item data
     const userData = {
       name,
       email,
       phoneNumber,
-      location, 
-      timestamp: new Date() // You can use Firebase server timestamps as well
+      location,
+      timestamp: new Date(), // You can use Firebase server timestamps as well
     };
 
     try {
       await addDoc(itemsCollectionRef, userData);
-      alert('Request uploaded successfully!');
+      alert("Request uploaded successfully!");
 
       // Clear the form
-      setName('');     
-      setEmail(''); 
-      setPhoneNumber('');      
-      setLocation(null);  
+      setName("");
+      setEmail("");
+      setPhoneNumber("");
+      setLocation(null);
     } catch (error) {
-      console.error('Error uploading contact information:', error);
-      alert('Failed to upload contact inforation: ' + error.message);
+      console.error("Error uploading contact information:", error);
+      alert("Failed to upload contact inforation: " + error.message);
     }
   };
 
   const tooltipStyle = {
-    position: 'absolute',
-    top: '100%',
-    left: '0',
-    width: '75%', // Tooltip covers 75% of the input field
-    backgroundColor: '#f0f0f0',
-    padding: '10px',
-    borderRadius: '4px',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-    zIndex: '10',
-    marginTop: '5px'
+    position: "absolute",
+    top: "100%",
+    left: "0",
+    width: "75%", // Tooltip covers 75% of the input field
+    backgroundColor: "#f0f0f0",
+    padding: "10px",
+    borderRadius: "4px",
+    boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+    zIndex: "10",
+    marginTop: "5px",
   };
 
   const fetchListOfItems = async (email) => {
@@ -175,36 +175,76 @@ export default function Page() {
         )}
       </div>
 
-      {['name', 'email', 'phoneNumber', 'location'].map((field) => (
-        <div key={field} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '5px' }}>
-          {field === 'name' && <input
-            type="text"
-            value={title}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Name (Required)"
-            style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1 }}
-          />}
-          {field === 'email' && <input
-            type="text"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email (Required)"
-            style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1 }}
-          />}
-          {field === 'phoneNumber' && <input
-            type="text"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            placeholder="Phone Number"
-            style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1 }}
-          />}
-          {field === 'location' && <input
-            type="text"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Location (Required)"
-            style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1 }}
-          />}
+      {["name", "email", "phoneNumber", "location"].map((field) => (
+        <div
+          key={field}
+          style={{
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+          }}
+        >
+          {field === "name" && (
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Name (Required)"
+              style={{
+                padding: "10px",
+                fontSize: "16px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                flexGrow: 1,
+              }}
+            />
+          )}
+          {field === "email" && (
+            <input
+              type="text"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email (Required)"
+              style={{
+                padding: "10px",
+                fontSize: "16px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                flexGrow: 1,
+              }}
+            />
+          )}
+          {field === "phoneNumber" && (
+            <input
+              type="text"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="Phone Number"
+              style={{
+                padding: "10px",
+                fontSize: "16px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                flexGrow: 1,
+              }}
+            />
+          )}
+          {field === "location" && (
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Location (Required)"
+              style={{
+                padding: "10px",
+                fontSize: "16px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                flexGrow: 1,
+              }}
+            />
+          )}
         </div>
       ))}
 
@@ -222,27 +262,37 @@ export default function Page() {
             <button
               onClick={() => {
                 // Close any open tooltip and open the clicked one
-                setShowNameTooltip(field === 'name' ? !showTitleTooltip : false);
-                setShowEmailTooltip(field === 'email' ? !showDescriptionTooltip : false);
-                setShowPhoneNumberTooltip(field === 'phoneNumber' ? !showPriceTooltip : false);
-                setShowLocationTooltip(field === 'location' ? !showImageTooltip : false);
+                setShowNameTooltip(
+                  field === "name" ? !showTitleTooltip : false
+                );
+                setShowEmailTooltip(
+                  field === "email" ? !showDescriptionTooltip : false
+                );
+                setShowPhoneNumberTooltip(
+                  field === "phoneNumber" ? !showPriceTooltip : false
+                );
+                setShowLocationTooltip(
+                  field === "location" ? !showImageTooltip : false
+                );
               }}
-              style={{ position: 'relative', zIndex: '20' }}
+              style={{ position: "relative", zIndex: "20" }}
             >
               ?
             </button>
-            {showNameTooltip && <div style={tooltipStyle}>
-              The name of the user
-            </div>}
-            {showEmailTooltip && field === 'email' && <div style={tooltipStyle}>
-              The email of the user
-            </div>}
-            {showPhoneNumberTooltip && field === 'phoneNumber' && <div style={tooltipStyle}>
-              The phone number of the user
-            </div>}
-            {showLocationTooltip && field === 'location' && <div style={tooltipStyle}>
-              The location of the user for picking up requested item
-            </div>}
+            {showNameTooltip && (
+              <div style={tooltipStyle}>The name of the user</div>
+            )}
+            {showEmailTooltip && field === "email" && (
+              <div style={tooltipStyle}>The email of the user</div>
+            )}
+            {showPhoneNumberTooltip && field === "phoneNumber" && (
+              <div style={tooltipStyle}>The phone number of the user</div>
+            )}
+            {showLocationTooltip && field === "location" && (
+              <div style={tooltipStyle}>
+                The location of the user for picking up requested item
+              </div>
+            )}
           </>
         )}
       </div>
