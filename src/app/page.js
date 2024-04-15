@@ -7,13 +7,14 @@ import { storage } from "./firebase/config";
 import { v4 } from "uuid";
 import { ItemCard } from "./components/itemCard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import { faAngleDown, faSearch } from "@fortawesome/free-solid-svg-icons";
 
 export default function Home() {
   const [user, setUser] = useState(null);
   const imagesRef = ref(storage, "images");
   const [imageUpload, setImageUpload] = useState(null);
   const [search, setSearch] = useState("");
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [marketSelected, setMarketSelected] = useState(true);
   const [rentalsSelected, setRentalsSelected] = useState(true);
   const [requestsSelected, setRequestsSelected] = useState(true);
@@ -134,6 +135,19 @@ export default function Home() {
                   />
                 </div>
                 <div className="control">
+                  <button
+                    className="button"
+                    onClick={() => setShowFilterModal(true)}
+                  >
+                    Filters
+                    <FontAwesomeIcon
+                      className="ml-1"
+                      icon={faAngleDown}
+                      size="sm"
+                    />
+                  </button>
+                </div>
+                <div className="control">
                   <button type="submit" className="button is-warning">
                     <FontAwesomeIcon icon={faSearch} />
                   </button>
@@ -172,6 +186,93 @@ export default function Home() {
                 </button>
               </div>
             </div>
+            {showFilterModal && (
+              <div className="modal is-active">
+                <div className="modal-background"></div>
+                <div className="modal-card">
+                  <header className="modal-card-head">
+                    <p className="modal-card-title">Filter and Sort</p>
+                    <button
+                      className="delete"
+                      aria-label="close"
+                      onClick={() => setShowFilterModal(false)}
+                    ></button>
+                  </header>
+                  <section className="modal-card-body">
+                    <div className="columns is-centered is-mobile">
+                      <div className="column field">
+                        <label className="label">Categories</label>
+                        <div className="control is-expanded">
+                          <div className="select is-fullwidth">
+                            <select>
+                              <option value="Food">Food</option>
+                              <option value="electronics">Electronics</option>
+                              <option value="furniture">Furniture</option>
+                              <option value="clothing">Clothing</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="column field">
+                        <label className="label">Sort By</label>
+                        <div className="control is-expanded">
+                          <div className="select is-fullwidth">
+                            <select>
+                              <option value="relevance">Relevance</option>
+                              <option value="uploadDate">Upload Date</option>
+                              <option value="priceAsc">
+                                Price (Low to High)
+                              </option>
+                              <option value="priceDesc">
+                                Price (High to Low)
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="columns is-centered is-mobile">
+                      <div className="column field">
+                        <label className="label ml-2">Min</label>
+                        <div className="field has-addons">
+                          <p className="control">
+                            <a className="button is-static">$</a>
+                          </p>
+                          <div className="control">
+                            <input className="input" type="number" min="0" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="column field">
+                        <label className="label ml-2">Max</label>
+                        <div className="field has-addons">
+                          <p className="control">
+                            <a className="button is-static">$</a>
+                          </p>
+                          <div className="control">
+                            <input className="input" type="number" min="0" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                  <footer className="modal-card-foot">
+                    <button
+                      className="button is-success"
+                      onClick={() => setShowFilterModal(false)}
+                    >
+                      Apply Filters
+                    </button>
+                    <button
+                      className="button"
+                      onClick={() => setShowFilterModal(false)}
+                    >
+                      Cancel
+                    </button>
+                  </footer>
+                </div>
+              </div>
+            )}
             {items.map((item, idx) => (
               <>
                 <ItemCard key={idx} item={item} />
