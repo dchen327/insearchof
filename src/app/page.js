@@ -123,7 +123,7 @@ export default function Home() {
         {user ? (
           <>
             <form className="flex justify-center mt-2" onSubmit={searchItems}>
-              <div className="field w-full mx-5">
+              <div className="field w-full mx-2">
                 <div className="control is-expanded flex flex-row">
                   <input
                     className="input"
@@ -132,16 +132,16 @@ export default function Home() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
-                  <button type="submit" className="button is-dark">
+                  <button type="submit" className="button is-warning">
                     <FontAwesomeIcon icon={faSearch} />
                   </button>
                 </div>
               </div>
             </form>
             <div className="columns is-centered is-mobile mx-1 mt-1 mb-0">
-              <div className="column is-one-third has-text-centered">
+              <div className="column is-one-third has-text-centered p-1">
                 <button
-                  className={`w-full text-white py-2 px-4 rounded ${
+                  className={`w-full text-white py-2 px-2 rounded ${
                     marketSelected ? "bg-blue-500" : "bg-blue-300"
                   }`}
                   onClick={() => setMarketSelected(!marketSelected)}
@@ -149,9 +149,9 @@ export default function Home() {
                   Market
                 </button>
               </div>
-              <div className="column is-one-third has-text-centered">
+              <div className="column is-one-third has-text-centered p-1">
                 <button
-                  className={`w-full text-white py-2 px-4 rounded ${
+                  className={`w-full text-white py-2 px-2 rounded ${
                     rentalsSelected ? "bg-green-500" : "bg-green-300"
                   }`}
                   onClick={() => setRentalsSelected(!rentalsSelected)}
@@ -159,9 +159,9 @@ export default function Home() {
                   Rentals
                 </button>
               </div>
-              <div className="column is-one-third has-text-centered">
+              <div className="column is-one-third has-text-centered p-1">
                 <button
-                  className={`w-full text-white py-2 px-4 rounded ${
+                  className={`w-full text-white py-2 px-2 rounded ${
                     requestsSelected ? "bg-purple-500" : "bg-purple-300"
                   }`}
                   onClick={() => setRequestsSelected(!requestsSelected)}
