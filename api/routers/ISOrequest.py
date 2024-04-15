@@ -1,6 +1,16 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from typing import Optional
 from pydantic import BaseModel, Field, validator
+
+# import firebase_admin
+# from firebase_admin import credentials
+# from firebase_admin import firestore
+
+# 'technically .env file'
+# cred = credentials.Certificate('path/to/serviceAccountKey.json')
+# firebase_admin.initialize_app(cred)
+# db = firestore.client()
+
 
 
 router = APIRouter(
@@ -121,7 +131,12 @@ class NotificationService:
 
 
 @router.post("/upload", response_model=UploadRequestResponse)
-def upload_request(request: ISOrequester, current_user):
+async def upload_request(
+    title: str = Form(...),
+    description: Optional[str] = Form(None),
+    price: float = Form(...),
+    image: Optional[UploadFile] = File(None)
+):
     '''
     Uploads the ISO request to the database. This endpoint is protected and requires
     the user to be authenticated.
@@ -137,7 +152,31 @@ def upload_request(request: ISOrequester, current_user):
 
     Returns a JSON response with the result of the operation.
     '''
-    return {"message": "Request uploaded", "request_id": "new_request_id"}
+    
+    # Validate the price
+    if price < 0:
+        raise HTTPException(
+            status_code=400, detail="Price must be non-negative.")
+
+    # If there is an image, use the upload_image endpoint logic
+    if image:
+        image_data = await upload_image(image)
+        image_url = image_data["message"]
+    else:
+        image_url = None
+
+    # Now save the request data to the database (Firestore or Realtime Database)
+    # You would use your Firebase Admin SDK here
+
+    # Example of adding a document to Firestore
+    doc_ref = await db.collection("ISOrequests").add({
+        "title": title,
+        "description": description,
+        "price": price,
+        "image": image_url
+    })
+
+    return {"message": "Request uploaded", "request_id": doc_ref.id}
 
 
 @router.patch("/update/{request_id}", response_model=UpdateRequestResponse)
@@ -194,7 +233,15 @@ async def upload_image(file: UploadFile = File()):
     """
     # Logic to ensure correct file size and format
     # Stores the reference UUID in the Firestore listing of the image
-    return {"message": "Image uploaded successfully"}
+
+    # Check the file size and type here (you might use file.content_type)
+    if file.content_type not in ["image/jpeg", "image/png"]:
+        raise HTTPException(status_code=415, detail="Unsupported file type.")
+    
+    # Assuming you have a function to upload to Firebase Storage and return the URL
+    image_url = await upload_to_storage_service(file)
+
+    return {"message": "Image uploaded successfully", "image_url": image_url}
 
 
 '''
