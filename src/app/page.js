@@ -14,6 +14,9 @@ export default function Home() {
   const imagesRef = ref(storage, "images");
   const [imageUpload, setImageUpload] = useState(null);
   const [search, setSearch] = useState("");
+  const [marketSelected, setMarketSelected] = useState(true);
+  const [rentalsSelected, setRentalsSelected] = useState(true);
+  const [requestsSelected, setRequestsSelected] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -129,12 +132,44 @@ export default function Home() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
-                  <button type="submit" className="button is-primary">
+                  <button type="submit" className="button is-dark">
                     <FontAwesomeIcon icon={faSearch} />
                   </button>
                 </div>
               </div>
             </form>
+            <div className="columns is-centered is-mobile mx-1 mt-1 mb-0">
+              <div className="column is-one-third has-text-centered">
+                <button
+                  className={`w-full text-white py-2 px-4 rounded ${
+                    marketSelected ? "bg-blue-500" : "bg-blue-300"
+                  }`}
+                  onClick={() => setMarketSelected(!marketSelected)}
+                >
+                  Market
+                </button>
+              </div>
+              <div className="column is-one-third has-text-centered">
+                <button
+                  className={`w-full text-white py-2 px-4 rounded ${
+                    rentalsSelected ? "bg-green-500" : "bg-green-300"
+                  }`}
+                  onClick={() => setRentalsSelected(!rentalsSelected)}
+                >
+                  Rentals
+                </button>
+              </div>
+              <div className="column is-one-third has-text-centered">
+                <button
+                  className={`w-full text-white py-2 px-4 rounded ${
+                    requestsSelected ? "bg-purple-500" : "bg-purple-300"
+                  }`}
+                  onClick={() => setRequestsSelected(!requestsSelected)}
+                >
+                  Requests
+                </button>
+              </div>
+            </div>
             {items.map((item, idx) => (
               <>
                 <ItemCard key={idx} item={item} />
