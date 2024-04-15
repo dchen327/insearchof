@@ -87,14 +87,14 @@ export default function Home() {
       itemID: Math.floor(Math.random() * 1000000), // Random number for itemId
       sellerUserID: "davidchen@hmc.edu",
       title: "Microwave",
-      description: `This is a description for item ${Math.floor(
-        Math.random() * 1000
-      )}`, // Random description
+      description:
+        "Upgrade your kitchen with the Chef's Choice 900W Digital Microwave Oven, the perfect blend of style, efficiency, and convenience. This sleek stainless steel microwave is designed to meet all your cooking needs with ease and precision.",
       category: categories[Math.floor(Math.random() * categories.length)], // Random category
       price: (Math.random() * 100).toFixed(2), // Random price
       images: ["/images/microwave.jpg"], // Random image URL
       status: statuses[Math.floor(Math.random() * statuses.length)], // Random status
       timestamp: new Date().toISOString(), // Current timestamp
+      timeSinceListing: "3h",
     };
 
     return item;
