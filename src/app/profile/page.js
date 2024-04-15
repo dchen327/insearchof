@@ -1,8 +1,7 @@
-"use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { auth, googleProvider } from "../firebase/config";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import axios from "axios"; // Added axios import
 
 export default function Page() {
   const [user, setUser] = useState(null);
@@ -10,7 +9,10 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([]);
   const [transactionHistory, setTransactionHistory] = useState([]);
-  const router = useRouter();
+  const [showNameTooltip, setShowNameTooltip] = useState(false); // Added state variables for tooltips
+  const [showEmailTooltip, setShowEmailTooltip] = useState(false);
+  const [showPhoneNumberTooltip, setShowPhoneNumberTooltip] = useState(false);
+  const [showLocationTooltip, setShowLocationTooltip] = useState(false);
 
   // performs side effects in function components. subscribes authentication
   // state changes when the component mounts. when authentication state changes
@@ -29,7 +31,7 @@ export default function Page() {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [router]);
+  }, []);
 
   // logs the user out by using the firebase's signOut method
   const logOut = async () => {
@@ -49,30 +51,58 @@ export default function Page() {
     }
   };
 
-  // updates the user's profile data by taking new profile data as input
-  // and then uses updateProfile from firebase to update a user's profile
-  const updateUserProfile = async (newProfileData) => {
+  const uploadContactInformation = async () => {
+    if (!name) {
+      alert('Name is required');
+      return;
+    }
+
+    if (!email) {
+      alert('Email is required');
+      return;
+    }
+
+    if (!location) {
+      alert('Location is required');
+      return;
+    }
+
+
+    // Then, create a document in Firestore with the item data
+    const userData = {
+      name,
+      email,
+      phoneNumber,
+      location, 
+      timestamp: new Date() // You can use Firebase server timestamps as well
+    };
+
     try {
-      // Update user profile data
-      await auth.currentUser.updateProfile(newProfileData);
-      // Update the user state with the new profile data
-      setUser({ ...user, ...newProfileData });
-    } catch (err) {
-      console.error(err);
-      setError("Failed to update profile");
+      await addDoc(itemsCollectionRef, userData);
+      alert('Request uploaded successfully!');
+
+      // Clear the form
+      setName('');     
+      setEmail(''); 
+      setPhoneNumber('');      
+      setLocation(null);  
+    } catch (error) {
+      console.error('Error uploading contact information:', error);
+      alert('Failed to upload contact inforation: ' + error.message);
     }
   };
 
-  const handleProfileUpdate = async (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    const newProfileData = {
-      name: formData.get("name"),
-      email: formData.get("email"),
-      phone_number: formData.get("phone_number"),
-      location: formData.get("location"),
-    };
-    updateUserProfile(newProfileData);
+  const tooltipStyle = {
+    position: 'absolute',
+    top: '100%',
+    left: '0',
+    width: '75%', // Tooltip covers 75% of the input field
+    backgroundColor: '#f0f0f0',
+    padding: '10px',
+    borderRadius: '4px',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+    zIndex: '10',
+    marginTop: '5px'
   };
 
   const fetchListOfItems = async (email) => {
@@ -105,6 +135,32 @@ export default function Page() {
     }
   };
 
+  // updates the user's profile data by taking new profile data as input
+  // and then uses updateProfile from firebase to update a user's profile
+  const updateUserProfile = async (newProfileData) => {
+    try {
+      // Update user profile data
+      await auth.currentUser.updateProfile(newProfileData);
+      // Update the user state with the new profile data
+      setUser({ ...user, ...newProfileData });
+    } catch (err) {
+      console.error(err);
+      setError("Failed to update profile");
+    }
+  };
+
+  const handleProfileUpdate = async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const newProfileData = {
+      name: formData.get("name"),
+      email: formData.get("email"),
+      phone_number: formData.get("phone_number"),
+      location: formData.get("location"),
+    };
+    updateUserProfile(newProfileData);
+  };
+
   return (
     <>
       <div className="buttons">
@@ -119,63 +175,75 @@ export default function Page() {
         )}
       </div>
 
+      {['name', 'email', 'phoneNumber', 'location'].map((field) => (
+        <div key={field} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '5px' }}>
+          {field === 'name' && <input
+            type="text"
+            value={title}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Name (Required)"
+            style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1 }}
+          />}
+          {field === 'email' && <input
+            type="text"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email (Required)"
+            style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1 }}
+          />}
+          {field === 'phoneNumber' && <input
+            type="text"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="Phone Number"
+            style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1 }}
+          />}
+          {field === 'location' && <input
+            type="text"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="Location (Required)"
+            style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1 }}
+          />}
+        </div>
+      ))}
+
       <div>
         {user && (
-          <div>
-            <p>Welcome, {user.name}</p>
-            <p>Email: {user.email}</p>
-            <p>Phone number, {user.phone_number}</p>
-            <p>Location, {user.location}</p>
-            {/* Display profile picture if available */}
-            {user.photoURL && <img src={user.photoURL} alt="Profile" />}
-          </div>
-        )}
-
-        <div>
-          <ul>
-            <li>
-              <a href="/dashboard">Dashboard</a>
-            </li>
-            <li>
-              <a href="/settings">Settings</a>
-            </li>
-          </ul>
-        </div>
-        {user && (
-          <div>
-            <form onSubmit={handleProfileUpdate}>
-              <label>
-                Name:
-                <input type="text" name="name" defaultValue={user.name} />
-              </label>
-              <br />
-              <label>
-                Email:
-                <input type="text" name="email" defaultValue={user.email} />
-              </label>
-              <br />
-              <label>
-                Phone Number:
-                <input
-                  type="text"
-                  name="phone_number"
-                  defaultValue={user.phone_number}
-                />
-              </label>
-              <br />
-              <label>
-                Location:
-                <input
-                  type="text"
-                  name="location"
-                  defaultValue={user.location}
-                />
-              </label>
-              <br />
-              <button type="submit">Update Profile</button>
-            </form>
-            {error && <p>{error}</p>}
-          </div>
+          <>
+            <div>
+              <p>Welcome, {user.name}</p>
+              <p>Email: {user.email}</p>
+              <p>Phone number, {user.phone_number}</p>
+              <p>Location, {user.location}</p>
+              {/* Display profile picture if available */}
+              {user.photoURL && <img src={user.photoURL} alt="Profile" />}
+            </div>
+            <button
+              onClick={() => {
+                // Close any open tooltip and open the clicked one
+                setShowNameTooltip(field === 'name' ? !showTitleTooltip : false);
+                setShowEmailTooltip(field === 'email' ? !showDescriptionTooltip : false);
+                setShowPhoneNumberTooltip(field === 'phoneNumber' ? !showPriceTooltip : false);
+                setShowLocationTooltip(field === 'location' ? !showImageTooltip : false);
+              }}
+              style={{ position: 'relative', zIndex: '20' }}
+            >
+              ?
+            </button>
+            {showNameTooltip && <div style={tooltipStyle}>
+              The name of the user
+            </div>}
+            {showEmailTooltip && field === 'email' && <div style={tooltipStyle}>
+              The email of the user
+            </div>}
+            {showPhoneNumberTooltip && field === 'phoneNumber' && <div style={tooltipStyle}>
+              The phone number of the user
+            </div>}
+            {showLocationTooltip && field === 'location' && <div style={tooltipStyle}>
+              The location of the user for picking up requested item
+            </div>}
+          </>
         )}
       </div>
     </>
