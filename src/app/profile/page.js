@@ -3,7 +3,8 @@ import { auth } from "../firebase/config";
 import { useEffect, useState } from "react";
 import { signOut, onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
-//import signInWithGoogle;
+import { auth, googleProvider } from "./firebase/config";
+import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 
 export default function Page() {
   const [user, setUser] = useState(null);
@@ -37,6 +38,14 @@ export default function Page() {
     try {
       await signOut(auth);
       console.log("signed out");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
     } catch (err) {
       console.error(err);
     }
@@ -96,7 +105,7 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <>
@@ -108,7 +117,7 @@ export default function Page() {
                 ) : (
                   <button
                     className="button is-primary"
-                    //onClick={signInWithGoogle}
+                    onClick={signInWithGoogle}
                   >
                     <strong>Sign In</strong>
                   </button>
