@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter, File, Form, UploadFile, HTTPException
+from fastapi import FastAPI, APIRouter, File, Form, UploadFile, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 from pydantic import BaseModel, Field
 from firebase_admin import credentials, firestore, initialize_app
@@ -12,6 +13,21 @@ router = APIRouter(
     prefix='/insearchof',
     tags=['insearchof'],
 )
+
+app = FastAPI()
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
+
+app.include_router(router)
+
 
 cred_dict = json.loads(os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY'))
 cred = credentials.Certificate(cred_dict)
@@ -158,7 +174,7 @@ async def upload_request(iso_request: insearchof):
 
     Returns a JSON response with the result of the operation.
     '''
-    doc_ref = db.collection('insearchofs').document()
+    doc_ref = db.collection('insearchof').document()
     iso_request_data = iso_request.dict()
     doc_ref.set(iso_request_data)
     return {"message": "Request uploaded successfully", "request_id": doc_ref.id}

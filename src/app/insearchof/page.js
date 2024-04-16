@@ -63,8 +63,18 @@ export default function Page() {
   };
 
   const uploadRequest = async () => {
-    if (!title || price < 0 || !user) {
-      alert('Check your inputs or login status.');
+    if (!title) {
+      alert('Title is required.');
+      return;
+    }
+
+    if (price < 0) {
+      alert('Price cannot be negative.');
+      return;
+    }
+
+    if (!user) {
+      alert('You need to be logged in to submit a request.');
       return;
     }
 
@@ -74,25 +84,28 @@ export default function Page() {
       // Image upload logic goes here, returning an image URL
     }
 
-    const response = await fetch('http://localhost:3000/insearchof/upload', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        title: title,
-        description: description,
-        price: parseFloat(price),
-        imageUrl: imageUrl
-      })
-    });
-
-    const data = await response.json();
-    if (response.ok) {
-      alert('Request uploaded successfully!');
-      // Clear form fields here
-    } else {
-      alert('Failed to upload request: ' + data.message);
+    try {
+      const response = await fetch('http://localhost:8000/insearchof/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: title,
+          description: description,
+          price: parseFloat(price),
+          imageUrl: imageUrl
+        })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert('Request uploaded successfully!');
+      } else {
+        alert('Failed to upload request: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Failed to fetch:', error);
+      alert('An error occurred. Please try again.');
     }
   };
 
