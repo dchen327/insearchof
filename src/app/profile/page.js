@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { auth, googleProvider } from "../firebase/config";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
-import axios from "axios"; // Added axios import
 
 export default function Page() {
   const [user, setUser] = useState(null);
