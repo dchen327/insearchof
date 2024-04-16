@@ -1,27 +1,27 @@
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, APIRouter, File, Form, UploadFile, HTTPException
 from typing import Optional
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
+from firebase_admin import credentials, firestore, initialize_app
+import os
+import json
+from dotenv import load_dotenv
 
-# import firebase_admin
-# from firebase_admin import credentials
-# from firebase_admin import firestore
-
-# 'technically .env file'
-# cred = credentials.Certificate('path/to/serviceAccountKey.json')
-# firebase_admin.initialize_app(cred)
-# db = firestore.client()
-
-
+load_dotenv()
 
 router = APIRouter(
-    prefix='/ISOrequest',
-    tags=['ISOrequest'],
+    prefix='/insearchof',
+    tags=['insearchof'],
 )
 
+cred_dict = json.loads(os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY'))
+cred = credentials.Certificate(cred_dict)
+firebase_app = initialize_app(cred)
+db = firestore.client()
 
-class ISOrequesterFilters(BaseModel):
+
+class insearchoferFilters(BaseModel):
     """
-    The ISORequester backend component allows users to request items or services through
+    The insearchofer backend component allows users to request items or services through
     the application, functioning similarly to current ISO management practices.
     Users can specify various details about the item or service they are seeking,
     including title, optional description, optional image, and the price they are
@@ -54,14 +54,13 @@ class ISOrequesterFilters(BaseModel):
     price: float = Field(
         0.0, description="The price the requester is willing to pay. Must be non-negative.")
 
-    @validator('price')
     def validate_price(cls, price):
         if price < 0:
             raise ValueError('Price must be non-negative.')
         return price
 
 
-class ISOrequester(BaseModel):
+class insearchofer(BaseModel):
     pass
 
 
@@ -130,13 +129,20 @@ class NotificationService:
         print(f"Notification sent to {user_id}: {message}")
 
 
-@router.post("/upload", response_model=UploadRequestResponse)
-async def upload_request(
-    title: str = Form(...),
-    description: Optional[str] = Form(None),
-    price: float = Form(...),
-    image: Optional[UploadFile] = File(None)
-):
+class insearchof(BaseModel):
+    title: str
+    description: Optional[str] = None
+    price: float
+    image_url: Optional[str] = None
+
+    def validate_price(cls, value):
+        if value < 0:
+            raise ValueError("Price must be non-negative")
+        return value
+
+
+@router.post("/upload", response_model=dict)
+async def upload_request(iso_request: insearchof):
     '''
     Uploads the ISO request to the database. This endpoint is protected and requires
     the user to be authenticated.
@@ -152,31 +158,10 @@ async def upload_request(
 
     Returns a JSON response with the result of the operation.
     '''
-    
-    # Validate the price
-    if price < 0:
-        raise HTTPException(
-            status_code=400, detail="Price must be non-negative.")
-
-    # If there is an image, use the upload_image endpoint logic
-    if image:
-        image_data = await upload_image(image)
-        image_url = image_data["message"]
-    else:
-        image_url = None
-
-    # Now save the request data to the database (Firestore or Realtime Database)
-    # You would use your Firebase Admin SDK here
-
-    # Example of adding a document to Firestore
-    doc_ref = await db.collection("ISOrequests").add({
-        "title": title,
-        "description": description,
-        "price": price,
-        "image": image_url
-    })
-
-    return {"message": "Request uploaded", "request_id": doc_ref.id}
+    doc_ref = db.collection('insearchofs').document()
+    iso_request_data = iso_request.dict()
+    doc_ref.set(iso_request_data)
+    return {"message": "Request uploaded successfully", "request_id": doc_ref.id}
 
 
 @router.patch("/update/{request_id}", response_model=UpdateRequestResponse)
@@ -237,7 +222,7 @@ async def upload_image(file: UploadFile = File()):
     # Check the file size and type here (you might use file.content_type)
     if file.content_type not in ["image/jpeg", "image/png"]:
         raise HTTPException(status_code=415, detail="Unsupported file type.")
-    
+
     # Assuming you have a function to upload to Firebase Storage and return the URL
     image_url = await upload_to_storage_service(file)
 
@@ -274,7 +259,7 @@ Risk: Tests are formatted in many different ways, creating confusion
 SUMMARY OF CHANGES MADE:
 
 Non-negative Price Validation:
-Change: Added a validator within the ISOrequesterFilters Pydantic model to check for non-negative prices.
+Change: Added a validator within the insearchoferFilters Pydantic model to check for non-negative prices.
 Reason: Backend validation ensures integrity even if frontend validation fails or is bypassed, safeguarding the database against corrupt data.
 
 Editing/Deleting ISO Requests:

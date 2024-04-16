@@ -22,11 +22,6 @@ export default function Page() {
   const [showPriceTooltip, setShowPriceTooltip] = useState(false);
   const [showImageTooltip, setShowImageTooltip] = useState(false);
 
-  // Firestore reference
-  const db = getFirestore();
-  const itemsCollectionRef = collection(db, "items");
-
-
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -68,54 +63,39 @@ export default function Page() {
   };
 
   const uploadRequest = async () => {
-    if (!title) {
-      alert('Title is required.');
+    if (!title || price < 0 || !user) {
+      alert('Check your inputs or login status.');
       return;
     }
 
-    if (price < 0) {
-      alert('Price cannot be negative.');
-      return;
-    }
-
-    if (!user) {
-      alert('You need to be logged in to submit a request.');
-      return;
-    }
-
-    // First, upload the image to Firebase Storage if it exists
     let imageUrl = '';
     if (image) {
-      const imageId = uuidv4();
-      const imageStorageRef = storageRef(storage, `images/${imageId}`);
-      const snapshot = await uploadBytes(imageStorageRef, image);
-      imageUrl = await getDownloadURL(snapshot.ref);
+      // Handle image upload first if there is an image
+      // Image upload logic goes here, returning an image URL
     }
 
-    // Then, create a document in Firestore with the item data
-    const itemData = {
-      title,
-      description,
-      price: price || '0',
-      imageUrl, // Include the image URL from Storage
-      userId: user.uid,
-      timestamp: new Date() // You can use Firebase server timestamps as well
-    };
+    const response = await fetch('http://localhost:3000/insearchof/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        title: title,
+        description: description,
+        price: parseFloat(price),
+        imageUrl: imageUrl
+      })
+    });
 
-    try {
-      await addDoc(itemsCollectionRef, itemData);
+    const data = await response.json();
+    if (response.ok) {
       alert('Request uploaded successfully!');
-
-      // Clear the form
-      setTitle('');       // Assuming setTitle is the setter function for title
-      setDescription(''); // Assuming setDescription is the setter function for description
-      setPrice('');        // Assuming setPrice is the setter function for price
-      setImage(null);     // Assuming setImage is the setter function for image
-    } catch (error) {
-      console.error('Error uploading request:', error);
-      alert('Failed to upload request: ' + error.message);
+      // Clear form fields here
+    } else {
+      alert('Failed to upload request: ' + data.message);
     }
   };
+
 
   // Define the style for the tooltips outside of the return statement
   const tooltipStyle = {

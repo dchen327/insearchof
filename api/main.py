@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routers import catalog, profile, ISOrequest, sellList
+from .routers import catalog, insearchof, profile, sellList
 
 tags_metadata = [
     {
@@ -9,8 +9,8 @@ The catalog backend component is responsible for retrieving listings from the da
 It also handles when a user chooses to purchase an item, working with the profiles backend to show the seller's contact information.""",
     },
     {
-        'name': 'ISOrequest',
-        'description': """The ISORequester backend component allows users to request items or services through the application, functioning similarly to current ISO management practices.
+        'name': 'insearchof',
+        'description': """The insearchofer backend component allows users to request items or services through the application, functioning similarly to current ISO management practices.
         """
     },
     {
@@ -31,5 +31,5 @@ app = FastAPI(openapi_tags=tags_metadata,
 
 app.include_router(catalog.router)
 app.include_router(profile.router)
-app.include_router(ISOrequest.router)
+app.include_router(insearchof.router)
 app.include_router(sellList.router)
