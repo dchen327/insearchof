@@ -1,6 +1,13 @@
+import os
+import firebase_admin
+import json
 from fastapi import APIRouter
 from typing import Optional, List, Dict
 from pydantic import BaseModel, Field
+from firebase_admin import credentials, firestore
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 router = APIRouter(
@@ -83,3 +90,23 @@ def purchase_item(purchase_request: PurchaseRequest) -> PurchaseResponse:
     # Use the seller's email to find their profile and any other contact information (e.g. phone number, Discord, Messenger)
 
     return {"seller_email": "email@email.com", "seller_phone": "123-456-7890", "seller_discord": "username#1234", "seller_messenger": "profile"}
+
+
+def test_db_write():
+    # read FIREBASE_SERVICE_ACCOUNT_KEY from .env
+    service_key_dict = json.loads(os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY'))
+    # initialize firebase app
+    firebase_admin.initialize_app(
+        credentials.Certificate(service_key_dict))
+    # write a sample document to the database
+    db = firestore.client()
+    doc_ref = db.collection(u'items').document()
+    doc_ref.set({
+        u'name': u'item1',
+        u'price': 100,
+        u'category': u'electronics'
+    })
+
+
+if __name__ == '__main__':
+    test_db_write()
