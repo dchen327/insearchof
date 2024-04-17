@@ -1,11 +1,12 @@
 from fastapi import APIRouter
-from typing import Optional, List 
+from typing import Optional, List
 from pydantic import BaseModel, Field, constr
 
 router = APIRouter(
-    prefix='/profile',
+    prefix='/api/profile',
     tags=['profile'],
 )
+
 
 class UserProfile(BaseModel):
     """
@@ -28,10 +29,11 @@ class UserProfile(BaseModel):
 
     email: str = Field(None, description="The user's email.")
     name: str = Field(None, description="The user's name.")
-    profile_picture: Optional[str] = Field(None, description="An image of the profile picture representing the user.")
-    location: str = Field(None, description="The user's location on campus specifically")
+    profile_picture: Optional[str] = Field(
+        None, description="An image of the profile picture representing the user.")
+    location: str = Field(
+        None, description="The user's location on campus specifically")
     # phone_number: Optional[constr(regex=r'^\(\d{3}\)\s\d{3}-\d{4}$')]  = Field(None, description="The user's phone number") # type: ignore
-    
 
     class UploadContactInfoResponse(BaseModel):
         """
@@ -41,14 +43,12 @@ class UserProfile(BaseModel):
         message: str = Field(
             ..., description="Response message confirming the user's contact info has been uploaded.")
 
-
     class GetListOfItemsRequest(BaseModel):
         """
         Model for getting a list of items from the database.
         """
 
         requester_id: str = Field(..., description="The requester's email.")
-
 
     class GetListOfItemsResponse(BaseModel):
         """
@@ -57,7 +57,6 @@ class UserProfile(BaseModel):
 
         listingOfItems: List[dict] = Field(
             ..., description="List of items associated with the user.")
-
 
     class GetTransactionHistoryRequest(BaseModel):
         pass
@@ -70,7 +69,6 @@ class UserProfile(BaseModel):
         listingOfTransactionHistory: List[dict] = Field(
             ..., description="User's transaction history.")
 
-
     @router.put("/upload_contact_info")
     def upload_contact_info() -> UploadContactInfoResponse:
         """
@@ -78,7 +76,6 @@ class UserProfile(BaseModel):
         phone number, to the user database, making it visible to buyers.
         """
         return {"message": "Uploads users contact info successfully"}
-
 
     @router.get("/get_list_of_items")
     def get_list_of_items(get_list: GetListOfItemsRequest) -> GetListOfItemsResponse:
@@ -96,6 +93,6 @@ class UserProfile(BaseModel):
         Retrieves a list of the user's transaction history and stores it within the user database. This includes 
         recent transactions such as buys, sells, and ISOs. Users can use this method to review their own 
         transaction history and other users' transaction history.
-        
+
         """
         return {"listingOfTransactionHistory": []}

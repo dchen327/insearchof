@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 router = APIRouter(
-    prefix='/insearchof',
+    prefix='/api/insearchof',
     tags=['insearchof'],
 )
 

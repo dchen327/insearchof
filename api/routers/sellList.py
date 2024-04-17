@@ -7,12 +7,13 @@ from pydantic import BaseModel, Field, validator
 
 
 router = APIRouter(
-    prefix='/sell-list',
+    prefix='/api/sell-list',
     tags=['sell-list'],
 )
 
 # # Initialize Firebase Admin SDK here
 # db = firestore.client()
+
 
 class SellList(BaseModel):
     """
@@ -33,18 +34,24 @@ class SellList(BaseModel):
         update_listing(listing_id, item): Updates the status of an existing listing.
         upload_image(UploadFile)
     """
-    title: str = Field(None, description="The title of the item or service being listed.")
-    description: Optional[str] = Field(None, description="A detailed description of the item or service.")
-    category: str = Field(None, description="The category of the item or service.")
-    price: float = Field(0.00, description="The price of the item or service. Must be non-negative.")
+    title: str = Field(
+        None, description="The title of the item or service being listed.")
+    description: Optional[str] = Field(
+        None, description="A detailed description of the item or service.")
+    category: str = Field(
+        None, description="The category of the item or service.")
+    price: float = Field(
+        0.00, description="The price of the item or service. Must be non-negative.")
     image: Optional[str] = Field(None, description="An image based on ID")
-    availability_dates: Optional[str] = Field(None, description="Start and end dates for rentable item availability.")
+    availability_dates: Optional[str] = Field(
+        None, description="Start and end dates for rentable item availability.")
 
     @validator('price')
     def non_neg_price(cls, v):
         if v < 0:
             raise ValueError('Price must be non-negative')
         return v
+
 
 @router.post("/list-item")
 def list_item(item: SellList):
@@ -59,8 +66,9 @@ def list_item(item: SellList):
 
     # In the future, we could add a file of constants for status codes to make it more readable.
     if item.price < 0:
-        raise HTTPException(status_code=400, detail="Negative prices are not allowed")
-    
+        raise HTTPException(
+            status_code=400, detail="Negative prices are not allowed")
+
     # Including Firebase serverTimestamp for sorting by recent in the catalog/profile.
     # --- This code will be uncommented when we finalize our Firebase collections ---
     # item_dict = item.dict()
@@ -68,6 +76,7 @@ def list_item(item: SellList):
     # db.collection('listings').add(item_dict)
     # return {"message": "Listing added successfully", "item": item.dict()}
     return {"message": "Listing added successfully", "item": item}
+
 
 @router.patch("/update-listing/{listing_id}")
 def update_listing(listing_id: str, item: SellList):
@@ -84,11 +93,13 @@ def update_listing(listing_id: str, item: SellList):
     # listing_ref.update(item.dict())
     return {"message": "Listing updated successfully", "listing_id": listing_id, "item": item}
 
+
 @router.post("/upload-image")
 async def upload_image(file: UploadFile = File()):
     """ Allows user to upload an image for their item listing. """
     # Stores the reference UUID in the Firestore listing of the image
     return {"message": "Image uploaded successfully"}
+
 
 @router.delete("/delete-listing/{listing_id}")
 def delete_listing(listing_id: str):
@@ -100,6 +111,6 @@ def delete_listing(listing_id: str):
     # Delete from firebase db; uncomment when fully implemented
     # doc_ref = db.collection('listings').document(listing_id)
     # doc_ref.delete()
-    
+
     # For robustness, we will handle cases where the listing does not exist or the user does not have permission to delete it.
     return {"message": "Listing deleted successfully"}

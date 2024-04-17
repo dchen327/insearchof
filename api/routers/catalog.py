@@ -11,7 +11,7 @@ load_dotenv()
 
 
 router = APIRouter(
-    prefix='/catalog',
+    prefix='/api/catalog',
     tags=['catalog'],
 )
 
@@ -106,6 +106,11 @@ def test_db_write():
         u'price': 100,
         u'category': u'electronics'
     })
+
+
+@router.get('/test')
+def test():
+    return {"message": "Hello, World!"}
 
 
 if __name__ == '__main__':

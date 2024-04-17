@@ -52,7 +52,7 @@ export default function Home() {
   };
 
   const testAPI = async () => {
-    const res = await fetch("/api/helloworld");
+    const res = await fetch("/api/catalog/test");
     const data = await res.json();
     console.log(data);
   };
@@ -185,6 +185,9 @@ export default function Home() {
                   Requests
                 </button>
               </div>
+              <button className="button" onClick={() => testAPI()}>
+                test
+              </button>
             </div>
             {showFilterModal && (
               <div className="modal is-active">
