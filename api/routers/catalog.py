@@ -26,7 +26,7 @@ class ListingsFilters(BaseModel):
     min_price: float = Field(
         0, description="Minimum price of returned items. Must be at most the maximum price, and be a non-negative float with max 2 decimal places. ")
     max_price: float = Field(
-        None, description="Maximum price of returned items. Must at least the minimum price, and be a non-negative float with max 2 decimal places.")
+        0, description="Maximum price of returned items. Must at least the minimum price, and be a non-negative float with max 2 decimal places.")
     categories: List[str] = Field(
         None, description="Categories to filter by (e.g. electronics, furniture, clothing)")
 
@@ -79,6 +79,9 @@ def get_listings(filters: ListingsFilters) -> ListingsResponse:
 
     # If there are errors in the input, generates a descriptive error message and fails the API call
     # This allows the frontend to display the error to the users
+    search, sort, listing_types, min_price, max_price, categories = filters.search, filters.sort, filters.listing_types, filters.min_price, filters.max_price, filters.categories
+    if max_price == 0:
+        max_price = float('inf')
 
     return {"listings": []}
 
