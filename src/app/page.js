@@ -24,6 +24,8 @@ export default function Home() {
   const [sortBy, setSortBy] = useState("relevance");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null);
 
   // temp variables for filter modal
   const [tempCategory, setTempCategory] = useState(category);
@@ -341,10 +343,65 @@ export default function Home() {
             )}
             {items.map((item, idx) => (
               <>
-                <ItemCard key={idx} item={item} />
+                <div
+                  onClick={() => {
+                    setCurrentItem(item);
+                    setShowItemModal(true);
+                  }}
+                >
+                  <ItemCard key={idx} item={item} />
+                </div>
                 {idx !== items.length - 1 && <hr className="py-[1px]" />}
               </>
             ))}
+            {showItemModal && currentItem && (
+              <div className="modal is-active">
+                <div
+                  className="modal-background"
+                  onClick={() => setShowItemModal(false)}
+                ></div>
+                <div className="modal-card">
+                  <section className="modal-card-body">
+                    <div className="card is-shadowless">
+                      <div className="card-content px-4 py-">
+                        <div className="media mb-2 flex items-center">
+                          <div className="media-content">
+                            <p className="title is-4 mb-2">
+                              {currentItem.title}
+                            </p>
+                            <div className="flex flex-row mb-0">
+                              <p className="is-6">{currentItem.sellerUserID}</p>
+                              <p className="is-6 font-thin">•</p>
+                              {/* todo: backend calculations  */}
+                              <p className="is-6">
+                                {currentItem.timeSinceListing}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="bg-gray-100 rounded">
+                            <p className="p-1 text-lg text-black is-4">
+                              ${currentItem.price}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="content">{currentItem.description}</div>
+                      </div>
+                    </div>
+                  </section>
+                  <footer className="modal-card-foot">
+                    <button className="button is-success">
+                      Contact Seller
+                    </button>
+                    <button
+                      className="button"
+                      onClick={() => setShowItemModal(false)}
+                    >
+                      Close
+                    </button>
+                  </footer>
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <>
