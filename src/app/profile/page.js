@@ -11,11 +11,9 @@ export default function Page() {
   const [items, setItems] = useState([]);
   const [transactionHistory, setTransactionHistory] = useState([]);
   const [showNameTooltip, setShowNameTooltip] = useState(false); // Added state variables for tooltips
-  const [showEmailTooltip, setShowEmailTooltip] = useState(false);
   const [showPhoneNumberTooltip, setShowPhoneNumberTooltip] = useState(false);
   const [showLocationTooltip, setShowLocationTooltip] = useState(false);
   const [name, setName] = useState(""); // Added state variables for name, email, phoneNumber, and location
-  const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [location, setLocation] = useState("");
 
@@ -88,7 +86,6 @@ export default function Page() {
 
       // Clear the form
       setName("");
-      setEmail("");
       setPhoneNumber("");
       setLocation(null);
     } catch (error) {
@@ -171,169 +168,147 @@ export default function Page() {
 
   return (
     <>
-      <div className="buttons">
-        {user ? (
-          <button className="button is-light" onClick={logOut}>
-            Log out
-          </button>
-        ) : (
-          <button className="button is-primary" onClick={signInWithGoogle}>
-            <strong>Sign In</strong>
-          </button>
-        )}
-      </div>
-  
-      {["name", "email", "phoneNumber", "location"].map((field) => (
-        <div
-          key={field}
-          style={{
-            position: "relative",
-            display: "flex",
-            alignItems: "center",
-            gap: "5px",
-          }}
-        >
-          {field === "name" && (
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Name (Required)"
-              style={{
-                padding: "10px",
-                fontSize: "16px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                flexGrow: 1,
-              }}
-            />
-          )}
-          {field === "email" && (
-            <input
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email (Required)"
-              style={{
-                padding: "10px",
-                fontSize: "16px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                flexGrow: 1,
-                marginTop: "10px"
-              }}
-            />
-          )}
-          {field === "phoneNumber" && (
-            <input
-              type="text"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="Phone Number"
-              style={{
-                padding: "10px",
-                fontSize: "16px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                flexGrow: 1,
-                marginTop: "10px"
-              }}
-            />
-          )}
-          {field === "location" && (
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Location (Required)"
-              style={{
-                padding: "10px",
-                fontSize: "16px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                flexGrow: 1,
-                marginTop: "10px"
-              }}
-            />
-          )}
-        </div>
-      ))}
-  
-      <div className="container">
-        <button 
-          className="button is-primary" 
-          onClick={() => console.log("Add Location button clicked")}
-          style={{ marginTop: "10px" }}
-        >
-          Add Location
-        </button>
-  
-        <button 
-          className="button is-primary" 
-          onClick={() => console.log("Get users transaction history button clicked")}
-          style={{ marginTop: "10px" }}
-        >
-          Get transaction history
-        </button>
-  
-        <button 
-          className="button is-primary" 
-          onClick={() => console.log("Get users list of current items button clicked")}
-          style={{ marginTop: "10px" }}
-        >
-          Get list of current items
-        </button>
-      </div>
-  
       <div>
         {user && (
           <>
-            <div>
-              <p>Welcome, {user.name}</p>
-              <p>Email: {user.email}</p>
-              <p>Phone number, {user.phone_number}</p>
-              <p>Location, {user.location}</p>
-              {/* Display profile picture if available */}
-              {user.photoURL && <img src={user.photoURL} alt="Profile" />}
+            <div style={{
+              textAlign: 'center',
+              margin: '30px 0',
+            }}>
+              <h1>Welcome, {user.email}</h1>
             </div>
-            <button
-              onClick={() => {
-                // Close any open tooltip and open the clicked one
-                setShowNameTooltip(
-                  field === "name" ? !showNameTooltip : false
-                );
-                setShowEmailTooltip(
-                  field === "email" ? !showEmailTooltip : false
-                );
-                setShowPhoneNumberTooltip(
-                  field === "phoneNumber" ? !showPhoneNumberTooltip : false
-                );
-                setShowLocationTooltip(
-                  field === "location" ? !showLocationTooltip : false
-                );
-              }}
-              style={{ position: "relative", zIndex: "20" }}
-            >
-              ?
-            </button>
-            {showNameTooltip && (
-              <div style={tooltipStyle}>The name of the user</div>
-            )}
-            {showEmailTooltip && field === "email" && (
-              <div style={tooltipStyle}>The email of the user</div>
-            )}
-            {showPhoneNumberTooltip && field === "phoneNumber" && (
-              <div style={tooltipStyle}>The phone number of the user</div>
-            )}
-            {showLocationTooltip && field === "location" && (
-              <div style={tooltipStyle}>
-                The location of the user for picking up requested item
-              </div>
-            )}
+  
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              maxWidth: '500px',
+              margin: '0px auto',
+              padding: '20px',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+              borderRadius: '8px',
+              backgroundColor: '#fff',
+            }}>
+              {['name', 'phoneNumber', 'location', 'image'].map((field) => (
+                <div key={field} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  {field === "name" && (
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Name (Required)"
+                      style={{
+                        padding: "10px",
+                        fontSize: "16px",
+                        border: "1px solid #ccc",
+                        borderRadius: "4px",
+                        flexGrow: 1,
+                      }}
+                    />
+                  )}
+                  {field === "phoneNumber" && (
+                    <input
+                      type="text"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="Phone Number"
+                      style={{
+                        padding: "10px",
+                        fontSize: "16px",
+                        border: "1px solid #ccc",
+                        borderRadius: "4px",
+                        flexGrow: 1,
+                      }}
+                    />
+                  )}
+                  {field === "location" && (
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="Location (Required)"
+                      style={{
+                        padding: "10px",
+                        fontSize: "16px",
+                        border: "1px solid #ccc",
+                        borderRadius: "4px",
+                        flexGrow: 1,
+                      }}
+                    />
+                  )}
+                  {/* {field === 'image' && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <label style={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+                        <span style={{ marginRight: '10px', fontSize: '16px' }}>Image (optional)</span>
+                        <input
+                          type="file"
+                          //onChange={handleImageChange}
+                          accept="image/*"
+                          style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1 }}
+                        />
+                      </label>
+                    </div>
+                  )} */}
+                  <button
+                    onClick={() => {
+                      setShowNameTooltip(
+                        field === "name" ? !showNameTooltip : false
+                      );
+                      setShowPhoneNumberTooltip(
+                        field === "phoneNumber" ? !showPhoneNumberTooltip : false
+                      );
+                      setShowLocationTooltip(
+                        field === "location" ? !showLocationTooltip : false
+                      );
+                    }}
+                    style={{ position: 'relative', zIndex: '20' }}
+                  >
+                  </button>
+                  {showNameTooltip && field === "name" && (
+                    <div style={tooltipStyle}>The user's name</div>
+                  )}
+                  {showPhoneNumberTooltip && field === "phoneNumber" && (
+                    <div style={tooltipStyle}>The phone number of the user</div>
+                  )}
+                  {showLocationTooltip && field === "location" && (
+                    <div style={tooltipStyle}>
+                      The location of the user for picking up requested item
+                    </div>
+                  )}
+                </div>
+              ))}
+              <button className="button is-primary" onClick={updateUserProfile} style={{
+                padding: '10px 20px',
+                fontSize: '16px',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}>
+                Update user info
+              </button>
+              <button
+                className="button is-primary"
+                //onClick={() => console.log("Get users transaction history button clicked")}
+                style={{ }}
+              >
+              Get transaction history
+              </button>
+        
+              <button
+                className="button is-primary"
+                //onClick={() => console.log("Get users list of items button clicked")}
+                style={{ }}
+              >
+              Get list of items
+              </button>   
+  
+              {/* {imagePreviewUrl && <img src={imagePreviewUrl} alt="Preview" style={{ maxWidth: '100%', marginTop: '20px' }} />} */}
+            </div>
           </>
         )}
       </div>
+  
     </>
   );
-  
-}
+}  
