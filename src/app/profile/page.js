@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { auth, googleProvider } from "../firebase/config";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
   const [user, setUser] = useState(null);
@@ -16,7 +16,7 @@ export default function Page() {
   const [name, setName] = useState(""); // Added state variables for name, email, phoneNumber, and location
   const [phoneNumber, setPhoneNumber] = useState("");
   const [location, setLocation] = useState("");
-
+  const router = useRouter();
 
   // performs side effects in function components. subscribes authentication
   // state changes when the component mounts. when authentication state changes
@@ -35,13 +35,13 @@ export default function Page() {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   // logs the user out by using the firebase's signOut method
   const logOut = async () => {
     try {
       await signOut(auth);
-      console.log("signed out");
+      router.push("/");
     } catch (err) {
       console.error(err);
     }
@@ -110,9 +110,11 @@ export default function Page() {
   const fetchListOfItems = async (email) => {
     try {
       setLoading(true);
-      const response = await fetch('/profile/get_list_of_items?requester_id=${email}');
+      const response = await fetch(
+        "/profile/get_list_of_items?requester_id=${email}"
+      );
       if (!response.ok) {
-        throw new Error('Failed to fetch list of items');
+        throw new Error("Failed to fetch list of items");
       }
       setItems(response.data.listingOfItems);
     } catch (err) {
@@ -126,9 +128,11 @@ export default function Page() {
   const fetchTransactionHistory = async (email) => {
     try {
       setLoading(true);
-      const response = await fetch('/profile/get_transaction_history?requester_id=${email}');
+      const response = await fetch(
+        "/profile/get_transaction_history?requester_id=${email}"
+      );
       if (!response.ok) {
-        throw new Error('Failed to fetch transaction history');
+        throw new Error("Failed to fetch transaction history");
       }
       const data = await response.json();
       setTransactionHistory(data.listingOfTransactionHistory);
@@ -168,6 +172,127 @@ export default function Page() {
 
   return (
     <>
+<<<<<<< HEAD
+=======
+      <div className="buttons">
+        {user ? (
+          <button className="button is-light" onClick={logOut}>
+            Log out
+          </button>
+        ) : (
+          <button className="button is-primary" onClick={signInWithGoogle}>
+            <strong>Sign In</strong>
+          </button>
+        )}
+      </div>
+
+      {["name", "email", "phoneNumber", "location"].map((field) => (
+        <div
+          key={field}
+          style={{
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+          }}
+        >
+          {field === "name" && (
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Name (Required)"
+              style={{
+                padding: "10px",
+                fontSize: "16px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                flexGrow: 1,
+              }}
+            />
+          )}
+          {field === "email" && (
+            <input
+              type="text"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email (Required)"
+              style={{
+                padding: "10px",
+                fontSize: "16px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                flexGrow: 1,
+                marginTop: "10px",
+              }}
+            />
+          )}
+          {field === "phoneNumber" && (
+            <input
+              type="text"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="Phone Number"
+              style={{
+                padding: "10px",
+                fontSize: "16px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                flexGrow: 1,
+                marginTop: "10px",
+              }}
+            />
+          )}
+          {field === "location" && (
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Location (Required)"
+              style={{
+                padding: "10px",
+                fontSize: "16px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                flexGrow: 1,
+                marginTop: "10px",
+              }}
+            />
+          )}
+        </div>
+      ))}
+
+      <div className="container">
+        <button
+          className="button is-primary"
+          onClick={() => console.log("Add Location button clicked")}
+          style={{ marginTop: "10px" }}
+        >
+          Add Location
+        </button>
+
+        <button
+          className="button is-primary"
+          onClick={() =>
+            console.log("Get users transaction history button clicked")
+          }
+          style={{ marginTop: "10px" }}
+        >
+          Get transaction history
+        </button>
+
+        <button
+          className="button is-primary"
+          onClick={() =>
+            console.log("Get users list of current items button clicked")
+          }
+          style={{ marginTop: "10px" }}
+        >
+          Get list of current items
+        </button>
+      </div>
+
+>>>>>>> cdc7952ab1e15b42239526693069a77616a9cd44
       <div>
         {user && (
           <>
@@ -305,10 +430,49 @@ export default function Page() {
   
               {/* {imagePreviewUrl && <img src={imagePreviewUrl} alt="Preview" style={{ maxWidth: '100%', marginTop: '20px' }} />} */}
             </div>
+<<<<<<< HEAD
+=======
+            <button
+              onClick={() => {
+                // Close any open tooltip and open the clicked one
+                setShowNameTooltip(field === "name" ? !showNameTooltip : false);
+                setShowEmailTooltip(
+                  field === "email" ? !showEmailTooltip : false
+                );
+                setShowPhoneNumberTooltip(
+                  field === "phoneNumber" ? !showPhoneNumberTooltip : false
+                );
+                setShowLocationTooltip(
+                  field === "location" ? !showLocationTooltip : false
+                );
+              }}
+              style={{ position: "relative", zIndex: "20" }}
+            >
+              ?
+            </button>
+            {showNameTooltip && (
+              <div style={tooltipStyle}>The name of the user</div>
+            )}
+            {showEmailTooltip && field === "email" && (
+              <div style={tooltipStyle}>The email of the user</div>
+            )}
+            {showPhoneNumberTooltip && field === "phoneNumber" && (
+              <div style={tooltipStyle}>The phone number of the user</div>
+            )}
+            {showLocationTooltip && field === "location" && (
+              <div style={tooltipStyle}>
+                The location of the user for picking up requested item
+              </div>
+            )}
+>>>>>>> cdc7952ab1e15b42239526693069a77616a9cd44
           </>
         )}
       </div>
   
     </>
   );
+<<<<<<< HEAD
 }  
+=======
+}
+>>>>>>> cdc7952ab1e15b42239526693069a77616a9cd44
