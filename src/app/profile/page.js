@@ -182,7 +182,7 @@ export default function Page() {
           </button>
         )}
       </div>
-
+  
       {["name", "email", "phoneNumber", "location"].map((field) => (
         <div
           key={field}
@@ -220,6 +220,7 @@ export default function Page() {
                 border: "1px solid #ccc",
                 borderRadius: "4px",
                 flexGrow: 1,
+                marginTop: "10px"
               }}
             />
           )}
@@ -235,6 +236,7 @@ export default function Page() {
                 border: "1px solid #ccc",
                 borderRadius: "4px",
                 flexGrow: 1,
+                marginTop: "10px"
               }}
             />
           )}
@@ -250,12 +252,39 @@ export default function Page() {
                 border: "1px solid #ccc",
                 borderRadius: "4px",
                 flexGrow: 1,
+                marginTop: "10px"
               }}
             />
           )}
         </div>
       ))}
-
+  
+      <div className="container">
+        <button 
+          className="button is-primary" 
+          onClick={() => console.log("Add Location button clicked")}
+          style={{ marginTop: "10px" }}
+        >
+          Add Location
+        </button>
+  
+        <button 
+          className="button is-primary" 
+          onClick={() => console.log("Get users transaction history button clicked")}
+          style={{ marginTop: "10px" }}
+        >
+          Get transaction history
+        </button>
+  
+        <button 
+          className="button is-primary" 
+          onClick={() => console.log("Get users list of current items button clicked")}
+          style={{ marginTop: "10px" }}
+        >
+          Get list of current items
+        </button>
+      </div>
+  
       <div>
         {user && (
           <>
@@ -306,4 +335,5 @@ export default function Page() {
       </div>
     </>
   );
+  
 }
