@@ -270,7 +270,7 @@ export default function Page() {
                   >
                   </button>
                   {showNameTooltip && field === "name" && (
-                    <div style={tooltipStyle}>The user's name</div>
+                    <div style={tooltipStyle}>The users name</div>
                   )}
                   {showPhoneNumberTooltip && field === "phoneNumber" && (
                     <div style={tooltipStyle}>The phone number of the user</div>
