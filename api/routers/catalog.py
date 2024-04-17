@@ -60,7 +60,8 @@ class PurchaseResponse(BaseModel):
         None, description="The seller's Facebook Messenger profile.")
 
 
-@router.get("/listings")
+@router.post("/listings")
+# def get_listings(filters: ListingsFilters) -> ListingsResponse:
 def get_listings(filters: ListingsFilters) -> ListingsResponse:
     ''' Get item listings based on search parameters. '''
     # First check that input is valid, then query the database for items that match the search parameters

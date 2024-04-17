@@ -39,7 +39,7 @@ export default function Home() {
       setTempMinPrice(minPrice);
       setTempMaxPrice(maxPrice);
     }
-  }, [showFilterModal]);
+  }, [category, maxPrice, minPrice, showFilterModal, sortBy]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -103,10 +103,25 @@ export default function Home() {
 
   const searchItems = async (e) => {
     e.preventDefault();
-    console.log(search);
-    // const res = await fetch(`/api/search?query=${search}`);
-    // const data = await res.json();
-    // console.log(data);
+    const listingTypes = [];
+    if (marketSelected) listingTypes.push("buy");
+    if (rentalsSelected) listingTypes.push("rent");
+    if (requestsSelected) listingTypes.push("request");
+
+    const response = await fetch("/api/catalog/listings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        search,
+        sort: sortBy,
+        listing_types: listingTypes,
+        min_price: minPrice || 0,
+        max_price: maxPrice || 0,
+        categories: category !== "None" ? [category] : [],
+      }),
+    });
   };
 
   const generateRandomItem = () => {
