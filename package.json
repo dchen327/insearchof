@@ -3,18 +3,26 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "fastapi-dev": "pip3 install -r requirements.txt && python3 -m uvicorn api.main:app --reload",
+    "fastapi-dev": "pip install -r requirements.txt && python -m uvicorn api.main:app --reload",
     "next-dev": "next dev",
     "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\""
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.5.2",
+    "@fortawesome/free-brands-svg-icons": "^6.5.2",
+    "@fortawesome/free-regular-svg-icons": "^6.5.2",
+    "@fortawesome/free-solid-svg-icons": "^6.5.2",
+    "@fortawesome/react-fontawesome": "^0.2.0",
+    "axios": "^1.6.8",
     "bulma": "^0.9.4",
     "concurrently": "^8.2.2",
-    "firebase": "^10.7.2",
+    "firebase": "^10.9.0",
     "next": "14.1.0",
     "react": "^18",
     "react-dom": "^18",
-    "vercel": "^33.2.0"
+    "react-firebase-hooks": "^5.1.1",
+    "uuid": "^9.0.1",
+    "vercel": "^32.0.1"
   },
   "devDependencies": {
     "autoprefixer": "^10.0.1",

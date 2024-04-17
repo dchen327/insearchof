@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routers import catalog, profiles
+from .routers import catalog, insearchof, profile, sellList
 
 tags_metadata = [
     {
@@ -10,7 +10,10 @@ tags_metadata = [
     },
 ]
 
-app = FastAPI(openapi_tags=tags_metadata)
+app = FastAPI(openapi_tags=tags_metadata,
+              swagger_ui_parameters={'defaultModelsExpandDepth': -1})
 
 app.include_router(catalog.router)
-app.include_router(profiles.router)
+app.include_router(profile.router)
+app.include_router(insearchof.router)
+app.include_router(sellList.router)
