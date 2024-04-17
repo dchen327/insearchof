@@ -185,9 +185,6 @@ export default function Home() {
                   Requests
                 </button>
               </div>
-              <button className="button" onClick={() => testAPI()}>
-                test
-              </button>
             </div>
             {showFilterModal && (
               <div className="modal is-active">
