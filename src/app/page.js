@@ -20,7 +20,7 @@ export default function Home() {
   const [requestsSelected, setRequestsSelected] = useState(true);
 
   // filter modal
-  const [category, setCategory] = useState("None");
+  const [category, setCategory] = useState("All");
   const [sortBy, setSortBy] = useState("relevance");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -108,19 +108,20 @@ export default function Home() {
     if (rentalsSelected) listingTypes.push("rent");
     if (requestsSelected) listingTypes.push("request");
 
-    const response = await fetch("/api/catalog/listings", {
-      method: "POST",
+    const params = new URLSearchParams();
+    params.append("search", search);
+    params.append("sort", sortBy);
+    params.append("min_price", minPrice || 0);
+    params.append("max_price", maxPrice || 0);
+
+    listingTypes.forEach((type) => params.append("listing_types", type));
+    params.append("categories", category);
+
+    const response = await fetch(`/api/catalog/listings?${params.toString()}`, {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        search,
-        sort: sortBy,
-        listing_types: listingTypes,
-        min_price: minPrice || 0,
-        max_price: maxPrice || 0,
-        categories: category !== "None" ? [category] : [],
-      }),
     });
   };
 
@@ -324,7 +325,6 @@ export default function Home() {
                         setMinPrice(tempMinPrice);
                         setMaxPrice(tempMaxPrice);
                         setShowFilterModal(false);
-                        console.log(tempMinPrice);
                       }}
                     >
                       Apply Filters

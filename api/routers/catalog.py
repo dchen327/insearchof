@@ -1,8 +1,8 @@
 import os
 import firebase_admin
 import json
-from fastapi import APIRouter
-from typing import Optional, List, Dict
+from fastapi import APIRouter, Query, Depends
+from typing import Annotated, Optional, List
 from pydantic import BaseModel, Field
 from firebase_admin import credentials, firestore
 from dotenv import load_dotenv
@@ -21,14 +21,14 @@ class ListingsFilters(BaseModel):
         default='', description="The search query: searches item names and descriptions.")
     sort: str = Field(
         default='relevance', description="Options for sorting (ascending/descending): relevance, upload date, price")
-    listing_types: List[str] = Field(
-        ['buy', 'rent', 'request'], description="The types of listing to return (buy, rent, or request)")
+    listing_types: Annotated[list[str], Query()] = Field(
+        description="The types of listing to return (buy, rent, or request)")
     min_price: float = Field(
         0, description="Minimum price of returned items. Must be at most the maximum price, and be a non-negative float with max 2 decimal places. ")
     max_price: float = Field(
         0, description="Maximum price of returned items. Must at least the minimum price, and be a non-negative float with max 2 decimal places.")
     categories: List[str] = Field(
-        None, description="Categories to filter by (e.g. electronics, furniture, clothing)")
+        ['None'], description="Categories to filter by (e.g. electronics, furniture, clothing)")
 
 
 class Listing(BaseModel):
@@ -60,9 +60,21 @@ class PurchaseResponse(BaseModel):
         None, description="The seller's Facebook Messenger profile.")
 
 
-@router.post("/listings")
-# def get_listings(filters: ListingsFilters) -> ListingsResponse:
-def get_listings(filters: ListingsFilters) -> ListingsResponse:
+@router.get("/listings")
+def get_listings(
+    search: str = Query(
+        default='', description="The search query: searches item names and descriptions."),
+    sort: str = Query(default='relevance',
+                      description="Options for sorting (ascending/descending): relevance, upload date, price"),
+    listing_types: List[str] = Query(
+        default=[], description="The types of listing to return (buy, rent, or request)"),
+    min_price: float = Query(
+        default=0, description="Minimum price of returned items. Must be at most the maximum price, and be a non-negative float with max 2 decimal places."),
+    max_price: float = Query(
+        default=0, description="Maximum price of returned items. Must at least the minimum price, and be a non-negative float with max 2 decimal places."),
+    categories: List[str] = Query(default=[
+                                  'None'], description="Categories to filter by (e.g. electronics, furniture, clothing)")
+) -> ListingsResponse:
     ''' Get item listings based on search parameters. '''
     # First check that input is valid, then query the database for items that match the search parameters
     # For the default blank search, we return all items and sort by most recent
@@ -79,14 +91,16 @@ def get_listings(filters: ListingsFilters) -> ListingsResponse:
 
     # If there are errors in the input, generates a descriptive error message and fails the API call
     # This allows the frontend to display the error to the users
-    search, sort, listing_types, min_price, max_price, categories = filters.search, filters.sort, filters.listing_types, filters.min_price, filters.max_price, filters.categories
     if max_price == 0:
         max_price = float('inf')
+
+    # print all
+    print(search, sort, listing_types, min_price, max_price, categories)
 
     return {"listings": []}
 
 
-@router.get("/purchase")
+@ router.get("/purchase")
 def purchase_item(purchase_request: PurchaseRequest) -> PurchaseResponse:
     ''' A buyer indicates to a seller that they'd want to purchase an item. Query profiles backend for seller\'s contact information and return for the frontend. '''
     # First validates inputs
@@ -112,7 +126,7 @@ def test_db_write():
     })
 
 
-@router.get('/test')
+@ router.get('/test')
 def test():
     return {"message": "Hello, World!"}
 
