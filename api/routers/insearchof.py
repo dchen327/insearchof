@@ -14,19 +14,16 @@ router = APIRouter(
     tags=['insearchof'],
 )
 
-app = FastAPI()
-
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Allows all origins
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
-)
+# # Configure CORS
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["http://localhost:3000"],  # Allows all origins
+#     allow_credentials=True,
+#     allow_methods=["*"],  # Allows all methods
+#     allow_headers=["*"],  # Allows all headers
+# )
 
 
-app.include_router(router)
 
 
 cred_dict = json.loads(os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY'))
@@ -145,11 +142,12 @@ class NotificationService:
         print(f"Notification sent to {user_id}: {message}")
 
 
-class insearchof(BaseModel):
+class RequestInformation(BaseModel):
     title: str
     description: Optional[str] = None
     price: float
     image_url: Optional[str] = None
+    type: str  # will be "request"
 
     def validate_price(cls, value):
         if value < 0:
@@ -158,7 +156,7 @@ class insearchof(BaseModel):
 
 
 @router.post("/upload", response_model=dict)
-async def upload_request(iso_request: insearchof):
+async def upload_request(iso_request: RequestInformation):
     '''
     Uploads the ISO request to the database. This endpoint is protected and requires
     the user to be authenticated.
