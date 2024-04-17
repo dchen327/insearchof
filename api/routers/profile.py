@@ -27,7 +27,6 @@ class UserProfile(BaseModel):
         buys, sells, and ISOs.
     """
 
-    email: str = Field(None, description="The user's email.")
     name: str = Field(None, description="The user's name.")
     profile_picture: Optional[str] = Field(
         None, description="An image of the profile picture representing the user.")
