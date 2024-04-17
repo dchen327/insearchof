@@ -68,11 +68,12 @@ export default function Page() {
       return;
     }
 
-    if (price < 0) {
+    const finalPrice = price === '' ? 0 : parseFloat(price);
+    if (finalPrice < 0) {
       alert('Price cannot be negative.');
       return;
     }
-
+  
     if (!user) {
       alert('You need to be logged in to submit a request.');
       return;
@@ -85,7 +86,7 @@ export default function Page() {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/insearchof/upload', {
+      const response = await fetch('api/insearchof/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -93,8 +94,9 @@ export default function Page() {
         body: JSON.stringify({
           title: title,
           description: description,
-          price: parseFloat(price),
-          imageUrl: imageUrl
+          price: parseFloat(finalPrice),
+          image_url: imageUrl,
+          type: 'request'
         })
       });
       const data = await response.json();
@@ -172,14 +174,20 @@ export default function Page() {
               />
             </>}
             {field === 'image' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <label style={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
-                  <span style={{ marginRight: '10px', fontSize: '16px' }}>Image (optional)</span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <label style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <span style={{ marginBottom: '10px', fontSize: '16px' }}>Image (optional)</span>
                   <input
                     type="file"
                     onChange={handleImageChange}
                     accept="image/*"
-                    style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1 }}
+                    style={{
+                      padding: '10px',
+                      fontSize: '16px',
+                      border: '1px solid #ccc',
+                      borderRadius: '4px',
+                      width: '100%'  // Ensure the input takes the full width of its parent container
+                    }}
                   />
                 </label>
               </div>
