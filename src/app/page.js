@@ -19,6 +19,28 @@ export default function Home() {
   const [rentalsSelected, setRentalsSelected] = useState(true);
   const [requestsSelected, setRequestsSelected] = useState(true);
 
+  // filter modal
+  const [category, setCategory] = useState("None");
+  const [sortBy, setSortBy] = useState("relevance");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+
+  // temp variables for filter modal
+  const [tempCategory, setTempCategory] = useState(category);
+  const [tempSortBy, setTempSortBy] = useState(sortBy);
+  const [tempMinPrice, setTempMinPrice] = useState(minPrice);
+  const [tempMaxPrice, setTempMaxPrice] = useState(maxPrice);
+
+  // when the modal is opened, update the temporary variables with the current values
+  useEffect(() => {
+    if (showFilterModal) {
+      setTempCategory(category);
+      setTempSortBy(sortBy);
+      setTempMinPrice(minPrice);
+      setTempMaxPrice(maxPrice);
+    }
+  }, [showFilterModal]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -188,7 +210,10 @@ export default function Home() {
             </div>
             {showFilterModal && (
               <div className="modal is-active">
-                <div className="modal-background"></div>
+                <div
+                  className="modal-background"
+                  onClick={() => setShowFilterModal(false)}
+                ></div>
                 <div className="modal-card">
                   <header className="modal-card-head">
                     <p className="modal-card-title">Filter and Sort</p>
@@ -201,10 +226,14 @@ export default function Home() {
                   <section className="modal-card-body">
                     <div className="columns is-centered is-mobile">
                       <div className="column field">
-                        <label className="label">Categories</label>
+                        <label className="label">Category</label>
                         <div className="control is-expanded">
                           <div className="select is-fullwidth">
-                            <select>
+                            <select
+                              value={tempCategory}
+                              onChange={(e) => setTempCategory(e.target.value)}
+                            >
+                              <option value="All">All</option>
                               <option value="Food">Food</option>
                               <option value="electronics">Electronics</option>
                               <option value="furniture">Furniture</option>
@@ -217,7 +246,10 @@ export default function Home() {
                         <label className="label">Sort By</label>
                         <div className="control is-expanded">
                           <div className="select is-fullwidth">
-                            <select>
+                            <select
+                              value={tempSortBy}
+                              onChange={(e) => setTempSortBy(e.target.value)}
+                            >
                               <option value="relevance">Relevance</option>
                               <option value="uploadDate">Upload Date</option>
                               <option value="priceAsc">
@@ -239,7 +271,13 @@ export default function Home() {
                             <a className="button is-static">$</a>
                           </p>
                           <div className="control">
-                            <input className="input" type="number" min="0" />
+                            <input
+                              className="input"
+                              type="number"
+                              min="0"
+                              value={tempMinPrice}
+                              onChange={(e) => setTempMinPrice(e.target.value)}
+                            />
                           </div>
                         </div>
                       </div>
@@ -250,7 +288,13 @@ export default function Home() {
                             <a className="button is-static">$</a>
                           </p>
                           <div className="control">
-                            <input className="input" type="number" min="0" />
+                            <input
+                              className="input"
+                              type="number"
+                              min="0"
+                              value={tempMaxPrice}
+                              onChange={(e) => setTempMaxPrice(e.target.value)}
+                            />
                           </div>
                         </div>
                       </div>
@@ -259,7 +303,14 @@ export default function Home() {
                   <footer className="modal-card-foot">
                     <button
                       className="button is-success"
-                      onClick={() => setShowFilterModal(false)}
+                      onClick={() => {
+                        setCategory(tempCategory);
+                        setSortBy(tempSortBy);
+                        setMinPrice(tempMinPrice);
+                        setMaxPrice(tempMaxPrice);
+                        setShowFilterModal(false);
+                        console.log(tempMinPrice);
+                      }}
                     >
                       Apply Filters
                     </button>
