@@ -64,27 +64,27 @@ export default function Page() {
   };
 
 
-  const uploadImage = async (file) => {
-    try {
-      // Generate a unique filename for the image
-      const fileName = uuidv4();
+  // const uploadImage = async (file) => {
+  //   try {
+  //     // Generate a unique filename for the image
+  //     const fileName = uuidv4();
 
-      // Create a reference to the storage location
-      const imageRef = ref(imagesRef, fileName);
+  //     // Create a reference to the storage location
+  //     const imageRef = ref(imagesRef, fileName);
 
-      // Upload the image file to Firebase Storage
-      await uploadBytes(imageRef, file);
+  //     // Upload the image file to Firebase Storage
+  //     await uploadBytes(imageRef, file);
 
-      // Get the download URL of the uploaded image
-      const imageUrl = await getDownloadURL(imageRef);
+  //     // Get the download URL of the uploaded image
+  //     const imageUrl = await getDownloadURL(imageRef);
 
-      // Return the URL of the uploaded image
-      return imageUrl;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      throw error; // Re-throw the error to handle it elsewhere if needed
-    }
-  };
+  //     // Return the URL of the uploaded image
+  //     return imageUrl;
+  //   } catch (error) {
+  //     console.error('Error uploading image:', error);
+  //     throw error; // Re-throw the error to handle it elsewhere if needed
+  //   }
+  // };
 
 
   const uploadRequest = async () => {
@@ -107,10 +107,34 @@ export default function Page() {
 
     try {
       let imageUrl = '';
-      if (image) {
-        // Upload the image
-        console.log("owiejfoweijfoweijfwo");
-        imageUrl = await uploadImage(image);
+      try {
+        if (image) {
+          const formData = new FormData();
+          formData.append('file', image);
+
+          const imageResponse = await fetch('/api/insearchof/upload-image', {
+            method: 'POST',
+            body: formData, // Send the file as FormData
+          });
+
+          if (!imageResponse.ok) {
+            throw new Error('Image upload failed');
+          }
+
+          const imageData = await imageResponse.json();
+          imageUrl = imageData.image_url; // Get the image URL from the backend
+        }
+      } catch (error) {
+
+        console.error('Failed to fetch:', error);
+        // If the error object has a response with JSON, log that as well
+        if (error.response) {
+          error.response.json().then((json) => {
+            console.log('Error details:', json);
+          });
+        }
+        alert('An error occurred. Please check the console for more details.');
+        return;
       }
 
       // Prepare request data
@@ -120,6 +144,7 @@ export default function Page() {
         price: parseFloat(finalPrice),
         image_url: imageUrl, // Include the image URL
         type: 'request',
+        trans_comp: false,
         user_id: user.uid
       };
 

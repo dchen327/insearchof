@@ -1,12 +1,14 @@
 from fastapi import FastAPI, APIRouter, File, Form, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from typing import Optional
 from pydantic import BaseModel, Field
-from firebase_admin import credentials, firestore, initialize_app
+from firebase_admin import credentials, firestore, initialize_app, storage
 import os
 import json
 from dotenv import load_dotenv
 from datetime import datetime
+from uuid import uuid4
 
 load_dotenv()
 
@@ -17,7 +19,9 @@ router = APIRouter(
 
 cred_dict = json.loads(os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY'))
 cred = credentials.Certificate(cred_dict)
-firebase_app = initialize_app(cred)
+firebase_app = initialize_app(cred, {
+    'storageBucket': 'insearchof-1fb7a.appspot.com'
+})
 db = firestore.client()
 
 
@@ -138,6 +142,7 @@ class RequestInformation(BaseModel):
     image_url: Optional[str] = None
     user_id: str
     type: str  # will be "request"
+    trans_comp: bool  # will be False
 
     def validate_price(cls, value):
         if value < 0:
@@ -164,7 +169,7 @@ async def upload_request(iso_request: RequestInformation):
     '''
     doc_ref = db.collection('items').document()
     iso_request_data = iso_request.dict()
-    iso_request_data["timestamp"] = datetime.now()   
+    iso_request_data["timestamp"] = datetime.now()
     doc_ref.set(iso_request_data)
     return {"message": "Request uploaded successfully", "request_id": doc_ref.id}
 
@@ -210,24 +215,31 @@ def mark_transaction_complete(request_id: str, current_user):
 @router.post("/upload-image", response_model=dict)
 async def upload_image(file: UploadFile = File(...)):
     """
-    Allows users to upload an image for their item listing.
-
-    The uploaded image is processed and stored in a cloud storage service,
-    and a URL reference of the stored image is saved in the Firestore listing for retrieval.
-
-    If the uploaded image does not meet the criteria, the function raises an HTTPException.
+    Uploads an image to Firebase Storage and returns the URL of the uploaded image.
     """
-    try:
-        # Save the uploaded file to a location (e.g., Firebase Storage)
-        # Obtain the URL of the uploaded image
-        # For now, we'll mock the image URL
-        image_url = "gs://insearchof-1fb7a.appspot.com"
 
-        # Return the URL of the uploaded image
-        return {"message": "Image uploaded successfully", "image_url": image_url}
+    try:
+        bucket = storage.bucket()
+
+        # Create a unique file name
+        file_name = f"images/{uuid4()}-{file.filename}"
+        blob = bucket.blob(file_name)
+
+        file_content = await file.read()
+
+        # Upload the file
+        blob.upload_from_string(file_content, content_type=file.content_type)
+
+        # Make the blob publicly viewable
+        blob.make_public()
+
+        return {"image_url": blob.public_url}
     except Exception as e:
-        # Handle any errors that occur during the image upload process
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Failed to upload image: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"message": "Failed to upload image", "error": str(e)}
+        )
 
 
 '''
