@@ -5,13 +5,14 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
 import { getFirestore, collection, addDoc } from "firebase/firestore";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
 
 
 export default function Page() {
   const [user, setUser] = useState(null);
   const router = useRouter();
+  const imagesRef = ref(storage, "images");
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -62,7 +63,32 @@ export default function Page() {
     setPrice(formattedValue);
   };
 
+
+  const uploadImage = async (file) => {
+    try {
+      // Generate a unique filename for the image
+      const fileName = uuidv4();
+
+      // Create a reference to the storage location
+      const imageRef = ref(imagesRef, fileName);
+
+      // Upload the image file to Firebase Storage
+      await uploadBytes(imageRef, file);
+
+      // Get the download URL of the uploaded image
+      const imageUrl = await getDownloadURL(imageRef);
+
+      // Return the URL of the uploaded image
+      return imageUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error; // Re-throw the error to handle it elsewhere if needed
+    }
+  };
+
+
   const uploadRequest = async () => {
+    // Validate input fields
     if (!title) {
       alert('Title is required.');
       return;
@@ -73,35 +99,47 @@ export default function Page() {
       alert('Price cannot be negative.');
       return;
     }
-  
+
     if (!user) {
       alert('You need to be logged in to submit a request.');
       return;
     }
 
-    let imageUrl = '';
-    if (image) {
-      // Handle image upload first if there is an image
-      // Image upload logic goes here, returning an image URL
-    }
-
     try {
+      let imageUrl = '';
+      if (image) {
+        // Upload the image
+        console.log("owiejfoweijfoweijfwo");
+        imageUrl = await uploadImage(image);
+      }
+
+      // Prepare request data
+      const requestData = {
+        title: title,
+        description: description,
+        price: parseFloat(finalPrice),
+        image_url: imageUrl, // Include the image URL
+        type: 'request',
+        user_id: user.uid
+      };
+
+      // Send the request data to the backend
       const response = await fetch('api/insearchof/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          title: title,
-          description: description,
-          price: parseFloat(finalPrice),
-          image_url: imageUrl,
-          type: 'request'
-        })
+        body: JSON.stringify(requestData)
       });
+
       const data = await response.json();
       if (response.ok) {
         alert('Request uploaded successfully!');
+        // Clear the form
+        setTitle('');
+        setDescription('');
+        setPrice('');
+        setImage(null);
       } else {
         alert('Failed to upload request: ' + data.message);
       }

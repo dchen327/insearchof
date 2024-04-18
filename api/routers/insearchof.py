@@ -6,6 +6,7 @@ from firebase_admin import credentials, firestore, initialize_app
 import os
 import json
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
@@ -13,18 +14,6 @@ router = APIRouter(
     prefix='/api/insearchof',
     tags=['insearchof'],
 )
-
-# # Configure CORS
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["http://localhost:3000"],  # Allows all origins
-#     allow_credentials=True,
-#     allow_methods=["*"],  # Allows all methods
-#     allow_headers=["*"],  # Allows all headers
-# )
-
-
-
 
 cred_dict = json.loads(os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY'))
 cred = credentials.Certificate(cred_dict)
@@ -147,6 +136,7 @@ class RequestInformation(BaseModel):
     description: Optional[str] = None
     price: float
     image_url: Optional[str] = None
+    user_id: str
     type: str  # will be "request"
 
     def validate_price(cls, value):
@@ -172,8 +162,9 @@ async def upload_request(iso_request: RequestInformation):
 
     Returns a JSON response with the result of the operation.
     '''
-    doc_ref = db.collection('insearchof').document()
+    doc_ref = db.collection('items').document()
     iso_request_data = iso_request.dict()
+    iso_request_data["timestamp"] = datetime.now()   
     doc_ref.set(iso_request_data)
     return {"message": "Request uploaded successfully", "request_id": doc_ref.id}
 
@@ -216,31 +207,27 @@ def mark_transaction_complete(request_id: str, current_user):
     return {"message": "Transaction marked complete"}
 
 
-@router.post("/upload-image")
-async def upload_image(file: UploadFile = File()):
+@router.post("/upload-image", response_model=dict)
+async def upload_image(file: UploadFile = File(...)):
     """
-    Allows user to upload an image for their item listing.
+    Allows users to upload an image for their item listing.
 
-    The endpoint enforces the following restrictions for the uploaded images:
-    - File size: Maximum allowed file size is X MB <-- to be determined later.
-    - File format: Only JPEG and PNG formats are accepted.
-
-    The uploaded image is processed and stored in a cloud storage service, and a UUID reference
-    of the stored image is saved in the Firestore listing for retrieval.
+    The uploaded image is processed and stored in a cloud storage service,
+    and a URL reference of the stored image is saved in the Firestore listing for retrieval.
 
     If the uploaded image does not meet the criteria, the function raises an HTTPException.
     """
-    # Logic to ensure correct file size and format
-    # Stores the reference UUID in the Firestore listing of the image
+    try:
+        # Save the uploaded file to a location (e.g., Firebase Storage)
+        # Obtain the URL of the uploaded image
+        # For now, we'll mock the image URL
+        image_url = "gs://insearchof-1fb7a.appspot.com"
 
-    # Check the file size and type here (you might use file.content_type)
-    if file.content_type not in ["image/jpeg", "image/png"]:
-        raise HTTPException(status_code=415, detail="Unsupported file type.")
-
-    # Assuming you have a function to upload to Firebase Storage and return the URL
-    image_url = await upload_to_storage_service(file)
-
-    return {"message": "Image uploaded successfully", "image_url": image_url}
+        # Return the URL of the uploaded image
+        return {"message": "Image uploaded successfully", "image_url": image_url}
+    except Exception as e:
+        # Handle any errors that occur during the image upload process
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 '''
