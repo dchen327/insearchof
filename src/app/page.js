@@ -6,9 +6,11 @@ import { ItemCard } from "./components/itemCard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown, faSearch } from "@fortawesome/free-solid-svg-icons";
 import { useAuthState } from "react-firebase-hooks/auth";
+import Image from "next/image";
 
 export default function Home() {
   const [user, loading, error] = useAuthState(auth);
+
   const [search, setSearch] = useState("");
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [marketSelected, setMarketSelected] = useState(true);
@@ -348,7 +350,14 @@ export default function Home() {
                           </p>
                         </div>
                       </div>
-                      <div className="content">{currentItem.description}</div>
+                      <div className="content">
+                        <p>{currentItem.description}</p>
+                        <Image
+                          src={currentItem.image_url}
+                          alt="Image"
+                          fill="true"
+                        />
+                      </div>
                     </div>
                   </div>
                 </section>
