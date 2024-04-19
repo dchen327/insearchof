@@ -1,35 +1,18 @@
 from fastapi import FastAPI, APIRouter, File, Form, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from typing import Optional
 from pydantic import BaseModel, Field
-from firebase_admin import credentials, firestore, initialize_app
-import os
-import json
-from dotenv import load_dotenv
-
-load_dotenv()
+from firebase_admin import storage
+from ..firebase_config import db
+from datetime import datetime, timezone
+from uuid import uuid4
+from ..firebase_config import db
 
 router = APIRouter(
     prefix='/api/insearchof',
     tags=['insearchof'],
 )
-
-# # Configure CORS
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["http://localhost:3000"],  # Allows all origins
-#     allow_credentials=True,
-#     allow_methods=["*"],  # Allows all methods
-#     allow_headers=["*"],  # Allows all headers
-# )
-
-
-
-
-cred_dict = json.loads(os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY'))
-cred = credentials.Certificate(cred_dict)
-firebase_app = initialize_app(cred)
-db = firestore.client()
 
 
 class insearchoferFilters(BaseModel):
@@ -117,7 +100,7 @@ class MarkTransactionRequest(BaseModel):
 
 class MarkTransactionCompleteResponse(BaseModel):
     """
-    Response model for marking a transaction as complete in the database.    
+    Response model for marking a transaction as complete in the database.
     """
 
     message: str = Field(
@@ -147,7 +130,9 @@ class RequestInformation(BaseModel):
     description: Optional[str] = None
     price: float
     image_url: Optional[str] = None
+    user_id: str
     type: str  # will be "request"
+    trans_comp: bool  # will be False
 
     def validate_price(cls, value):
         if value < 0:
@@ -172,22 +157,53 @@ async def upload_request(iso_request: RequestInformation):
 
     Returns a JSON response with the result of the operation.
     '''
-    doc_ref = db.collection('insearchof').document()
+    doc_ref = db.collection('items').document()
     iso_request_data = iso_request.dict()
+    iso_request_data["timestamp"] = datetime.now(timezone.utc)
     doc_ref.set(iso_request_data)
     return {"message": "Request uploaded successfully", "request_id": doc_ref.id}
 
 
-@router.patch("/update/{request_id}", response_model=UpdateRequestResponse)
-def update_request(request_id: str, request, current_user):
-    '''
-    Updates an existing ISO request in the database. This endpoint requires the user to be authenticated.
+# THIS IS TEMPORARY
+@router.get("/update/{user_id}", response_model=dict)
+async def update_request(user_id: str):
+    """
+    Prints the titles of the requests made by a given user to the console.
+    This is a temporary implementation as per the user's requirement.
 
-    Security: Only the user who created the ISO request is allowed to update it.
+    Args:
+        user_id (str): The user ID for which to print request titles.
+    """
+    try:
+        # Fetch the documents where the `user_id` matches the one provided
+        docs = db.collection('items').where('user_id', '==', user_id).where(
+            'type', '==', 'request').stream()
 
-    Returns a JSON response with the result of the operation.
-    '''
-    return {"message": "Request updated"}
+        titles = []
+        print(f"Request titles for user {user_id}:")
+        for doc in docs:
+            title = doc.to_dict().get('title', 'No Title')  # Provide a default if 'title' is not found
+            titles.append(title)
+            print(title)
+        return {"message": f"Printed titles to console for user ID {user_id}", "titles": titles}
+
+    except Exception as e:
+        print(f"Failed to retrieve request titles: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"message": "Failed to retrieve request titles", "error": str(e)}
+        )
+
+
+# def update_request():
+#     '''
+#     Updates an existing ISO request in the database. This endpoint requires the user to be authenticated.
+
+#     Security: Only the user who created the ISO request is allowed to update it.
+
+#     Returns a JSON response with the result of the operation.
+#     '''
+#     return {"message": "Request updated"}
 
 
 @router.delete("/delete/{request_id}")
@@ -216,83 +232,32 @@ def mark_transaction_complete(request_id: str, current_user):
     return {"message": "Transaction marked complete"}
 
 
-@router.post("/upload-image")
-async def upload_image(file: UploadFile = File()):
+@router.post("/upload-image/{user_id}", response_model=dict)
+async def upload_image(user_id: str, file: UploadFile = File(...)):
     """
-    Allows user to upload an image for their item listing.
-
-    The endpoint enforces the following restrictions for the uploaded images:
-    - File size: Maximum allowed file size is X MB <-- to be determined later.
-    - File format: Only JPEG and PNG formats are accepted.
-
-    The uploaded image is processed and stored in a cloud storage service, and a UUID reference
-    of the stored image is saved in the Firestore listing for retrieval.
-
-    If the uploaded image does not meet the criteria, the function raises an HTTPException.
+    Uploads an image to Firebase Storage and returns the URL of the uploaded image.
     """
-    # Logic to ensure correct file size and format
-    # Stores the reference UUID in the Firestore listing of the image
 
-    # Check the file size and type here (you might use file.content_type)
-    if file.content_type not in ["image/jpeg", "image/png"]:
-        raise HTTPException(status_code=415, detail="Unsupported file type.")
+    try:
+        bucket = storage.bucket()
 
-    # Assuming you have a function to upload to Firebase Storage and return the URL
-    image_url = await upload_to_storage_service(file)
+        # Create a unique file name
+        unique_filename = f"{uuid4()}_{file.filename}"
+        file_name = f"images/{user_id}/{unique_filename}"
+        blob = bucket.blob(file_name)
 
-    return {"message": "Image uploaded successfully", "image_url": image_url}
+        file_content = await file.read()
 
+        # Upload the file
+        blob.upload_from_string(file_content, content_type=file.content_type)
 
-'''
-ISSUES PROVIDED BY REVIEW:
+        # Make the blob publicly viewable
+        blob.make_public()
 
-Non-negative Price Validation:
-Issue: The initial code did not validate the non-negative price on the backend.
-Risk: Without backend validation, there was a possibility of negative prices "screwing up" the database integrity.
-
-Editing/Deleting ISO Requests:
-Issue: The program lacked the ability for users to edit or delete their ISO requests.
-Risk: This limitation restricted user control and could lead to outdated information existing in the database.
-
-Image Handling Post-Upload:
-Issue: There was no clarification or implementation detail on the restrictions for image size and format.
-Risk: Without such restrictions, users could upload excessively large or improperly formatted images, potentially leading to storage inefficiencies or technical issues.
-
-Notification System Integration:
-Issue: There was no mention of a notification system to alert users of important events related to their ISO requests.
-Risk: Users might not be promptly informed about significant updates, potentially degrading the user experience.
-
-Security Measures:
-Issue: The preliminary design did not address security measures such as authentication and authorization for accessing and modifying requests.
-Risk: Neglecting security could lead to unauthorized access and manipulation of user data.
-
-Testing Framework
-Issue: No standard (off the shelf) testing framework.
-Risk: Tests are formatted in many different ways, creating confusion
-
-SUMMARY OF CHANGES MADE:
-
-Non-negative Price Validation:
-Change: Added a validator within the insearchoferFilters Pydantic model to check for non-negative prices.
-Reason: Backend validation ensures integrity even if frontend validation fails or is bypassed, safeguarding the database against corrupt data.
-
-Editing/Deleting ISO Requests:
-Change: Introduced new endpoints for updating and deleting ISO requests, along with proper permission checks.
-Reason: This allows users to maintain accurate and current information and removes any obsolete data, enhancing user control and data relevance.
-
-Image Handling Post-Upload:
-Change: Included comments about handling images with specific size and format restrictions post-upload.
-Reason: Outlines the need to enforce these limitations to maintain efficient storage and prevent technical issues.
-
-Notification System Integration:
-Change: Added comments discussing the potential integration of a notification system.
-Reason: To improve user engagement by keeping users updated about the status of their ISO requests and related transactions.
-
-Security Measures:
-Change: Ensured all sensitive endpoints require user authentication, and only appropriate users can perform actions.
-Reason: To protect user data and prevent unauthorized actions, upholding the application’s integrity and trustworthiness.
-
-Testing Framework
-Change: Utilize python unittest as the testing framework.
-Reason: Standardized tests will be easier to understand for yourself and others.
-'''
+        return {"image_url": blob.public_url}
+    except Exception as e:
+        print(f"Failed to upload image: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"message": "Failed to upload image", "error": str(e)}
+        )

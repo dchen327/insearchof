@@ -4,10 +4,6 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
-import { getFirestore, collection, addDoc } from "firebase/firestore";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
-import { v4 as uuidv4 } from "uuid";
-
 
 export default function Page() {
   const [user, setUser] = useState(null);
@@ -35,6 +31,7 @@ export default function Page() {
     return () => unsubscribe();
   }, [router]);
 
+
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     setImage(file);
@@ -53,8 +50,13 @@ export default function Page() {
 
   const handlePriceChange = (e) => {
     const value = e.target.value;
+
+    // prevent any non-numeric characters from being entered
+    // allow only one decimal point
     const validValue = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
     const parts = validValue.split('.');
+
+    // allow only two decimal places max
     if (parts.length > 1) {
       parts[1] = parts[1].substring(0, 2);
     }
@@ -63,45 +65,88 @@ export default function Page() {
   };
 
   const uploadRequest = async () => {
+    // Validate input fields
     if (!title) {
       alert('Title is required.');
       return;
     }
 
+    // If price is empty, set it to 0
     const finalPrice = price === '' ? 0 : parseFloat(price);
     if (finalPrice < 0) {
       alert('Price cannot be negative.');
       return;
     }
-  
+
+    // Check if the user is logged in
     if (!user) {
       alert('You need to be logged in to submit a request.');
       return;
     }
 
-    let imageUrl = '';
-    if (image) {
-      // Handle image upload first if there is an image
-      // Image upload logic goes here, returning an image URL
-    }
-
+    // Upload the image first, if it exists
     try {
+      let imageUrl = '';
+      try {
+        if (image) {
+          const formData = new FormData();
+          formData.append('file', image);
+
+          // Include the user_id in the URL
+          const imageResponse = await fetch(`/api/insearchof/upload-image/${user.uid}`, {
+            method: 'POST',
+            body: formData, // Send the file as FormData
+          });
+
+          if (!imageResponse.ok) {
+            throw new Error('Image upload failed');
+          }
+
+          const imageData = await imageResponse.json();
+          imageUrl = imageData.image_url; // Get the image URL from the backend
+        }
+      } catch (error) {
+        // error handling for image upload
+        console.error('Failed to fetch:', error);
+        // If the error object has a response with JSON, log that as well
+        if (error.response) {
+          error.response.json().then((json) => {
+            console.log('Error details:', json);
+          });
+        }
+        alert('An error occurred. Please check the console for more details.');
+        return;
+      }
+
+      // Prepare request data
+      const requestData = {
+        title: title,
+        description: description,
+        price: parseFloat(finalPrice),
+        image_url: imageUrl,
+        type: 'request',
+        trans_comp: false,
+        user_id: user.uid
+      };
+
+      // Send the request data to the backend
       const response = await fetch('api/insearchof/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          title: title,
-          description: description,
-          price: parseFloat(finalPrice),
-          image_url: imageUrl,
-          type: 'request'
-        })
+        body: JSON.stringify(requestData)
       });
+
       const data = await response.json();
       if (response.ok) {
         alert('Request uploaded successfully!');
+        // Clear the form
+        setTitle('');
+        setDescription('');
+        setPrice('');
+        setImage(null);
+        setImagePreviewUrl('');
       } else {
         alert('Failed to upload request: ' + data.message);
       }
@@ -111,6 +156,27 @@ export default function Page() {
     }
   };
 
+
+  const updateRequest = async () => {
+    if (!user) {
+      alert('You must be logged in to view your requests.');
+      return;
+    }
+  
+    try {
+      const response = await fetch(`/api/insearchof/update/${user.uid}`);
+      const data = await response.json();
+  
+      if (response.ok) {
+        console.log('Check the server console for the user requests');
+      } else {
+        alert('Failed to fetch user requests: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Failed to fetch:', error);
+      alert('An error occurred while fetching user requests. Please try again.');
+    }
+  };
 
   // Define the style for the tooltips outside of the return statement
   const tooltipStyle = {
@@ -239,6 +305,18 @@ export default function Page() {
         }}>
           Upload Request
         </button>
+        <button className="button is-light" onClick={updateRequest} style={{
+          padding: '10px 20px',
+          fontSize: '16px',
+          backgroundColor: '#007BFF',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer'
+        }}>
+          Update Request
+        </button>
+
       </div>
     </>
   );

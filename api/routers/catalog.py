@@ -4,8 +4,11 @@ import json
 from fastapi import APIRouter, Query, Depends
 from typing import Annotated, Optional, List
 from pydantic import BaseModel, Field
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, auth
 from dotenv import load_dotenv
+from ..firebase_config import db
+from datetime import datetime, timezone
+from google.cloud.firestore_v1 import FieldFilter
 
 load_dotenv()
 
@@ -15,12 +18,19 @@ router = APIRouter(
     tags=['catalog'],
 )
 
+sort_options = {
+    "uploadDateAsc": ("timestamp", "ASCENDING"),
+    "uploadDateDesc": ("timestamp", "DESCENDING"),
+    "priceAsc": ("price", "ASCENDING"),
+    "priceDesc": ("price", "DESCENDING"),
+}
+
 
 class ListingsFilters(BaseModel):
     search: str = Field(
         default='', description="The search query: searches item names and descriptions.")
     sort: str = Field(
-        default='relevance', description="Options for sorting (ascending/descending): relevance, upload date, price")
+        default='uploadDateAsc', description="Options for sorting (ascending/descending): upload date, price")
     listing_types: Annotated[list[str], Query()] = Field(
         description="The types of listing to return (buy, rent, or request)")
     min_price: float = Field(
@@ -32,7 +42,17 @@ class ListingsFilters(BaseModel):
 
 
 class Listing(BaseModel):
-    pass
+    description: str
+    image_url: str
+    price: float
+    timestamp: datetime
+    time_since_listing: str
+    title: str
+    trans_comp: bool
+    type: str
+    user_id: str
+    user_name: str
+    email: str
 
 
 class ListingsResponse(BaseModel):
@@ -60,14 +80,34 @@ class PurchaseResponse(BaseModel):
         None, description="The seller's Facebook Messenger profile.")
 
 
+def format_timedelta(td):
+    total_seconds = int(td.total_seconds())
+    periods = [
+        ('y', 60*60*24*365),
+        ('mo', 60*60*24*30),
+        ('w', 60*60*24*7),
+        ('d', 60*60*24),
+        ('h', 60*60),
+        ('m', 60),
+        ('s', 1)
+    ]
+
+    for period_name, period_seconds in periods:
+        if total_seconds >= period_seconds:
+            period_value, total_seconds = divmod(total_seconds, period_seconds)
+            return "%s%s" % (period_value, period_name)
+
+    return "0s"
+
+
 @router.get("/listings")
 def get_listings(
     search: str = Query(
         default='', description="The search query: searches item names and descriptions."),
-    sort: str = Query(default='relevance',
-                      description="Options for sorting (ascending/descending): relevance, upload date, price"),
+    sort: str = Query(default='uploadDateAsc',
+                      description="Options for sorting (ascending/descending): upload date, price"),
     listing_types: List[str] = Query(
-        default=[], description="The types of listing to return (buy, rent, or request)"),
+        default=['buy', 'rent', 'request'], description="The types of listing to return (buy, rent, or request)"),
     min_price: float = Query(
         default=0, description="Minimum price of returned items. Must be at most the maximum price, and be a non-negative float with max 2 decimal places."),
     max_price: float = Query(
@@ -91,16 +131,59 @@ def get_listings(
 
     # If there are errors in the input, generates a descriptive error message and fails the API call
     # This allows the frontend to display the error to the users
-    if max_price == 0:
-        max_price = float('inf')
+    # query from database items collection, filter and order correctly
+    field, direction = sort_options[sort]
+
+    # Create FieldFilter objects
+    filters = []
+    if listing_types:
+        type_filter = FieldFilter(
+            field_path='type', op_string='in', value=listing_types)
+        filters.append(type_filter)
+
+    if min_price > 0:
+        min_price_filter = FieldFilter(
+            field_path='price', op_string='>=', value=min_price)
+        filters.append(min_price_filter)
+
+    if max_price > 0:
+        max_price_filter = FieldFilter(
+            field_path='price', op_string='<=', value=max_price)
+        filters.append(max_price_filter)
+
+    # Use FieldFilter objects with where method
+    query = db.collection('items')
+    for filter_ in filters:
+        query = query.where(filter=filter_)
+
+    docs = query.order_by(field, direction=direction).stream()
+
+    items = []
+    for doc in docs:
+        items.append(doc.to_dict())
+
+    # convert timestamp to string (e.g. 5m, 1h, 1d, 1w, 1mo, 1y)
+    now = datetime.now(timezone.utc)
+    for item in items:
+        # calculate difference from current time
+        timestamp = item['timestamp']
+        diff = now - timestamp
+        item['time_since_listing'] = format_timedelta(diff)
+
+        # from user_id, get user's name and email
+        user_id = item['user_id']
+        user = auth.get_user(user_id)
+        item['user_name'] = user.display_name
+        item['email'] = user.email
 
     # print all
     print(search, sort, listing_types, min_price, max_price, categories)
+    # print(items)
 
-    return {"listings": []}
+    return {"listings": items}
 
 
-@ router.get("/purchase")
+@router.get("/purchase")
 def purchase_item(purchase_request: PurchaseRequest) -> PurchaseResponse:
     ''' A buyer indicates to a seller that they'd want to purchase an item. Query profiles backend for seller\'s contact information and return for the frontend. '''
     # First validates inputs

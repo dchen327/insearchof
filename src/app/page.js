@@ -22,7 +22,7 @@ export default function Home() {
 
   // filter modal
   const [category, setCategory] = useState("All");
-  const [sortBy, setSortBy] = useState("relevance");
+  const [sortBy, setSortBy] = useState("uploadDateAsc");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [showItemModal, setShowItemModal] = useState(false);
@@ -33,6 +33,19 @@ export default function Home() {
   const [tempSortBy, setTempSortBy] = useState(sortBy);
   const [tempMinPrice, setTempMinPrice] = useState(minPrice);
   const [tempMaxPrice, setTempMaxPrice] = useState(maxPrice);
+
+  const [items, setItems] = useState([]);
+  const [itemsLoading, setItemsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      const response = await fetch("/api/catalog/listings");
+      const data = await response.json();
+      setItems(data?.listings || []);
+    };
+
+    fetchItems();
+  }, []);
 
   // when the modal is opened, update the temporary variables with the current values
   useEffect(() => {
@@ -97,6 +110,7 @@ export default function Home() {
 
   const searchItems = async (e) => {
     e.preventDefault();
+    setItemsLoading(true);
     const listingTypes = [];
     if (marketSelected) listingTypes.push("buy");
     if (rentalsSelected) listingTypes.push("rent");
@@ -117,6 +131,11 @@ export default function Home() {
         "Content-Type": "application/json",
       },
     });
+
+    const data = await response.json();
+    const listings = data?.listings || [];
+    setItems(listings);
+    setItemsLoading(false);
   };
 
   const generateRandomItem = () => {
@@ -147,14 +166,11 @@ export default function Home() {
     return item;
   };
 
-  const testItem = generateRandomItem();
-  const items = [testItem, testItem, testItem];
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen mx-10">
         <progress
-          class="progress is-small is-primary max-w-[500px]"
+          className="progress is-small is-primary max-w-[500px]"
           max="100"
         ></progress>
       </div>
@@ -278,8 +294,10 @@ export default function Home() {
                             value={tempSortBy}
                             onChange={(e) => setTempSortBy(e.target.value)}
                           >
-                            <option value="relevance">Relevance</option>
-                            <option value="uploadDate">Upload Date</option>
+                            <option value="uploadDateAsc">Date (Newest)</option>
+                            <option value="uploadDateDesc">
+                              Date (Oldest)
+                            </option>
                             <option value="priceAsc">
                               Price (Low to High)
                             </option>
@@ -351,19 +369,30 @@ export default function Home() {
               </div>
             </div>
           )}
-          {items.map((item, idx) => (
-            <>
-              <div
-                onClick={() => {
-                  setCurrentItem(item);
-                  setShowItemModal(true);
-                }}
-              >
-                <ItemCard key={idx} item={item} />
-              </div>
-              {idx !== items.length - 1 && <hr className="py-[1px]" />}
-            </>
-          ))}
+          {itemsLoading ? (
+            <div className="flex justify-center h-screen mx-10 mt-10">
+              <progress
+                className="progress is-small is-primary max-w-[500px]"
+                max="100"
+              ></progress>
+            </div>
+          ) : items.length > 0 ? (
+            items.map((item, idx) => (
+              <>
+                <div
+                  onClick={() => {
+                    setCurrentItem(item);
+                    setShowItemModal(true);
+                  }}
+                >
+                  <ItemCard key={idx} item={item} />
+                </div>
+                {idx !== items.length - 1 && <hr className="py-[1px]" />}
+              </>
+            ))
+          ) : (
+            <p className="has-text-centered mt-3">No items found</p>
+          )}
           {showItemModal && currentItem && (
             <div className="modal is-active">
               <div
@@ -378,11 +407,11 @@ export default function Home() {
                         <div className="media-content">
                           <p className="title is-4 mb-2">{currentItem.title}</p>
                           <div className="flex flex-row mb-0">
-                            <p className="is-6">{currentItem.sellerUserID}</p>
+                            <p className="is-6">{currentItem.user_name}</p>
                             <p className="is-6 font-thin">•</p>
                             {/* todo: backend calculations  */}
                             <p className="is-6">
-                              {currentItem.timeSinceListing}
+                              {currentItem.time_since_listing}
                             </p>
                           </div>
                         </div>
