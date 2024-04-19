@@ -1,6 +1,17 @@
-from fastapi import APIRouter
-from typing import Optional, List
-from pydantic import BaseModel, Field, constr
+from fastapi import FastAPI, APIRouter, File, Form, UploadFile, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from typing import Optional
+from pydantic import BaseModel, Field
+from firebase_admin import credentials, firestore, initialize_app, storage
+from ..firebase_config import db
+import os
+import json
+from dotenv import load_dotenv
+from datetime import datetime
+from uuid import uuid4
+
+load_dotenv()
 
 router = APIRouter(
     prefix='/api/profile',
@@ -33,7 +44,11 @@ class UserProfile(BaseModel):
     location: str = Field(
         None, description="The user's location on campus specifically")
     # phone_number: Optional[constr(regex=r'^\(\d{3}\)\s\d{3}-\d{4}$')]  = Field(None, description="The user's phone number") # type: ignore
-
+    
+    class UploadContactInformation(BaseModel):
+        location: str
+        phoneNumber: str
+    
     class UploadContactInfoResponse(BaseModel):
         """
         Response model for uploading one's contact info to the database.
@@ -68,13 +83,17 @@ class UserProfile(BaseModel):
         listingOfTransactionHistory: List[dict] = Field(
             ..., description="User's transaction history.")
 
-    @router.put("/upload_contact_info")
-    def upload_contact_info() -> UploadContactInfoResponse:
+    @router.post("/upload_contact_info", response_model=dict)
+    async def upload_contact_info(profile: UploadContactInformation):
         """
         Uploads a users contact information, including their name, email, profile picture, optional
         phone number, to the user database, making it visible to buyers.
         """
+        doc_ref = db.collection('items').document()
+        profile_data = profile.dict()
+        doc_ref.set(profile_data)
         return {"message": "Uploads users contact info successfully"}
+
 
     @router.get("/get_list_of_items")
     def get_list_of_items(get_list: GetListOfItemsRequest) -> GetListOfItemsResponse:

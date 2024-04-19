@@ -11,14 +11,18 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([]);
   const [transactionHistory, setTransactionHistory] = useState([]);
-  const [showNameTooltip, setShowNameTooltip] = useState(false); // Added state variables for tooltips
   const [showPhoneNumberTooltip, setShowPhoneNumberTooltip] = useState(false);
   const [showLocationTooltip, setShowLocationTooltip] = useState(false);
   const [showUserIdTooltip, setShowUserIdTooltip] = useState(false);
-  const [name, setName] = useState(""); // Added state variables for name, email, phoneNumber, and location
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [location, setLocation] = useState("");
   const [userId, setUserId] = useState("");
+  const [locationFilled, setLocationFilled] = useState(false);
+
+  const [showItemModal, setShowItemModal] = useState(false);
+
+
   const router = useRouter();
 
   // performs side effects in function components. subscribes authentication
@@ -59,67 +63,44 @@ export default function Page() {
   };
 
   const uploadContactInformation = async () => {
-    if (!name) {
-      alert("Name is required");
-      return;
-    }
-
     if (!location) {
+      setLocationFilled(false);
       alert("Location is required");
       return;
     }
 
-    // Then, create a document in Firestore with the item data
-    const userData = {
-      name,
-      phoneNumber,
-      location,
-      userId,
-      timestamp: new Date(), // You can use Firebase server timestamps as well
-    };
-
-    // try {
-    //   await addDoc(itemsCollectionRef, userData);
-    //   alert("Request uploaded successfully!");
-
-    //   // Clear the form
-    //   setName("");
-    //   setPhoneNumber("");
-    //   setLocation(null);
-    //   setUserName("");
-    // } catch (error) {
-    //   console.error("Error uploading contact information:", error);
-    //   alert("Failed to upload contact inforation: " + error.message);
-    // }
-    // };
-
     try {
-      const response = await fetch('api/profile/upload', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: name,
+        // Then, create a document in Firestore with the item data
+        const userData = {
           phoneNumber: phoneNumber,
           location: location,
           type: 'request'
-        })
-      });
-      const data = await response.json();
-      
-      if (response.ok) {
-        alert('Contact info uploaded successfully!');
-      } else {
-        alert('Failed to upload contact info: ' + data.message);
-      }
-    } catch (error) {
-      console.error('Failed to fetch:', error);
-      alert('An error occurred. Please try again.');
-    }
-    };
-  
+        };
 
+        const response = await fetch('api/profile/update_contact_info', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestData)
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          alert('Request uploaded successfully!');
+          // Clear the form
+          setPhoneNumber();
+          setLocation();
+        } else {
+          alert('Failed to upload request: ' + data.message);
+        }
+      } catch (error) {
+        console.error('Failed to fetch:', error);
+        alert('An error occurred. Please try again.');
+      }
+  };
+
+  
   const tooltipStyle = {
     position: "absolute",
     top: "100%",
@@ -196,6 +177,7 @@ export default function Page() {
     updateUserProfile(newProfileData);
   };
 
+
   return (
     <>
       <div>
@@ -205,7 +187,7 @@ export default function Page() {
               textAlign: 'center',
               margin: '30px 0',
             }}>
-              <h1>Welcome, {user.email}</h1>
+              <h1>Welcome, {user.displayName}</h1>
             </div>
   
             <div style={{
@@ -219,23 +201,8 @@ export default function Page() {
               borderRadius: '8px',
               backgroundColor: '#fff',
              }}>
-              {['name', 'phoneNumber', 'location', 'image'].map((field) => (
+              {['phoneNumber', 'location', 'image'].map((field) => (
                 <div key={field} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  {field === "name" && (
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Name (Required)"
-                      style={{
-                        padding: "10px",
-                        fontSize: "16px",
-                        border: "1px solid #ccc",
-                        borderRadius: "4px",
-                        flexGrow: 1,
-                      }}
-                    />
-                  )}
                   {field === "phoneNumber" && (
                     <input
                       type="text"
@@ -266,24 +233,9 @@ export default function Page() {
                       }}
                     />
                   )}
-                  {/* {field === 'image' && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <label style={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
-                        <span style={{ marginRight: '10px', fontSize: '16px' }}>Image (optional)</span>
-                        <input
-                          type="file"
-                          //onChange={handleImageChange}
-                          accept="image/*"
-                          style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1 }}
-                        />
-                      </label>
-                    </div>
-                  )} */}
+                  
                   <button
                     onClick={() => {
-                      setShowNameTooltip(
-                        field === "name" ? !showNameTooltip : false
-                      );
                       setShowPhoneNumberTooltip(
                         field === "phoneNumber" ? !showPhoneNumberTooltip : false
                       );
@@ -294,9 +246,6 @@ export default function Page() {
                     style={{ position: 'relative', zIndex: '20' }}
                   >
                   </button>
-                  {showNameTooltip && field === "name" && (
-                    <div style={tooltipStyle}>The users name</div>
-                  )}
                   {showPhoneNumberTooltip && field === "phoneNumber" && (
                     <div style={tooltipStyle}>The phone number of the user</div>
                   )}
@@ -307,17 +256,18 @@ export default function Page() {
                   )}
                 </div>
               ))}
-              <button className="button is-primary" onClick={uploadContactInformation} style={{
-                padding: '10px 20px',
-                fontSize: '16px',
-                color: 'white',
-                border: 'none',
-                borderRadius: '2px',
-                cursor: 'pointer'
-              }}>
-                Update user info
-              </button>
-              
+              {(!locationFilled) && (
+                <button className="button is-primary" onClick={uploadContactInformation} style={{
+                  padding: '10px 20px',
+                  fontSize: '16px',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '2px',
+                  cursor: 'pointer'
+                }}>
+                  Update user info
+                </button>
+              )}
             </div>
           </>
         )}
@@ -330,7 +280,7 @@ export default function Page() {
               textAlign: 'center',
               margin: '30px 0',
             }}>
-              <h1>Get a users information</h1>
+              <h1>Get user information</h1>
             </div>
   
             <div style={{
@@ -344,40 +294,13 @@ export default function Page() {
               borderRadius: '8px',
               backgroundColor: '#fff',
              }}>
-              {['User Id'].map((field) => (
-                <div key={field} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  {field === "User Id" && (
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setUserName(e.target.value)}
-                      placeholder="Username (Required)"
-                      style={{
-                        padding: "10px",
-                        fontSize: "16px",
-                        border: "1px solid #ccc",
-                        borderRadius: "4px",
-                        flexGrow: 1,
-                      }}
-                    />
-                  )}
-                  
-                  <button
-                    onClick={() => {
-                      setShowUserIdTooltip(
-                        field === "userId" ? !showUserIdTooltip : false
-                      );
-                    }}
-                    style={{ position: 'relative', zIndex: '20' }}
-                  >
-                  </button>
-                  {showUserIdTooltip && field === "User Id" && (
-                    <div style={tooltipStyle}>The users name</div>
-                  )}
-                </div>
-              ))}
               <div style={{ display: 'flex', gap: '20px' }}>
-                <button className="button is-primary" onClick={fetchTransactionHistory} style={{
+                <button className="button is-primary" 
+                onClick={() => {
+                  fetchListOfItems
+                  setShowItemModal(true);
+                }} 
+                style={{
                   padding: '10px 20px',
                   fontSize: '16px',
                   color: 'white',
@@ -390,7 +313,11 @@ export default function Page() {
 
                 <button
                   className="button is-primary"
-                  onClick={fetchListOfItems}
+                  onClick={() => {
+                    fetchListOfItems
+                    setShowItemModal(true);
+                  }}
+                  //onClick={fetchListOfItems, setShowItemModal(true)}
                   style={{
                     padding: '10px 20px',
                     fontSize: '16px',
@@ -405,6 +332,35 @@ export default function Page() {
                 </button>
               </div>
 
+          {showItemModal && (
+            <div className="modal is-active">
+              <div
+                className="modal-background"
+                onClick={() => setShowItemModal(false)}
+              ></div>
+              <div className="modal-card">
+                <section className="modal-card-body">
+                  <div className="card is-shadowless">
+                    <div className="card-content px-4 py-">
+                      <div className="media mb-2 flex items-center">
+                        
+                        
+                      </div>
+                    </div>
+                  </div>
+                </section>
+                <footer className="modal-card-foot">
+                  {/* <button className="button is-success">Contact Seller</button> */}
+                  <button
+                    className="button"
+                    onClick={() => setShowItemModal(false)}
+                  >
+                    Close
+                  </button>
+                </footer>
+              </div>
+            </div>
+          )}
   
               {/* {imagePreviewUrl && <img src={imagePreviewUrl} alt="Preview" style={{ maxWidth: '100%', marginTop: '20px' }} />} */}
             </div>
