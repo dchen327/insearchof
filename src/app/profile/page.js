@@ -20,6 +20,9 @@ export default function Page() {
   const [userId, setUserId] = useState("");
   const [locationFilled, setLocationFilled] = useState(false);
 
+
+  const [uploadInfoButton, setUploadInfoButtonClicked] = useState(false);
+
   const [showItemModal, setShowItemModal] = useState(false);
 
 
@@ -67,7 +70,14 @@ export default function Page() {
       setLocationFilled(false);
       alert("Location is required");
       return;
+    } else {
+      setLocationFilled(true);
     }
+
+    setUploadInfoButtonClicked(true);
+
+    setShowLocationTooltip(true);
+    setShowPhoneNumberTooltip(true);
 
     try {
         // Then, create a document in Firestore with the item data
@@ -98,6 +108,13 @@ export default function Page() {
         console.error('Failed to fetch:', error);
         alert('An error occurred. Please try again.');
       }
+  };
+
+  const handleChangeUserInfo = () => {
+    // Hide the "Upload user info" button and tooltips
+    setUploadInfoButtonClicked(false);
+    setShowLocationTooltip(false);
+    setShowPhoneNumberTooltip(false);
   };
 
   
@@ -165,17 +182,7 @@ export default function Page() {
     }
   };
 
-  const handleProfileUpdate = async (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    const newProfileData = {
-      name: formData.get("name"),
-      email: formData.get("email"),
-      phone_number: formData.get("phone_number"),
-      location: formData.get("location"),
-    };
-    updateUserProfile(newProfileData);
-  };
+  
 
 
   return (
@@ -203,7 +210,7 @@ export default function Page() {
              }}>
               {['phoneNumber', 'location', 'image'].map((field) => (
                 <div key={field} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  {field === "phoneNumber" && (
+                  {!uploadInfoButton && field === "phoneNumber" && (
                     <input
                       type="text"
                       value={phoneNumber}
@@ -218,7 +225,7 @@ export default function Page() {
                       }}
                     />
                   )}
-                  {field === "location" && (
+                  {!uploadInfoButton && field === "location" && (
                     <input
                       type="text"
                       value={location}
@@ -246,17 +253,10 @@ export default function Page() {
                     style={{ position: 'relative', zIndex: '20' }}
                   >
                   </button>
-                  {showPhoneNumberTooltip && field === "phoneNumber" && (
-                    <div style={tooltipStyle}>The phone number of the user</div>
-                  )}
-                  {showLocationTooltip && field === "location" && (
-                    <div style={tooltipStyle}>
-                      The location of the user for picking up requested item
-                    </div>
-                  )}
+              
                 </div>
               ))}
-              {(!locationFilled) && (
+              {(!locationFilled && !uploadInfoButton) && (
                 <button className="button is-primary" onClick={uploadContactInformation} style={{
                   padding: '10px 20px',
                   fontSize: '16px',
@@ -267,6 +267,27 @@ export default function Page() {
                 }}>
                   Update user info
                 </button>
+              )}
+              {uploadInfoButton && (
+              <div style={{ textAlign: 'center', marginTop: '10px' }}>
+                <p>Phone Number: {phoneNumber}</p>
+                <p>Location: {location}</p>
+                <button className="button is-primary" 
+                onClick={() => {
+                  setShowLocationTooltip(false)
+                  setShowPhoneNumberTooltip(false);
+                }} 
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '16px',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '2px',
+                  cursor: 'pointer'
+                }}>
+                  Change user info
+                </button>
+              </div>
               )}
             </div>
           </>
@@ -350,7 +371,7 @@ export default function Page() {
                   </div>
                 </section>
                 <footer className="modal-card-foot">
-                  {/* <button className="button is-success">Contact Seller</button> */}
+                  <button className="button is-success">Delete item</button>
                   <button
                     className="button"
                     onClick={() => setShowItemModal(false)}
