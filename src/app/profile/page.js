@@ -93,7 +93,7 @@ export default function Page() {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(requestData)
+          body: JSON.stringify(userData)
         });
 
         const data = await response.json();
@@ -185,7 +185,6 @@ export default function Page() {
 
   
 
-
   return (
     <>
       <div>
@@ -209,8 +208,30 @@ export default function Page() {
               borderRadius: '8px',
               backgroundColor: '#fff',
              }}>
+               {uploadInfoButton && (
+              <div style={{ textAlign: 'center', top: '100%'}}>
+                <p>Phone Number: {phoneNumber}</p>
+                <p>Location: {location}</p>
+                <button className="button is-primary" 
+                onClick={() => {
+                  locationFilled, 
+                  uploadInfoButton
+                }} 
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '16px',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '2px',
+                  cursor: 'pointer',
+                  gap: '5px'
+                }}>
+                  Change user info
+                </button>
+              </div>
+              )}
               {['phoneNumber', 'location', 'image'].map((field) => (
-                <div key={field} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <div key={field} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '10px' }}>
                   {!uploadInfoButton && field === "phoneNumber" && (
                     <input
                       type="text"
@@ -269,27 +290,7 @@ export default function Page() {
                   Update user info
                 </button>
               )}
-              {uploadInfoButton && (
-              <div style={{ textAlign: 'center'}}>
-                <p>Phone Number: {phoneNumber}</p>
-                <p>Location: {location}</p>
-                <button className="button is-primary" 
-                onClick={() => {
-                  locationFilled, 
-                  uploadInfoButton
-                }} 
-                style={{
-                  padding: '10px 20px',
-                  fontSize: '16px',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '2px',
-                  cursor: 'pointer'
-                }}>
-                  Change user info
-                </button>
-              </div>
-              )}
+             
             </div>
           </>
         )}
