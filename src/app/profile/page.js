@@ -269,13 +269,13 @@ export default function Page() {
                 </button>
               )}
               {uploadInfoButton && (
-              <div style={{ textAlign: 'center', marginTop: '10px' }}>
+              <div style={{ textAlign: 'center'}}>
                 <p>Phone Number: {phoneNumber}</p>
                 <p>Location: {location}</p>
                 <button className="button is-primary" 
                 onClick={() => {
-                  setShowLocationTooltip(false)
-                  setShowPhoneNumberTooltip(false);
+                  locationFilled, 
+                  uploadInfoButton
                 }} 
                 style={{
                   padding: '10px 20px',
