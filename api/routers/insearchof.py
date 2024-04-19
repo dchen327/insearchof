@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from typing import Optional
 from pydantic import BaseModel, Field
 from firebase_admin import credentials, firestore, initialize_app, storage
+from ..firebase_config import db
 import os
 import json
 from dotenv import load_dotenv
@@ -16,13 +17,6 @@ router = APIRouter(
     prefix='/api/insearchof',
     tags=['insearchof'],
 )
-
-cred_dict = json.loads(os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY'))
-cred = credentials.Certificate(cred_dict)
-firebase_app = initialize_app(cred, {
-    'storageBucket': os.getenv('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET')
-})
-db = firestore.client()
 
 
 class insearchoferFilters(BaseModel):

@@ -154,7 +154,7 @@ export default function Home() {
     return (
       <div className="flex items-center justify-center h-screen mx-10">
         <progress
-          class="progress is-small is-primary max-w-[500px]"
+          className="progress is-small is-primary max-w-[500px]"
           max="100"
         ></progress>
       </div>
