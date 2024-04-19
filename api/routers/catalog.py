@@ -4,7 +4,7 @@ import json
 from fastapi import APIRouter, Query, Depends
 from typing import Annotated, Optional, List
 from pydantic import BaseModel, Field
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, auth
 from dotenv import load_dotenv
 from ..firebase_config import db
 from datetime import datetime, timezone
@@ -43,6 +43,8 @@ class Listing(BaseModel):
     trans_comp: bool
     type: str
     user_id: str
+    user_name: str
+    email: str
 
 
 class ListingsResponse(BaseModel):
@@ -138,9 +140,15 @@ def get_listings(
         diff = now - timestamp
         item['time_since_listing'] = format_timedelta(diff)
 
+        # from user_id, get user's name and email
+        user_id = item['user_id']
+        user = auth.get_user(user_id)
+        item['user_name'] = user.display_name
+        item['email'] = user.email
+
     # print all
     print(search, sort, listing_types, min_price, max_price, categories)
-    print(items)
+    # print(items)
 
     return {"listings": items}
 
