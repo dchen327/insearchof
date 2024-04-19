@@ -158,23 +158,23 @@ export default function Page() {
 
 
   const updateRequest = async () => {
-    // Fetch the requests made by the user
-    const response = await fetch(`api/insearchof/user_requests/${user.uid}`, { 
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      // Print the titles of the items requested by the user
-      data.forEach(request => {
-        console.log(request.title);
-      });
-    } else {
-      alert('Failed to fetch requests: ' + data.message);
+    if (!user) {
+      alert('You must be logged in to view your requests.');
+      return;
+    }
+  
+    try {
+      const response = await fetch(`/api/insearchof/update/${user.uid}`);
+      const data = await response.json();
+  
+      if (response.ok) {
+        console.log('Check the server console for the user requests');
+      } else {
+        alert('Failed to fetch user requests: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Failed to fetch:', error);
+      alert('An error occurred while fetching user requests. Please try again.');
     }
   };
 

@@ -100,7 +100,7 @@ class MarkTransactionRequest(BaseModel):
 
 class MarkTransactionCompleteResponse(BaseModel):
     """
-    Response model for marking a transaction as complete in the database.    
+    Response model for marking a transaction as complete in the database.
     """
 
     message: str = Field(
@@ -164,16 +164,46 @@ async def upload_request(iso_request: RequestInformation):
     return {"message": "Request uploaded successfully", "request_id": doc_ref.id}
 
 
-@router.patch("/update/{request_id}", response_model=UpdateRequestResponse)
-def update_request(request_id: str, request, current_user):
-    '''
-    Updates an existing ISO request in the database. This endpoint requires the user to be authenticated.
+# THIS IS TEMPORARY
+@router.get("/update/{user_id}", response_model=dict)
+async def update_request(user_id: str):
+    """
+    Prints the titles of the requests made by a given user to the console.
+    This is a temporary implementation as per the user's requirement.
 
-    Security: Only the user who created the ISO request is allowed to update it.
+    Args:
+        user_id (str): The user ID for which to print request titles.
+    """
+    try:
+        # Fetch the documents where the `user_id` matches the one provided
+        docs = db.collection('items').where('user_id', '==', user_id).where(
+            'type', '==', 'request').stream()
 
-    Returns a JSON response with the result of the operation.
-    '''
-    return {"message": "Request updated"}
+        titles = []
+        print(f"Request titles for user {user_id}:")
+        for doc in docs:
+            title = doc.to_dict().get('title', 'No Title')  # Provide a default if 'title' is not found
+            titles.append(title)
+            print(title)
+        return {"message": f"Printed titles to console for user ID {user_id}", "titles": titles}
+
+    except Exception as e:
+        print(f"Failed to retrieve request titles: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"message": "Failed to retrieve request titles", "error": str(e)}
+        )
+
+
+# def update_request():
+#     '''
+#     Updates an existing ISO request in the database. This endpoint requires the user to be authenticated.
+
+#     Security: Only the user who created the ISO request is allowed to update it.
+
+#     Returns a JSON response with the result of the operation.
+#     '''
+#     return {"message": "Request updated"}
 
 
 @router.delete("/delete/{request_id}")
@@ -231,58 +261,3 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
             status_code=500,
             content={"message": "Failed to upload image", "error": str(e)}
         )
-
-
-'''
-ISSUES PROVIDED BY REVIEW:
-
-Non-negative Price Validation:
-Issue: The initial code did not validate the non-negative price on the backend.
-Risk: Without backend validation, there was a possibility of negative prices "screwing up" the database integrity.
-
-Editing/Deleting ISO Requests:
-Issue: The program lacked the ability for users to edit or delete their ISO requests.
-Risk: This limitation restricted user control and could lead to outdated information existing in the database.
-
-Image Handling Post-Upload:
-Issue: There was no clarification or implementation detail on the restrictions for image size and format.
-Risk: Without such restrictions, users could upload excessively large or improperly formatted images, potentially leading to storage inefficiencies or technical issues.
-
-Notification System Integration:
-Issue: There was no mention of a notification system to alert users of important events related to their ISO requests.
-Risk: Users might not be promptly informed about significant updates, potentially degrading the user experience.
-
-Security Measures:
-Issue: The preliminary design did not address security measures such as authentication and authorization for accessing and modifying requests.
-Risk: Neglecting security could lead to unauthorized access and manipulation of user data.
-
-Testing Framework
-Issue: No standard (off the shelf) testing framework.
-Risk: Tests are formatted in many different ways, creating confusion
-
-SUMMARY OF CHANGES MADE:
-
-Non-negative Price Validation:
-Change: Added a validator within the insearchoferFilters Pydantic model to check for non-negative prices.
-Reason: Backend validation ensures integrity even if frontend validation fails or is bypassed, safeguarding the database against corrupt data.
-
-Editing/Deleting ISO Requests:
-Change: Introduced new endpoints for updating and deleting ISO requests, along with proper permission checks.
-Reason: This allows users to maintain accurate and current information and removes any obsolete data, enhancing user control and data relevance.
-
-Image Handling Post-Upload:
-Change: Included comments about handling images with specific size and format restrictions post-upload.
-Reason: Outlines the need to enforce these limitations to maintain efficient storage and prevent technical issues.
-
-Notification System Integration:
-Change: Added comments discussing the potential integration of a notification system.
-Reason: To improve user engagement by keeping users updated about the status of their ISO requests and related transactions.
-
-Security Measures:
-Change: Ensured all sensitive endpoints require user authentication, and only appropriate users can perform actions.
-Reason: To protect user data and prevent unauthorized actions, upholding the application’s integrity and trustworthiness.
-
-Testing Framework
-Change: Utilize python unittest as the testing framework.
-Reason: Standardized tests will be easier to understand for yourself and others.
-'''
