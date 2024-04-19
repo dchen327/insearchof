@@ -4,15 +4,10 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
-import { getFirestore, collection, addDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { v4 as uuidv4 } from "uuid";
-
 
 export default function Page() {
   const [user, setUser] = useState(null);
   const router = useRouter();
-  const imagesRef = ref(storage, "images");
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -36,6 +31,7 @@ export default function Page() {
     return () => unsubscribe();
   }, [router]);
 
+  // Handle image change
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     setImage(file);
@@ -54,6 +50,9 @@ export default function Page() {
 
   const handlePriceChange = (e) => {
     const value = e.target.value;
+
+    // prevent any non-numeric characters from being entered
+    // allow only one decimal point
     const validValue = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
     const parts = validValue.split('.');
     if (parts.length > 1) {
@@ -63,28 +62,6 @@ export default function Page() {
     setPrice(formattedValue);
   };
 
-
-  // const uploadImage = async (file) => {
-  //   try {
-  //     // Generate a unique filename for the image
-  //     const fileName = uuidv4();
-
-  //     // Create a reference to the storage location
-  //     const imageRef = ref(imagesRef, fileName);
-
-  //     // Upload the image file to Firebase Storage
-  //     await uploadBytes(imageRef, file);
-
-  //     // Get the download URL of the uploaded image
-  //     const imageUrl = await getDownloadURL(imageRef);
-
-  //     // Return the URL of the uploaded image
-  //     return imageUrl;
-  //   } catch (error) {
-  //     console.error('Error uploading image:', error);
-  //     throw error; // Re-throw the error to handle it elsewhere if needed
-  //   }
-  // };
 
 
   const uploadRequest = async () => {

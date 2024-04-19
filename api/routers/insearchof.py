@@ -20,7 +20,7 @@ router = APIRouter(
 cred_dict = json.loads(os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY'))
 cred = credentials.Certificate(cred_dict)
 firebase_app = initialize_app(cred, {
-    'storageBucket': 'insearchof-1fb7a.appspot.com'
+    'storageBucket': os.getenv('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET')
 })
 db = firestore.client()
 
