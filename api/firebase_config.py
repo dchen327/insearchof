@@ -2,6 +2,9 @@
 import os
 import json
 from firebase_admin import credentials, initialize_app, firestore
+from dotenv import load_dotenv
+
+load_dotenv()
 
 cred_dict = json.loads(os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY'))
 cred = credentials.Certificate(cred_dict)

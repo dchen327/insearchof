@@ -6,6 +6,7 @@ from typing import Annotated, Optional, List
 from pydantic import BaseModel, Field
 from firebase_admin import credentials, firestore
 from dotenv import load_dotenv
+from ..firebase_config import db
 
 load_dotenv()
 
@@ -94,13 +95,17 @@ def get_listings(
     if max_price == 0:
         max_price = float('inf')
 
+    # query from database items collection
+    items = db.collection(u'items').stream()
+
     # print all
     print(search, sort, listing_types, min_price, max_price, categories)
+    print(items)
 
     return {"listings": []}
 
 
-@ router.get("/purchase")
+@router.get("/purchase")
 def purchase_item(purchase_request: PurchaseRequest) -> PurchaseResponse:
     ''' A buyer indicates to a seller that they'd want to purchase an item. Query profiles backend for seller\'s contact information and return for the frontend. '''
     # First validates inputs
