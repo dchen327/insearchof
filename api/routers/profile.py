@@ -110,7 +110,7 @@ class UserProfile(BaseModel):
             items.append(doc.to_dict())
 
         print(items)
-        return {"listingOfItems": []}
+        return {"listingOfItems": items}
 
     @router.get("/get_transaction_history")
     def get_transaction_history(get_transactions: GetTransactionHistoryRequest) -> GetTransactionHistoryResponse:

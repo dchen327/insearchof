@@ -140,7 +140,7 @@ export default function Page() {
       }
       const data = await response.json();
       console.log(data);
-      setItems(response.data.listingOfItems);
+      setItems(data.listingOfItems);
     } catch (err) {
       console.error(err);
       setError("Failed to fetch list of items");
@@ -215,9 +215,9 @@ export default function Page() {
                   <p>Location: {location}</p>
                   <button
                     className="button is-primary"
-                    onClick={() => {
-                      locationFilled, uploadInfoButton;
-                    }}
+                    // onClick={() => {
+                    //   locationFilled, uploadInfoButton;
+                    // }}
                     style={{
                       padding: "10px 20px",
                       fontSize: "16px",
@@ -337,7 +337,7 @@ export default function Page() {
                 <button
                   className="button is-primary"
                   onClick={() => {
-                    fetchListOfItems;
+                    fetchTransactionHistory();
                     setShowItemModal(true);
                   }}
                   style={{
