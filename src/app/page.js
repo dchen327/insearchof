@@ -35,6 +35,7 @@ export default function Home() {
   const [tempMaxPrice, setTempMaxPrice] = useState(maxPrice);
 
   const [items, setItems] = useState([]);
+  const [itemsLoading, setItemsLoading] = useState(false);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -109,6 +110,7 @@ export default function Home() {
 
   const searchItems = async (e) => {
     e.preventDefault();
+    setItemsLoading(true);
     const listingTypes = [];
     if (marketSelected) listingTypes.push("buy");
     if (rentalsSelected) listingTypes.push("rent");
@@ -133,6 +135,7 @@ export default function Home() {
     const data = await response.json();
     const listings = data?.listings || [];
     setItems(listings);
+    setItemsLoading(false);
   };
 
   const generateRandomItem = () => {
@@ -366,7 +369,14 @@ export default function Home() {
               </div>
             </div>
           )}
-          {items.length > 0 ? (
+          {itemsLoading ? (
+            <div className="flex justify-center h-screen mx-10 mt-10">
+              <progress
+                className="progress is-small is-primary max-w-[500px]"
+                max="100"
+              ></progress>
+            </div>
+          ) : items.length > 0 ? (
             items.map((item, idx) => (
               <>
                 <div
