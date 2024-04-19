@@ -4,9 +4,10 @@ import json
 from fastapi import APIRouter, Query, Depends
 from typing import Annotated, Optional, List
 from pydantic import BaseModel, Field
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, auth
 from dotenv import load_dotenv
 from ..firebase_config import db
+from datetime import datetime, timezone
 
 load_dotenv()
 
@@ -33,7 +34,17 @@ class ListingsFilters(BaseModel):
 
 
 class Listing(BaseModel):
-    pass
+    description: str
+    image_url: str
+    price: float
+    timestamp: datetime
+    time_since_listing: str
+    title: str
+    trans_comp: bool
+    type: str
+    user_id: str
+    user_name: str
+    email: str
 
 
 class ListingsResponse(BaseModel):
@@ -59,6 +70,26 @@ class PurchaseResponse(BaseModel):
         None, description="The seller's Discord username.")
     seller_messenger: Optional[str] = Field(
         None, description="The seller's Facebook Messenger profile.")
+
+
+def format_timedelta(td):
+    total_seconds = int(td.total_seconds())
+    periods = [
+        ('y', 60*60*24*365),
+        ('mo', 60*60*24*30),
+        ('w', 60*60*24*7),
+        ('d', 60*60*24),
+        ('h', 60*60),
+        ('m', 60),
+        ('s', 1)
+    ]
+
+    for period_name, period_seconds in periods:
+        if total_seconds >= period_seconds:
+            period_value, total_seconds = divmod(total_seconds, period_seconds)
+            return "%s%s" % (period_value, period_name)
+
+    return "0s"
 
 
 @router.get("/listings")
@@ -96,13 +127,30 @@ def get_listings(
         max_price = float('inf')
 
     # query from database items collection
-    items = db.collection(u'items').stream()
+    items = []
+    for doc in db.collection(u'items').stream():
+        items.append(doc.to_dict())
+
+    # convert timestamp to string (e.g. 5m, 1h, 1d, 1w, 1mo, 1y)
+    now = datetime.now(timezone.utc)
+    for item in items:
+        # calculate difference from current time
+        timestamp = item['timestamp']
+        print(timestamp, type(timestamp))
+        diff = now - timestamp
+        item['time_since_listing'] = format_timedelta(diff)
+
+        # from user_id, get user's name and email
+        user_id = item['user_id']
+        user = auth.get_user(user_id)
+        item['user_name'] = user.display_name
+        item['email'] = user.email
 
     # print all
     print(search, sort, listing_types, min_price, max_price, categories)
-    print(items)
+    # print(items)
 
-    return {"listings": []}
+    return {"listings": items}
 
 
 @router.get("/purchase")

@@ -3,15 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import Optional
 from pydantic import BaseModel, Field
-from firebase_admin import credentials, firestore, initialize_app, storage
-import os
-import json
-from dotenv import load_dotenv
-from datetime import datetime
+from firebase_admin import storage
+from ..firebase_config import db
+from datetime import datetime, timezone
 from uuid import uuid4
 from ..firebase_config import db
-
-load_dotenv()
 
 router = APIRouter(
     prefix='/api/insearchof',
@@ -163,7 +159,7 @@ async def upload_request(iso_request: RequestInformation):
     '''
     doc_ref = db.collection('items').document()
     iso_request_data = iso_request.dict()
-    iso_request_data["timestamp"] = datetime.now()
+    iso_request_data["timestamp"] = datetime.now(timezone.utc)
     doc_ref.set(iso_request_data)
     return {"message": "Request uploaded successfully", "request_id": doc_ref.id}
 

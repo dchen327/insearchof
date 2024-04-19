@@ -34,6 +34,18 @@ export default function Home() {
   const [tempMinPrice, setTempMinPrice] = useState(minPrice);
   const [tempMaxPrice, setTempMaxPrice] = useState(maxPrice);
 
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      const response = await fetch("/api/catalog/listings");
+      const data = await response.json();
+      setItems(data?.listings || []);
+    };
+
+    fetchItems();
+  }, []);
+
   // when the modal is opened, update the temporary variables with the current values
   useEffect(() => {
     if (showFilterModal) {
@@ -117,6 +129,10 @@ export default function Home() {
         "Content-Type": "application/json",
       },
     });
+
+    const data = await response.json();
+    const listings = data?.listings || [];
+    console.log(listings[0]);
   };
 
   const generateRandomItem = () => {
@@ -146,9 +162,6 @@ export default function Home() {
 
     return item;
   };
-
-  const testItem = generateRandomItem();
-  const items = [testItem, testItem, testItem];
 
   if (loading) {
     return (
