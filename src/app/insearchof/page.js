@@ -158,7 +158,24 @@ export default function Page() {
 
 
   const updateRequest = async () => {
-    // todo
+    if (!user) {
+      alert('You must be logged in to view your requests.');
+      return;
+    }
+  
+    try {
+      const response = await fetch(`/api/insearchof/update/${user.uid}`);
+      const data = await response.json();
+  
+      if (response.ok) {
+        console.log('Check the server console for the user requests');
+      } else {
+        alert('Failed to fetch user requests: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Failed to fetch:', error);
+      alert('An error occurred while fetching user requests. Please try again.');
+    }
   };
 
   // Define the style for the tooltips outside of the return statement

@@ -100,7 +100,7 @@ class MarkTransactionRequest(BaseModel):
 
 class MarkTransactionCompleteResponse(BaseModel):
     """
-    Response model for marking a transaction as complete in the database.    
+    Response model for marking a transaction as complete in the database.
     """
 
     message: str = Field(
@@ -164,15 +164,46 @@ async def upload_request(iso_request: RequestInformation):
     return {"message": "Request uploaded successfully", "request_id": doc_ref.id}
 
 
-def update_request():
-    '''
-    Updates an existing ISO request in the database. This endpoint requires the user to be authenticated.
+# THIS IS TEMPORARY
+@router.get("/update/{user_id}", response_model=dict)
+async def update_request(user_id: str):
+    """
+    Prints the titles of the requests made by a given user to the console.
+    This is a temporary implementation as per the user's requirement.
 
-    Security: Only the user who created the ISO request is allowed to update it.
+    Args:
+        user_id (str): The user ID for which to print request titles.
+    """
+    try:
+        # Fetch the documents where the `user_id` matches the one provided
+        docs = db.collection('items').where('user_id', '==', user_id).where(
+            'type', '==', 'request').stream()
 
-    Returns a JSON response with the result of the operation.
-    '''
-    return {"message": "Request updated"}
+        titles = []
+        print(f"Request titles for user {user_id}:")
+        for doc in docs:
+            title = doc.to_dict().get('title', 'No Title')  # Provide a default if 'title' is not found
+            titles.append(title)
+            print(title)
+        return {"message": f"Printed titles to console for user ID {user_id}", "titles": titles}
+
+    except Exception as e:
+        print(f"Failed to retrieve request titles: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"message": "Failed to retrieve request titles", "error": str(e)}
+        )
+
+
+# def update_request():
+#     '''
+#     Updates an existing ISO request in the database. This endpoint requires the user to be authenticated.
+
+#     Security: Only the user who created the ISO request is allowed to update it.
+
+#     Returns a JSON response with the result of the operation.
+#     '''
+#     return {"message": "Request updated"}
 
 
 @router.delete("/delete/{request_id}")
