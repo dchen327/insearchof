@@ -5,6 +5,10 @@ export const ItemCard = ({ item }) => {
       ? item.description.substring(0, 200) + "..."
       : item.description;
 
+  const price = Number.isInteger(item.price)
+    ? item.price
+    : parseFloat(item.price).toFixed(2);
+
   return (
     <div className="card is-shadowless">
       <div className="card-content px-4 py-">
@@ -14,12 +18,11 @@ export const ItemCard = ({ item }) => {
             <div className="flex flex-row mb-0">
               <p className="is-6">{item.sellerUserID}</p>
               <p className="is-6 font-thin">•</p>
-              {/* todo: backend calculations  */}
               <p className="is-6">{item.timeSinceListing}</p>
             </div>
           </div>
           <div className="bg-gray-100 rounded">
-            <p className="p-1 text-lg text-black is-4">${item.price}</p>
+            <p className="p-1 text-lg text-black is-4">${price}</p>
           </div>
         </div>
         <div className="content">{description}</div>
