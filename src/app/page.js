@@ -352,11 +352,14 @@ export default function Home() {
                       </div>
                       <div className="content">
                         <p>{currentItem.description}</p>
-                        <Image
-                          src={currentItem.image_url}
-                          alt="Image"
-                          fill="true"
-                        />
+                        <div>
+                          <Image
+                            src={currentItem.image_url}
+                            alt="Image"
+                            fill="true"
+                            objectFit="contain"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
