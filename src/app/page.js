@@ -17,7 +17,7 @@ export default function Home() {
 
   // filter modal
   const [category, setCategory] = useState("All");
-  const [sortBy, setSortBy] = useState("uploadDateAsc");
+  const [sortBy, setSortBy] = useState("uploadDateDesc");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [showItemModal, setShowItemModal] = useState(false);
@@ -221,10 +221,10 @@ export default function Home() {
                             value={tempSortBy}
                             onChange={(e) => setTempSortBy(e.target.value)}
                           >
-                            <option value="uploadDateAsc">Date (Newest)</option>
                             <option value="uploadDateDesc">
-                              Date (Oldest)
+                              Date (Newest)
                             </option>
+                            <option value="uploadDateAsc">Date (Oldest)</option>
                             <option value="priceAsc">
                               Price (Low to High)
                             </option>
