@@ -8,6 +8,7 @@ from firebase_admin import credentials, firestore, auth
 from dotenv import load_dotenv
 from ..firebase_config import db
 from datetime import datetime, timezone
+from google.cloud.firestore_v1 import FieldFilter
 
 load_dotenv()
 
@@ -106,7 +107,7 @@ def get_listings(
     sort: str = Query(default='uploadDateAsc',
                       description="Options for sorting (ascending/descending): upload date, price"),
     listing_types: List[str] = Query(
-        default=[], description="The types of listing to return (buy, rent, or request)"),
+        default=['buy', 'rent', 'request'], description="The types of listing to return (buy, rent, or request)"),
     min_price: float = Query(
         default=0, description="Minimum price of returned items. Must be at most the maximum price, and be a non-negative float with max 2 decimal places."),
     max_price: float = Query(
@@ -136,7 +137,17 @@ def get_listings(
     items = []
     # query from database items collection, filter and order correctly
     field, direction = sort_options[sort]
-    docs = db.collection('items').order_by(
+
+    # Create FieldFilter objects
+    type_filter = FieldFilter(
+        field_path='type', op_string='in', value=listing_types)
+    min_price_filter = FieldFilter(
+        field_path='price', op_string='>=', value=min_price)
+    max_price_filter = FieldFilter(
+        field_path='price', op_string='<=', value=max_price)
+
+    # Use FieldFilter objects with where method
+    docs = db.collection('items').where(filter=type_filter).where(filter=min_price_filter).where(filter=max_price_filter).order_by(
         field, direction=direction).stream()
     for doc in docs:
         items.append(doc.to_dict())

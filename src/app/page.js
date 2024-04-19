@@ -366,19 +366,23 @@ export default function Home() {
               </div>
             </div>
           )}
-          {items.map((item, idx) => (
-            <>
-              <div
-                onClick={() => {
-                  setCurrentItem(item);
-                  setShowItemModal(true);
-                }}
-              >
-                <ItemCard key={idx} item={item} />
-              </div>
-              {idx !== items.length - 1 && <hr className="py-[1px]" />}
-            </>
-          ))}
+          {items.length > 0 ? (
+            items.map((item, idx) => (
+              <>
+                <div
+                  onClick={() => {
+                    setCurrentItem(item);
+                    setShowItemModal(true);
+                  }}
+                >
+                  <ItemCard key={idx} item={item} />
+                </div>
+                {idx !== items.length - 1 && <hr className="py-[1px]" />}
+              </>
+            ))
+          ) : (
+            <p className="has-text-centered mt-3">No items found</p>
+          )}
           {showItemModal && currentItem && (
             <div className="modal is-active">
               <div
