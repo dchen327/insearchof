@@ -22,7 +22,7 @@ export default function Home() {
 
   // filter modal
   const [category, setCategory] = useState("All");
-  const [sortBy, setSortBy] = useState("relevance");
+  const [sortBy, setSortBy] = useState("uploadDateAsc");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [showItemModal, setShowItemModal] = useState(false);
@@ -132,7 +132,7 @@ export default function Home() {
 
     const data = await response.json();
     const listings = data?.listings || [];
-    console.log(listings[0]);
+    setItems(listings);
   };
 
   const generateRandomItem = () => {
@@ -291,8 +291,10 @@ export default function Home() {
                             value={tempSortBy}
                             onChange={(e) => setTempSortBy(e.target.value)}
                           >
-                            <option value="relevance">Relevance</option>
-                            <option value="uploadDate">Upload Date</option>
+                            <option value="uploadDateAsc">Date (Newest)</option>
+                            <option value="uploadDateDesc">
+                              Date (Oldest)
+                            </option>
                             <option value="priceAsc">
                               Price (Low to High)
                             </option>
@@ -391,11 +393,11 @@ export default function Home() {
                         <div className="media-content">
                           <p className="title is-4 mb-2">{currentItem.title}</p>
                           <div className="flex flex-row mb-0">
-                            <p className="is-6">{currentItem.sellerUserID}</p>
+                            <p className="is-6">{currentItem.user_name}</p>
                             <p className="is-6 font-thin">•</p>
                             {/* todo: backend calculations  */}
                             <p className="is-6">
-                              {currentItem.timeSinceListing}
+                              {currentItem.time_since_listing}
                             </p>
                           </div>
                         </div>

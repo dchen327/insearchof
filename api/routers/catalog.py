@@ -17,12 +17,19 @@ router = APIRouter(
     tags=['catalog'],
 )
 
+sort_options = {
+    "uploadDateAsc": ("timestamp", "ASCENDING"),
+    "uploadDateDesc": ("timestamp", "DESCENDING"),
+    "priceAsc": ("price", "ASCENDING"),
+    "priceDesc": ("price", "DESCENDING"),
+}
+
 
 class ListingsFilters(BaseModel):
     search: str = Field(
         default='', description="The search query: searches item names and descriptions.")
     sort: str = Field(
-        default='relevance', description="Options for sorting (ascending/descending): relevance, upload date, price")
+        default='uploadDateAsc', description="Options for sorting (ascending/descending): upload date, price")
     listing_types: Annotated[list[str], Query()] = Field(
         description="The types of listing to return (buy, rent, or request)")
     min_price: float = Field(
@@ -96,8 +103,8 @@ def format_timedelta(td):
 def get_listings(
     search: str = Query(
         default='', description="The search query: searches item names and descriptions."),
-    sort: str = Query(default='relevance',
-                      description="Options for sorting (ascending/descending): relevance, upload date, price"),
+    sort: str = Query(default='uploadDateAsc',
+                      description="Options for sorting (ascending/descending): upload date, price"),
     listing_types: List[str] = Query(
         default=[], description="The types of listing to return (buy, rent, or request)"),
     min_price: float = Query(
@@ -126,17 +133,20 @@ def get_listings(
     if max_price == 0:
         max_price = float('inf')
 
-    # query from database items collection
     items = []
-    for doc in db.collection(u'items').stream():
+    # query from database items collection, filter and order correctly
+    field, direction = sort_options[sort]
+    docs = db.collection('items').order_by(
+        field, direction=direction).stream()
+    for doc in docs:
         items.append(doc.to_dict())
 
+    print('***', items)
     # convert timestamp to string (e.g. 5m, 1h, 1d, 1w, 1mo, 1y)
     now = datetime.now(timezone.utc)
     for item in items:
         # calculate difference from current time
         timestamp = item['timestamp']
-        print(timestamp, type(timestamp))
         diff = now - timestamp
         item['time_since_listing'] = format_timedelta(diff)
 
