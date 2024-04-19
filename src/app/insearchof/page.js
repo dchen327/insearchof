@@ -158,24 +158,7 @@ export default function Page() {
 
 
   const updateRequest = async () => {
-    // Fetch the requests made by the user
-    const response = await fetch(`api/insearchof/user_requests/${user.uid}`, { 
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      // Print the titles of the items requested by the user
-      data.forEach(request => {
-        console.log(request.title);
-      });
-    } else {
-      alert('Failed to fetch requests: ' + data.message);
-    }
+    // todo
   };
 
   // Define the style for the tooltips outside of the return statement
