@@ -19,6 +19,7 @@ export default function Page() {
   const [location, setLocation] = useState("");
   const [userId, setUserId] = useState("");
   const [locationFilled, setLocationFilled] = useState(false);
+  const [listOfItems, setListOfItems] = useState(false);
 
 
   const [uploadInfoButton, setUploadInfoButtonClicked] = useState(false);
@@ -131,7 +132,7 @@ export default function Page() {
     marginTop: "5px",
   };
 
-  const fetchListOfItems = async (email) => {
+  const fetchListOfItems = async () => {
     try {
       setLoading(true);
       const response = await fetch(
