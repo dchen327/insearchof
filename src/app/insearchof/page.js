@@ -9,6 +9,7 @@ export default function Page() {
   const [user, setUser] = useState(null);
   const router = useRouter();
   const [title, setTitle] = useState('');
+  const [item_id, setItem_id] = useState(''); // DELETE THIS LINE
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [image, setImage] = useState(null);
@@ -17,6 +18,9 @@ export default function Page() {
   const [showDescriptionTooltip, setShowDescriptionTooltip] = useState(false);
   const [showPriceTooltip, setShowPriceTooltip] = useState(false);
   const [showImageTooltip, setShowImageTooltip] = useState(false);
+  const [isItemIdValid, setIsItemIdValid] = useState(false);
+  const [requestId, setRequestId] = useState('');
+
 
 
   useEffect(() => {
@@ -48,6 +52,56 @@ export default function Page() {
     }
   };
 
+
+  const handleItemIDChange = async (e) => {
+    const newItemId = e.target.value;
+    setItem_id(newItemId); // Assuming setItem_id is your state setter for item_id
+
+    if (newItemId.length === 20) {
+      try {
+        // Make an API call to your backend to validate the item_id
+        const response = await fetch(`/api/insearchof/validate-item-id/${newItemId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ user_id: user.uid }) // Send the current user's uid for validation
+        });
+
+        const data = await response.json();
+        if (response.ok && data.isValid) {
+          // Set the form fields with the item details
+          setTitle(data.itemDetails.title);
+          setDescription(data.itemDetails.description);
+          setPrice(data.itemDetails.price.toString()); // Convert price to a string for the input field
+          // setImagePreviewUrl(data.itemDetails.image_url);
+          // Note: Handling the actual image file object for uploads will require additional logic
+          setIsItemIdValid(true);
+
+        } else {
+          console.error('Item ID validation error:', data.message);
+          setIsItemIdValid(false);
+          setTitle('');
+          setDescription('');
+          setPrice('');
+          setImagePreviewUrl('');
+        }
+      } catch (error) {
+        console.error('Failed to validate Item ID:', error);
+        setIsItemIdValid(false);
+      }
+    } else {
+      // Reset the form and validation status if the item_id is not 20 characters long
+      setIsItemIdValid(false);
+      setTitle('');
+      setDescription('');
+      setPrice('');
+      setImagePreviewUrl('');
+
+    }
+  };
+
+
   const handlePriceChange = (e) => {
     const value = e.target.value;
 
@@ -63,6 +117,30 @@ export default function Page() {
     const formattedValue = parts.join('.');
     setPrice(formattedValue);
   };
+
+
+  const uploadImage = async (imageFile) => {
+    if (!imageFile) {
+      // If no image is provided, we don't need to upload anything
+      return '';
+    }
+  
+    const formData = new FormData();
+    formData.append('file', imageFile);
+  
+    const imageResponse = await fetch(`/api/insearchof/upload-image/${user.uid}`, {
+      method: 'POST',
+      body: formData, // Send the file as FormData
+    });
+  
+    if (!imageResponse.ok) {
+      throw new Error('Image upload failed');
+    }
+  
+    const imageData = await imageResponse.json();
+    return imageData.image_url; // Return the uploaded image URL
+  };
+  
 
   const uploadRequest = async () => {
     // Validate input fields
@@ -88,27 +166,9 @@ export default function Page() {
     try {
       let imageUrl = '';
       try {
-        if (image) {
-          const formData = new FormData();
-          formData.append('file', image);
-
-          // Include the user_id in the URL
-          const imageResponse = await fetch(`/api/insearchof/upload-image/${user.uid}`, {
-            method: 'POST',
-            body: formData, // Send the file as FormData
-          });
-
-          if (!imageResponse.ok) {
-            throw new Error('Image upload failed');
-          }
-
-          const imageData = await imageResponse.json();
-          imageUrl = imageData.image_url; // Get the image URL from the backend
-        }
+        imageUrl = await uploadImage(image);
       } catch (error) {
-        // error handling for image upload
         console.error('Failed to fetch:', error);
-        // If the error object has a response with JSON, log that as well
         if (error.response) {
           error.response.json().then((json) => {
             console.log('Error details:', json);
@@ -157,26 +217,62 @@ export default function Page() {
   };
 
 
-  const updateRequest = async () => {
-    if (!user) {
-      alert('You must be logged in to view your requests.');
-      return;
+// Assuming `item_id` is the state that holds your item ID, no need for additional state
+
+// Update the updateRequest function to use item_id
+const updateRequest = async () => {
+  if (!item_id) {
+    alert('No item ID provided for the update.');
+    return;
+  }
+
+  // Validate other fields just like in the uploadRequest function
+  // ...
+
+  let imageUrl = imagePreviewUrl; // Keep the existing image URL by default
+
+  try {
+    // If a new image is provided, upload it and get the new image URL
+    if (image) {
+      imageUrl = await uploadImage(image);
     }
-  
-    try {
-      const response = await fetch(`/api/insearchof/update/${user.uid}`);
-      const data = await response.json();
-  
-      if (response.ok) {
-        console.log('Check the server console for the user requests');
-      } else {
-        alert('Failed to fetch user requests: ' + data.message);
-      }
-    } catch (error) {
-      console.error('Failed to fetch:', error);
-      alert('An error occurred while fetching user requests. Please try again.');
+
+    // Prepare request data with the possibly updated image URL
+    const requestData = {
+      title,
+      description,
+      price: parseFloat(price),
+      image_url: imageUrl,
+      type: 'request',
+      trans_comp: false,
+      user_id: user.uid,
+    };
+
+    // Send the update request to the backend
+    const response = await fetch(`/api/insearchof/update/${item_id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      alert('Request updated successfully!');
+      // ... Code to handle successful update ...
+      // Optionally reset form fields here, if required
+    } else {
+      alert('Failed to update request: ' + data.message);
     }
-  };
+  } catch (error) {
+    console.error('Failed to update:', error);
+    alert('An error occurred. Please try again.');
+  }
+};
+
+// ... rest of your code ...
+
 
   // Define the style for the tooltips outside of the return statement
   const tooltipStyle = {
@@ -214,8 +310,16 @@ export default function Page() {
         borderRadius: '8px',
         backgroundColor: '#fff',
       }}>
-        {['title', 'description', 'price', 'image'].map((field) => (
+        {['item id', 'title', 'description', 'price', 'image'].map((field) => (
+          // ITEM ID IS TEMPORARY, PLEASE DELETE
           <div key={field} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            {field === 'item id' && <input
+              type="text"
+              value={item_id}
+              onChange={handleItemIDChange}
+              placeholder="Item ID (Temporary)"
+              style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1 }}
+            />}
             {field === 'title' && <input
               type="text"
               value={title}

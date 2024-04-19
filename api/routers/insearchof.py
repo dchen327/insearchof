@@ -8,6 +8,7 @@ from ..firebase_config import db
 from datetime import datetime, timezone
 from uuid import uuid4
 from ..firebase_config import db
+from fastapi.encoders import jsonable_encoder
 
 router = APIRouter(
     prefix='/api/insearchof',
@@ -164,35 +165,43 @@ async def upload_request(iso_request: RequestInformation):
     return {"message": "Request uploaded successfully", "request_id": doc_ref.id}
 
 
-# THIS IS TEMPORARY
-@router.get("/update/{user_id}", response_model=dict)
-async def update_request(user_id: str):
-    """
-    Prints the titles of the requests made by a given user to the console.
-    This is a temporary implementation as per the user's requirement.
+class UpdateRequest(BaseModel):
+    title: Optional[str]
+    description: Optional[str]
+    price: Optional[float]
+    image_url: Optional[str]
+    user_id: str
+    type: str  # should remain "request"
+    trans_comp: bool  # should remain False
 
-    Args:
-        user_id (str): The user ID for which to print request titles.
+# Add the following endpoint to your router for updates
+@router.put("/update/{item_id}", response_model=UpdateRequestResponse)
+async def update_request(item_id: str, update_data: UpdateRequest, request: Request):
     """
+    Updates an existing ISO request in the database using the item ID.
+
+    Parameters:
+    - item_id: The unique ID of the item to update.
+    - update_data: Data to update the item with.
+
+    Returns a JSON response with the result of the operation.
+    """
+    print('bruh')
     try:
-        # Fetch the documents where the `user_id` matches the one provided
-        docs = db.collection('items').where('user_id', '==', user_id).where(
-            'type', '==', 'request').stream()
-
-        titles = []
-        print(f"Request titles for user {user_id}:")
-        for doc in docs:
-            title = doc.to_dict().get('title', 'No Title')  # Provide a default if 'title' is not found
-            titles.append(title)
-            print(title)
-        return {"message": f"Printed titles to console for user ID {user_id}", "titles": titles}
-
+        item_ref = db.collection('items').document(item_id)
+        item = item_ref.get()
+        if item.exists:
+            item_data = item.to_dict()
+            # Proceed with the update
+            item_data.update(update_data.dict(exclude_unset=True))
+            item_ref.set(item_data)
+            return {"message": "Item updated successfully"}
+        
+        # MAYBE UPDATE TIMESTAMP AS WELL?
+        else:
+            raise HTTPException(status_code=404, detail="Item not found")
     except Exception as e:
-        print(f"Failed to retrieve request titles: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content={"message": "Failed to retrieve request titles", "error": str(e)}
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # def update_request():
@@ -261,3 +270,33 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
             status_code=500,
             content={"message": "Failed to upload image", "error": str(e)}
         )
+
+# In your FastAPI backend...
+
+@router.post("/validate-item-id/{item_id}", response_model=dict)
+async def validate_item_id(item_id: str, user_data: dict):
+    try:
+        # Assuming db is your Firebase database client
+        item_ref = db.collection('items').document(item_id).get()
+        if item_ref.exists:
+            item = item_ref.to_dict()
+            # Check if the item's user_id matches the logged-in user's uid
+            is_valid = item.get('user_id') == user_data.get('user_id')
+            print("This item is yours" if is_valid else "This item is not yours")
+            if is_valid:
+                # Return the item details to the frontend
+                return {
+                    "isValid": True,
+                    "itemDetails": {
+                        "title": item.get("title", ""),
+                        "description": item.get("description", ""),
+                        "price": item.get("price", 0),
+                        "image_url": item.get("image_url", "")
+                    }
+                }
+            else:
+                return {"isValid": False}
+        else:
+            return {"isValid": False}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
