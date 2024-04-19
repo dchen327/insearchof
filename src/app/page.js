@@ -128,6 +128,7 @@ export default function Home() {
               </div>
               <div className="control">
                 <button
+                  type="button"
                   className="button"
                   onClick={() => setShowFilterModal(true)}
                 >
