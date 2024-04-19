@@ -34,9 +34,11 @@ export default function Home() {
 
   useEffect(() => {
     const fetchItems = async () => {
+      setItemsLoading(true);
       const response = await fetch("/api/catalog/listings");
       const data = await response.json();
       setItems(data?.listings || []);
+      setItemsLoading(false);
     };
 
     fetchItems();

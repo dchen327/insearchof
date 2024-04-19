@@ -136,7 +136,7 @@ def get_listings(
 
     # Create FieldFilter objects
     filters = []
-    if listing_types:
+    if listing_types not in [['buy', 'rent', 'request'], []]:
         type_filter = FieldFilter(
             field_path='type', op_string='in', value=listing_types)
         filters.append(type_filter)
