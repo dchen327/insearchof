@@ -31,7 +31,7 @@ export default function Page() {
     return () => unsubscribe();
   }, [router]);
 
-  // Handle image change
+
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     setImage(file);
@@ -55,14 +55,14 @@ export default function Page() {
     // allow only one decimal point
     const validValue = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
     const parts = validValue.split('.');
+
+    // allow only two decimal places max
     if (parts.length > 1) {
       parts[1] = parts[1].substring(0, 2);
     }
     const formattedValue = parts.join('.');
     setPrice(formattedValue);
   };
-
-
 
   const uploadRequest = async () => {
     // Validate input fields
@@ -71,17 +71,20 @@ export default function Page() {
       return;
     }
 
+    // If price is empty, set it to 0
     const finalPrice = price === '' ? 0 : parseFloat(price);
     if (finalPrice < 0) {
       alert('Price cannot be negative.');
       return;
     }
 
+    // Check if the user is logged in
     if (!user) {
       alert('You need to be logged in to submit a request.');
       return;
     }
 
+    // Upload the image first, if it exists
     try {
       let imageUrl = '';
       try {
@@ -89,7 +92,8 @@ export default function Page() {
           const formData = new FormData();
           formData.append('file', image);
 
-          const imageResponse = await fetch('/api/insearchof/upload-image', {
+          // Include the user_id in the URL
+          const imageResponse = await fetch(`/api/insearchof/upload-image/${user.uid}`, {
             method: 'POST',
             body: formData, // Send the file as FormData
           });
@@ -102,7 +106,7 @@ export default function Page() {
           imageUrl = imageData.image_url; // Get the image URL from the backend
         }
       } catch (error) {
-
+        // error handling for image upload
         console.error('Failed to fetch:', error);
         // If the error object has a response with JSON, log that as well
         if (error.response) {
@@ -119,7 +123,7 @@ export default function Page() {
         title: title,
         description: description,
         price: parseFloat(finalPrice),
-        image_url: imageUrl, // Include the image URL
+        image_url: imageUrl,
         type: 'request',
         trans_comp: false,
         user_id: user.uid
@@ -142,6 +146,7 @@ export default function Page() {
         setDescription('');
         setPrice('');
         setImage(null);
+        setImagePreviewUrl('');
       } else {
         alert('Failed to upload request: ' + data.message);
       }
@@ -151,6 +156,27 @@ export default function Page() {
     }
   };
 
+
+  const updateRequest = async () => {
+    // Fetch the requests made by the user
+    const response = await fetch(`api/insearchof/user_requests/${user.uid}`, { 
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Print the titles of the items requested by the user
+      data.forEach(request => {
+        console.log(request.title);
+      });
+    } else {
+      alert('Failed to fetch requests: ' + data.message);
+    }
+  };
 
   // Define the style for the tooltips outside of the return statement
   const tooltipStyle = {
@@ -279,6 +305,18 @@ export default function Page() {
         }}>
           Upload Request
         </button>
+        <button className="button is-light" onClick={updateRequest} style={{
+          padding: '10px 20px',
+          fontSize: '16px',
+          backgroundColor: '#007BFF',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer'
+        }}>
+          Update Request
+        </button>
+
       </div>
     </>
   );

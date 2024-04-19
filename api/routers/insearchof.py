@@ -4,12 +4,12 @@ from fastapi.responses import JSONResponse
 from typing import Optional
 from pydantic import BaseModel, Field
 from firebase_admin import credentials, firestore, initialize_app, storage
-from ..firebase_config import db
 import os
 import json
 from dotenv import load_dotenv
 from datetime import datetime
 from uuid import uuid4
+from ..firebase_config import db
 
 load_dotenv()
 
@@ -206,8 +206,8 @@ def mark_transaction_complete(request_id: str, current_user):
     return {"message": "Transaction marked complete"}
 
 
-@router.post("/upload-image", response_model=dict)
-async def upload_image(file: UploadFile = File(...)):
+@router.post("/upload-image/{user_id}", response_model=dict)
+async def upload_image(user_id: str, file: UploadFile = File(...)):
     """
     Uploads an image to Firebase Storage and returns the URL of the uploaded image.
     """
@@ -216,7 +216,8 @@ async def upload_image(file: UploadFile = File(...)):
         bucket = storage.bucket()
 
         # Create a unique file name
-        file_name = f"images/{uuid4()}-{file.filename}"
+        unique_filename = f"{uuid4()}_{file.filename}"
+        file_name = f"images/{user_id}/{unique_filename}"
         blob = bucket.blob(file_name)
 
         file_content = await file.read()
