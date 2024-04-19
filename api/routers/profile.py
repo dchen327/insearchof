@@ -1,9 +1,9 @@
-from fastapi import FastAPI, APIRouter, File, Form, UploadFile, HTTPException, Request
+from fastapi import FastAPI, APIRouter, File, Form, UploadFile, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field
-from firebase_admin import credentials, firestore, initialize_app, storage
+from firebase_admin import auth
 from ..firebase_config import db
 import os
 import json
@@ -44,11 +44,11 @@ class UserProfile(BaseModel):
     location: str = Field(
         None, description="The user's location on campus specifically")
     # phone_number: Optional[constr(regex=r'^\(\d{3}\)\s\d{3}-\d{4}$')]  = Field(None, description="The user's phone number") # type: ignore
-    
+
     class UploadContactInformation(BaseModel):
         location: str
         phoneNumber: str
-    
+
     class UploadContactInfoResponse(BaseModel):
         """
         Response model for uploading one's contact info to the database.
@@ -62,7 +62,7 @@ class UserProfile(BaseModel):
         Model for getting a list of items from the database.
         """
 
-        requester_id: str = Field(..., description="The requester's email.")
+        user_id: str = Field(..., description="The requester's uid.")
 
     class GetListOfItemsResponse(BaseModel):
         """
@@ -94,15 +94,22 @@ class UserProfile(BaseModel):
         doc_ref.set(profile_data)
         return {"message": "Uploads users contact info successfully"}
 
-
     @router.get("/get_list_of_items")
-    def get_list_of_items(get_list: GetListOfItemsRequest) -> GetListOfItemsResponse:
+    def get_list_of_items(requester_id: str = Query(description="The requester's uid")) -> GetListOfItemsResponse:
         """
         Retrieves a list of items associated with a given user from the itemsForSale and itemsForRent 
         database and stores it within the user database, making it visible to buyers. 
         This allows potential buyers to view items listed by the user.
 
         """
+        print('hi')
+        print(requester_id)
+        query = db.collection('items').where('user_id', '==', requester_id)
+        items = []
+        for doc in query.stream():
+            items.append(doc.to_dict())
+
+        print(items)
         return {"listingOfItems": []}
 
     @router.get("/get_transaction_history")
