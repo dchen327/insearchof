@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, File, Form, UploadFile, HTTPException, Request
+from fastapi import FastAPI, APIRouter, File, Form, UploadFile, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import Optional
@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 from ..firebase_config import db
 from fastapi.encoders import jsonable_encoder
+
 
 router = APIRouter(
     prefix='/api/insearchof',
@@ -61,31 +62,31 @@ class insearchofer(BaseModel):
     pass
 
 
-class UploadRequestResponse(BaseModel):
-    """
-    Response model for uploading a request to the database.
-    """
+# class UploadRequestResponse(BaseModel):
+#     """
+#     Response model for uploading a request to the database.
+#     """
 
-    message: str = Field(
-        ..., description="Response message confirming the request has been uploaded.")
-
-
-class UpdateRequestResponse(BaseModel):
-    """
-    Response model for updating a request in the database.
-    """
-
-    message: str = Field(
-        ..., description="Response message confirming the request has been updated.")
+#     message: str = Field(
+#         ..., description="Response message confirming the request has been uploaded.")
 
 
-class DeleteRequestResponse(BaseModel):
-    """
-    Response model for deleting a request from the database.
-    """
+# class UpdateRequestResponse(BaseModel):
+#     """
+#     Response model for updating a request in the database.
+#     """
 
-    message: str = Field(
-        ..., description="Response message confirming the request has been deleted.")
+#     message: str = Field(
+#         ..., description="Response message confirming the request has been updated.")
+
+
+# class DeleteRequestResponse(BaseModel):
+#     """
+#     Response model for deleting a request from the database.
+#     """
+
+#     message: str = Field(
+#         ..., description="Response message confirming the request has been deleted.")
 
 
 class MarkTransactionRequest(BaseModel):
@@ -175,8 +176,8 @@ class UpdateRequest(BaseModel):
     trans_comp: bool  # should remain False
 
 # Add the following endpoint to your router for updates
-@router.put("/update/{item_id}", response_model=UpdateRequestResponse)
-async def update_request(item_id: str, update_data: UpdateRequest, request: Request):
+@router.put("/update/{item_id}", response_model=dict)
+async def update_request(item_id: str, update_data: UpdateRequest):
     """
     Updates an existing ISO request in the database using the item ID.
 
@@ -186,12 +187,15 @@ async def update_request(item_id: str, update_data: UpdateRequest, request: Requ
 
     Returns a JSON response with the result of the operation.
     """
-    print('bruh')
     try:
         item_ref = db.collection('items').document(item_id)
         item = item_ref.get()
         if item.exists:
             item_data = item.to_dict()
+            
+            if item_data['user_id'] != update_data.user_id:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have permission to update this item.")
+
             # Proceed with the update
             item_data.update(update_data.dict(exclude_unset=True))
             item_ref.set(item_data)
@@ -204,27 +208,34 @@ async def update_request(item_id: str, update_data: UpdateRequest, request: Requ
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# def update_request():
-#     '''
-#     Updates an existing ISO request in the database. This endpoint requires the user to be authenticated.
-
-#     Security: Only the user who created the ISO request is allowed to update it.
-
-#     Returns a JSON response with the result of the operation.
-#     '''
-#     return {"message": "Request updated"}
-
-
-@router.delete("/delete/{request_id}")
-def delete_request(request_id: str, current_user):
-    '''
+@router.delete("/delete/{item_id}", response_model=dict)
+async def delete_request(item_id: str, user_data: dict):
+    """
     Deletes an ISO request from the database. This endpoint requires user authentication.
 
     Security: Only the user who created the ISO request or an admin can delete it.
 
+    Parameters:
+    - item_id: The unique ID of the item to delete.
+    - user_data: Authentication information of the current user, typically provided from a security dependency.
+
     Returns a JSON response indicating the outcome of the operation.
-    '''
-    return {"message": "Request deleted"}
+    """
+    try:
+        item_ref = db.collection('items').document(item_id)
+        item = item_ref.get()
+        if item.exists:
+            item_data = item.to_dict()
+            # Check if the item's user_id matches the logged-in user's uid
+            if item_data['user_id'] != user_data['user_id']:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have permission to delete this item.")
+            # Proceed with the deletion
+            item_ref.delete()
+            return {"message": "Item deleted successfully"}
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.get("/mark/{request_id}", response_model=MarkTransactionCompleteResponse)

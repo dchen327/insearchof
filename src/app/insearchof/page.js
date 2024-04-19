@@ -19,7 +19,6 @@ export default function Page() {
   const [showPriceTooltip, setShowPriceTooltip] = useState(false);
   const [showImageTooltip, setShowImageTooltip] = useState(false);
   const [isItemIdValid, setIsItemIdValid] = useState(false);
-  const [requestId, setRequestId] = useState('');
 
 
 
@@ -74,7 +73,7 @@ export default function Page() {
           setTitle(data.itemDetails.title);
           setDescription(data.itemDetails.description);
           setPrice(data.itemDetails.price.toString()); // Convert price to a string for the input field
-          // setImagePreviewUrl(data.itemDetails.image_url);
+          setImagePreviewUrl(data.itemDetails.image_url);
           // Note: Handling the actual image file object for uploads will require additional logic
           setIsItemIdValid(true);
 
@@ -124,23 +123,23 @@ export default function Page() {
       // If no image is provided, we don't need to upload anything
       return '';
     }
-  
+
     const formData = new FormData();
     formData.append('file', imageFile);
-  
+
     const imageResponse = await fetch(`/api/insearchof/upload-image/${user.uid}`, {
       method: 'POST',
       body: formData, // Send the file as FormData
     });
-  
+
     if (!imageResponse.ok) {
       throw new Error('Image upload failed');
     }
-  
+
     const imageData = await imageResponse.json();
     return imageData.image_url; // Return the uploaded image URL
   };
-  
+
 
   const uploadRequest = async () => {
     // Validate input fields
@@ -217,62 +216,100 @@ export default function Page() {
   };
 
 
-// Assuming `item_id` is the state that holds your item ID, no need for additional state
-
-// Update the updateRequest function to use item_id
-const updateRequest = async () => {
-  if (!item_id) {
-    alert('No item ID provided for the update.');
-    return;
-  }
-
-  // Validate other fields just like in the uploadRequest function
-  // ...
-
-  let imageUrl = imagePreviewUrl; // Keep the existing image URL by default
-
-  try {
-    // If a new image is provided, upload it and get the new image URL
-    if (image) {
-      imageUrl = await uploadImage(image);
+  const updateRequest = async () => {
+    if (!item_id) {
+      alert('No item ID provided for the update.');
+      return;
     }
 
-    // Prepare request data with the possibly updated image URL
-    const requestData = {
-      title,
-      description,
-      price: parseFloat(price),
-      image_url: imageUrl,
-      type: 'request',
-      trans_comp: false,
-      user_id: user.uid,
-    };
+    // Validate other fields just like in the uploadRequest function
+    // ...
 
-    // Send the update request to the backend
-    const response = await fetch(`/api/insearchof/update/${item_id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestData),
-    });
+    let imageUrl = imagePreviewUrl; // Keep the existing image URL by default
 
-    const data = await response.json();
-    if (response.ok) {
-      alert('Request updated successfully!');
-      // ... Code to handle successful update ...
-      // Optionally reset form fields here, if required
-    } else {
-      alert('Failed to update request: ' + data.message);
+    try {
+      // If a new image is provided, upload it and get the new image URL
+      if (image) {
+        imageUrl = await uploadImage(image);
+      }
+
+      // Prepare request data with the possibly updated image URL
+      const requestData = {
+        title,
+        description,
+        price: parseFloat(price),
+        image_url: imageUrl,
+        type: 'request',
+        trans_comp: false,
+        user_id: user.uid,
+      };
+
+      // Send the update request to the backend
+      const response = await fetch(`/api/insearchof/update/${item_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert('Request updated successfully!');
+        // ... Code to handle successful update ...
+        // Optionally reset form fields here, if required
+      } else {
+        alert('Failed to update request: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Failed to update:', error);
+      alert('An error occurred. Please try again.');
     }
-  } catch (error) {
-    console.error('Failed to update:', error);
-    alert('An error occurred. Please try again.');
-  }
-};
+  };
 
-// ... rest of your code ...
 
+  const deleteRequest = async () => {
+    if (!item_id) {
+      alert('No item ID provided for the deletion.');
+      return;
+    }
+  
+    // Confirm with the user before deleting
+    if (!window.confirm('Are you sure you want to delete this request?')) {
+      return;
+    }
+  
+    try {
+      // Send the delete request to the backend
+      const response = await fetch(`/api/insearchof/delete/${item_id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id: user.uid }), // Send necessary data if needed, e.g., user ID
+      });
+  
+      if (response.ok) {
+        alert('Request deleted successfully!');
+        // Clear the form and any states related to the deleted item
+        setItem_id('');
+        setTitle('');
+        setDescription('');
+        setPrice('');
+        setImage(null);
+        setImagePreviewUrl('');
+        // ... any other cleanup you need to do ...
+      } else {
+        // If the backend responds with an error
+        const errorData = await response.json();
+        alert(`Failed to delete request: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error('Failed to delete:', error);
+      alert('An error occurred during deletion. Please try again.');
+    }
+  };
+  
 
   // Define the style for the tooltips outside of the return statement
   const tooltipStyle = {
@@ -392,11 +429,15 @@ const updateRequest = async () => {
         {imagePreviewUrl && <img src={imagePreviewUrl} alt="Preview" style={{ maxWidth: '100%', marginTop: '20px' }} />}
       </div>
 
-      <div className="buttons" style={{
+      <div style={{
         maxWidth: '500px',
         margin: '20px auto',
         display: 'flex',
-        justifyContent: 'center'
+        flexDirection: 'column', // Stack the buttons vertically
+        alignItems: 'center',
+        gap: '10px', // Space between buttons
+        paddingBottom: '100px', // Add extra space below the buttons for scrolling
+        // If the navbar is taller, increase this value accordingly
       }}>
         <button className="button is-light" onClick={uploadRequest} style={{
           padding: '10px 20px',
@@ -405,24 +446,43 @@ const updateRequest = async () => {
           color: 'white',
           border: 'none',
           borderRadius: '4px',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          width: '100%', // Make button full width
         }}>
           Upload Request
         </button>
         <button className="button is-light" onClick={updateRequest} style={{
           padding: '10px 20px',
           fontSize: '16px',
-          backgroundColor: '#007BFF',
+          backgroundColor: '#28a745',
           color: 'white',
           border: 'none',
           borderRadius: '4px',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          width: '100%', // Make button full width
+          marginTop: '10px', // Space above the button
         }}>
           Update Request
         </button>
-
+        <button className="button is-light" onClick={deleteRequest} style={{
+          padding: '10px 20px',
+          fontSize: '16px',
+          backgroundColor: '#dc3545',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          width: '100%', // Make button full width
+          marginTop: '10px', // Space above the button
+        }}>
+          Delete Request
+        </button>
       </div>
     </>
   );
 
 }
+
+
+// TODO: UPDATING AND DELETING IMAGES
+// TODO: MARKING TRANSACTION COMPLETE
