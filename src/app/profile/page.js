@@ -1,4 +1,3 @@
-
 "use client";
 import { useEffect, useState } from "react";
 import { auth, googleProvider } from "../firebase/config";
@@ -11,12 +10,20 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([]);
   const [transactionHistory, setTransactionHistory] = useState([]);
-  const [showNameTooltip, setShowNameTooltip] = useState(false); // Added state variables for tooltips
   const [showPhoneNumberTooltip, setShowPhoneNumberTooltip] = useState(false);
   const [showLocationTooltip, setShowLocationTooltip] = useState(false);
-  const [name, setName] = useState(""); // Added state variables for name, email, phoneNumber, and location
+  const [showUserIdTooltip, setShowUserIdTooltip] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [location, setLocation] = useState("");
+  const [userId, setUserId] = useState("");
+  const [locationFilled, setLocationFilled] = useState(false);
+  const [listOfItems, setListOfItems] = useState(false);
+
+  const [uploadInfoButton, setUploadInfoButtonClicked] = useState(false);
+
+  const [showItemModal, setShowItemModal] = useState(false);
+
   const router = useRouter();
 
   // performs side effects in function components. subscribes authentication
@@ -57,42 +64,55 @@ export default function Page() {
   };
 
   const uploadContactInformation = async () => {
-    if (!name) {
-      alert("Name is required");
-      return;
-    }
-
-    if (!email) {
-      alert("Email is required");
-      return;
-    }
-
     if (!location) {
+      setLocationFilled(false);
       alert("Location is required");
       return;
+    } else {
+      setLocationFilled(true);
     }
 
-    // Then, create a document in Firestore with the item data
-    const userData = {
-      name,
-      email,
-      phoneNumber,
-      location,
-      timestamp: new Date(), // You can use Firebase server timestamps as well
-    };
+    setUploadInfoButtonClicked(true);
+
+    setShowLocationTooltip(true);
+    setShowPhoneNumberTooltip(true);
 
     try {
-      await addDoc(itemsCollectionRef, userData);
-      alert("Request uploaded successfully!");
+      // Then, create a document in Firestore with the item data
+      const userData = {
+        phoneNumber: phoneNumber,
+        location: location,
+        type: "request",
+      };
 
-      // Clear the form
-      setName("");
-      setPhoneNumber("");
-      setLocation(null);
+      const response = await fetch("api/profile/update_contact_info", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert("Request uploaded successfully!");
+        // Clear the form
+        setPhoneNumber();
+        setLocation();
+      } else {
+        alert("Failed to upload request: " + data.message);
+      }
     } catch (error) {
-      console.error("Error uploading contact information:", error);
-      alert("Failed to upload contact inforation: " + error.message);
+      console.error("Failed to fetch:", error);
+      alert("An error occurred. Please try again.");
     }
+  };
+
+  const handleChangeUserInfo = () => {
+    // Hide the "Upload user info" button and tooltips
+    setUploadInfoButtonClicked(false);
+    setShowLocationTooltip(false);
+    setShowPhoneNumberTooltip(false);
   };
 
   const tooltipStyle = {
@@ -108,15 +128,18 @@ export default function Page() {
     marginTop: "5px",
   };
 
-  const fetchListOfItems = async (email) => {
+  const fetchListOfItems = async () => {
     try {
       setLoading(true);
+      console.log("hi");
       const response = await fetch(
-        "/profile/get_list_of_items?requester_id=${email}"
+        `/api/profile/get_list_of_items?requester_id=${user.uid}`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch list of items");
       }
+      const data = await response.json();
+      console.log(data);
       setItems(response.data.listingOfItems);
     } catch (err) {
       console.error(err);
@@ -159,59 +182,44 @@ export default function Page() {
     }
   };
 
-  const handleProfileUpdate = async (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    const newProfileData = {
-      name: formData.get("name"),
-      email: formData.get("email"),
-      phone_number: formData.get("phone_number"),
-      location: formData.get("location"),
-    };
-    updateUserProfile(newProfileData);
-  };
-
   return (
     <>
       <div>
         {user && (
           <>
-            <div style={{
-              textAlign: 'center',
-              margin: '30px 0',
-            }}>
-              <h1>Welcome, {user.email}</h1>
+            <div
+              style={{
+                textAlign: "center",
+                margin: "30px 0",
+              }}
+            >
+              <h1>Welcome, {user.displayName}</h1>
             </div>
-  
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '20px',
-              maxWidth: '500px',
-              margin: '0px auto',
-              padding: '20px',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-              borderRadius: '8px',
-              backgroundColor: '#fff',
-            }}>
-              {['name', 'phoneNumber', 'location', 'image'].map((field) => (
-                <div key={field} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  {field === "name" && (
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Name (Required)"
-                      style={{
-                        padding: "10px",
-                        fontSize: "16px",
-                        border: "1px solid #ccc",
-                        borderRadius: "4px",
-                        flexGrow: 1,
-                      }}
-                    />
-                  )}
-                  {field === "phoneNumber" && (
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "20px",
+                maxWidth: "500px",
+                margin: "0px auto",
+                padding: "20px",
+                boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                borderRadius: "8px",
+                backgroundColor: "#fff",
+              }}
+            >
+              {["phoneNumber", "location", "image"].map((field) => (
+                <div
+                  key={field}
+                  style={{
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px",
+                  }}
+                >
+                  {!uploadInfoButton && field === "phoneNumber" && (
                     <input
                       type="text"
                       value={phoneNumber}
@@ -226,7 +234,7 @@ export default function Page() {
                       }}
                     />
                   )}
-                  {field === "location" && (
+                  {!uploadInfoButton && field === "location" && (
                     <input
                       type="text"
                       value={location}
@@ -241,80 +249,162 @@ export default function Page() {
                       }}
                     />
                   )}
-                  {/* {field === 'image' && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <label style={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
-                        <span style={{ marginRight: '10px', fontSize: '16px' }}>Image (optional)</span>
-                        <input
-                          type="file"
-                          //onChange={handleImageChange}
-                          accept="image/*"
-                          style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1 }}
-                        />
-                      </label>
-                    </div>
-                  )} */}
+
                   <button
                     onClick={() => {
-                      setShowNameTooltip(
-                        field === "name" ? !showNameTooltip : false
-                      );
                       setShowPhoneNumberTooltip(
-                        field === "phoneNumber" ? !showPhoneNumberTooltip : false
+                        field === "phoneNumber"
+                          ? !showPhoneNumberTooltip
+                          : false
                       );
                       setShowLocationTooltip(
                         field === "location" ? !showLocationTooltip : false
                       );
                     }}
-                    style={{ position: 'relative', zIndex: '20' }}
-                  >
-                  </button>
-                  {showNameTooltip && field === "name" && (
-                    <div style={tooltipStyle}>The users name</div>
-                  )}
-                  {showPhoneNumberTooltip && field === "phoneNumber" && (
-                    <div style={tooltipStyle}>The phone number of the user</div>
-                  )}
-                  {showLocationTooltip && field === "location" && (
-                    <div style={tooltipStyle}>
-                      The location of the user for picking up requested item
-                    </div>
-                  )}
+                    style={{ position: "relative", zIndex: "20" }}
+                  ></button>
                 </div>
               ))}
-              <button className="button is-primary" onClick={updateUserProfile} style={{
-                padding: '10px 20px',
-                fontSize: '16px',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}>
-                Update user info
-              </button>
-              <button
-                className="button is-primary"
-                //onClick={() => console.log("Get users transaction history button clicked")}
-                style={{ }}
-              >
-              Get transaction history
-              </button>
-        
-              <button
-                className="button is-primary"
-                //onClick={() => console.log("Get users list of items button clicked")}
-                style={{ }}
-              >
-              Get list of items
-              </button>   
-  
+              {!locationFilled && !uploadInfoButton && (
+                <button
+                  className="button is-primary"
+                  onClick={uploadContactInformation}
+                  style={{
+                    padding: "10px 20px",
+                    fontSize: "16px",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "2px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Update user info
+                </button>
+              )}
+              {uploadInfoButton && (
+                <div style={{ textAlign: "center" }}>
+                  <p>Phone Number: {phoneNumber}</p>
+                  <p>Location: {location}</p>
+                  <button
+                    className="button is-primary"
+                    onClick={() => {
+                      locationFilled, uploadInfoButton;
+                    }}
+                    style={{
+                      padding: "10px 20px",
+                      fontSize: "16px",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "2px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Change user info
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      <div>
+        {user && (
+          <>
+            <div
+              style={{
+                textAlign: "center",
+                margin: "30px 0",
+              }}
+            >
+              <h1>Get user information</h1>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "20px",
+                maxWidth: "500px",
+                margin: "0px auto",
+                padding: "20px",
+                boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                borderRadius: "8px",
+                backgroundColor: "#fff",
+              }}
+            >
+              <div style={{ display: "flex", gap: "20px" }}>
+                <button
+                  className="button is-primary"
+                  onClick={() => {
+                    fetchListOfItems;
+                    setShowItemModal(true);
+                  }}
+                  style={{
+                    padding: "10px 20px",
+                    fontSize: "16px",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Get transaction history
+                </button>
+
+                <button
+                  className="button is-primary"
+                  onClick={() => {
+                    fetchListOfItems();
+                    setShowItemModal(true);
+                  }}
+                  //onClick={fetchListOfItems, setShowItemModal(true)}
+                  style={{
+                    padding: "10px 20px",
+                    fontSize: "16px",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    flex: "1",
+                  }}
+                >
+                  Get list of items
+                </button>
+              </div>
+
+              {showItemModal && (
+                <div className="modal is-active">
+                  <div
+                    className="modal-background"
+                    onClick={() => setShowItemModal(false)}
+                  ></div>
+                  <div className="modal-card">
+                    <section className="modal-card-body">
+                      <div className="card is-shadowless">
+                        <div className="card-content px-4 py-">
+                          <div className="media mb-2 flex items-center"></div>
+                        </div>
+                      </div>
+                    </section>
+                    <footer className="modal-card-foot">
+                      <button className="button is-success">Delete item</button>
+                      <button
+                        className="button"
+                        onClick={() => setShowItemModal(false)}
+                      >
+                        Close
+                      </button>
+                    </footer>
+                  </div>
+                </div>
+              )}
+
               {/* {imagePreviewUrl && <img src={imagePreviewUrl} alt="Preview" style={{ maxWidth: '100%', marginTop: '20px' }} />} */}
             </div>
           </>
         )}
       </div>
-  
     </>
   );
-}  
-
+}

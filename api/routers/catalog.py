@@ -131,28 +131,36 @@ def get_listings(
 
     # If there are errors in the input, generates a descriptive error message and fails the API call
     # This allows the frontend to display the error to the users
+    # query from database items collection, filter and order correctly
     if max_price == 0:
         max_price = float('inf')
 
-    items = []
-    # query from database items collection, filter and order correctly
     field, direction = sort_options[sort]
 
     # Create FieldFilter objects
     type_filter = FieldFilter(
         field_path='type', op_string='in', value=listing_types)
+
     min_price_filter = FieldFilter(
         field_path='price', op_string='>=', value=min_price)
+
     max_price_filter = FieldFilter(
         field_path='price', op_string='<=', value=max_price)
 
     # Use FieldFilter objects with where method
-    docs = db.collection('items').where(filter=type_filter).where(filter=min_price_filter).where(filter=max_price_filter).order_by(
-        field, direction=direction).stream()
+    query = db.collection('items').where(filter=type_filter).where(
+        filter=min_price_filter).where(filter=max_price_filter)
+
+    docs = query.order_by(field, direction=direction).stream()
+
+    items = []
     for doc in docs:
         items.append(doc.to_dict())
 
-    print('***', items)
+    if search:
+        items = [item for item in items if search.lower() in item['title'].lower(
+        ) or search.lower() in item['description'].lower()]
+
     # convert timestamp to string (e.g. 5m, 1h, 1d, 1w, 1mo, 1y)
     now = datetime.now(timezone.utc)
     for item in items:
