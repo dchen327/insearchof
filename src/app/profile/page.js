@@ -215,9 +215,7 @@ export default function Page() {
                   <p>Location: {location}</p>
                   <button
                     className="button is-primary"
-                    // onClick={() => {
-                    //   locationFilled, uploadInfoButton;
-                    // }}
+                    onClick={(handleChangeUserInfo)}
                     style={{
                       padding: "10px 20px",
                       fontSize: "16px",
@@ -384,6 +382,7 @@ export default function Page() {
                       <div className="card is-shadowless">
                         <div className="card-content px-4 py-">
                           <div className="media mb-2 flex items-center"></div>
+                          
                         </div>
                       </div>
                     </section>
