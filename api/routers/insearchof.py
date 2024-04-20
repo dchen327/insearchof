@@ -319,6 +319,14 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
             status_code=500,
             content={"message": "Failed to upload image", "error": str(e)}
         )
+        
+        
+@router.put("/update-image/{user_id}/{image_id}", response_model=dict)
+async def update_image(user_id: str, image_id: str, file: UploadFile = File(...)):
+    pass
+
+def delete_image():
+    pass
 
 # In your FastAPI backend...
 
