@@ -89,24 +89,24 @@ class insearchofer(BaseModel):
 #         ..., description="Response message confirming the request has been deleted.")
 
 
-class MarkTransactionRequest(BaseModel):
-    """
-    Model for marking a transaction as complete in the database.
-    """
+# class MarkTransactionRequest(BaseModel):
+#     """
+#     Model for marking a transaction as complete in the database.
+#     """
 
-    item_id: str = Field(...,
-                         description="The ID of the item being requested.")
-    requester_id: str = Field(..., description="The requester's email.")
-    seller_id: str = Field(..., description="The seller's email.")
+#     item_id: str = Field(...,
+#                          description="The ID of the item being requested.")
+#     requester_id: str = Field(..., description="The requester's email.")
+#     seller_id: str = Field(..., description="The seller's email.")
 
 
-class MarkTransactionCompleteResponse(BaseModel):
-    """
-    Response model for marking a transaction as complete in the database.
-    """
+# class MarkTransactionCompleteResponse(BaseModel):
+#     """
+#     Response model for marking a transaction as complete in the database.
+#     """
 
-    message: str = Field(
-        ..., description="Response message confirming the transaction has been marked as complete.")
+#     message: str = Field(
+#         ..., description="Response message confirming the transaction has been marked as complete.")
 
 
 class NotificationService:
@@ -176,6 +176,8 @@ class UpdateRequest(BaseModel):
     trans_comp: bool  # should remain False
 
 # Add the following endpoint to your router for updates
+
+
 @router.put("/update/{item_id}", response_model=dict)
 async def update_request(item_id: str, update_data: UpdateRequest):
     """
@@ -192,15 +194,16 @@ async def update_request(item_id: str, update_data: UpdateRequest):
         item = item_ref.get()
         if item.exists:
             item_data = item.to_dict()
-            
+
             if item_data['user_id'] != update_data.user_id:
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have permission to update this item.")
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                    detail="You do not have permission to update this item.")
 
             # Proceed with the update
             item_data.update(update_data.dict(exclude_unset=True))
             item_ref.set(item_data)
             return {"message": "Item updated successfully"}
-        
+
         # MAYBE UPDATE TIMESTAMP AS WELL?
         else:
             raise HTTPException(status_code=404, detail="Item not found")
@@ -228,19 +231,23 @@ async def delete_request(item_id: str, user_data: dict):
             item_data = item.to_dict()
             # Check if the item's user_id matches the logged-in user's uid
             if item_data['user_id'] != user_data['user_id']:
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have permission to delete this item.")
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                    detail="You do not have permission to delete this item.")
             # Proceed with the deletion
             item_ref.delete()
             return {"message": "Item deleted successfully"}
         else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-@router.get("/mark/{request_id}", response_model=MarkTransactionCompleteResponse)
-def mark_transaction_complete(request_id: str, current_user):
-    '''
+
+@router.put("/mark/{item_id}", response_model=dict)
+def mark_transaction_complete(item_id: str, current_user: dict):
+    """
     Marks the transaction related to the ISO request as complete. This endpoint requires user authentication.
 
     Security: Ensures that only the user involved in the transaction can mark it as complete.
@@ -248,8 +255,39 @@ def mark_transaction_complete(request_id: str, current_user):
     If an error occurs during the database operation, an appropriate error response is returned.
 
     Returns a JSON response confirming the transaction status update.
-    '''
-    return {"message": "Transaction marked complete"}
+    """
+    print("hello?")
+    try:
+        # Fetch the item from the database
+        print("hello?")
+        item_ref = db.collection('items').document(item_id)
+        item = item_ref.get()
+
+        # Check if the item exists
+        if item.exists:
+            item_data = item.to_dict()
+
+            # Check if the current user is authorized to mark the transaction as complete
+            if item_data['user_id'] != current_user['user_id']:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have permission to mark this transaction as complete.")
+
+            # Toggle the value of trans_comp
+            trans_comp_value = not item_data.get('trans_comp', False)
+            item_ref.update({'trans_comp': trans_comp_value})
+
+            # Log the change
+            print(f"Transaction status for item {item_id} has been set to {trans_comp_value}")
+
+            # Return a success message
+            return {"message": "Transaction status updated successfully"}
+
+        # If the item does not exist, raise a 404 error
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    except Exception as e:
+        # If any other error occurs, raise a 500 error
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
 
 
 @router.post("/upload-image/{user_id}", response_model=dict)
@@ -283,6 +321,7 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
         )
 
 # In your FastAPI backend...
+
 
 @router.post("/validate-item-id/{item_id}", response_model=dict)
 async def validate_item_id(item_id: str, user_data: dict):

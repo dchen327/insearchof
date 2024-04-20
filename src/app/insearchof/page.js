@@ -273,12 +273,12 @@ export default function Page() {
       alert('No item ID provided for the deletion.');
       return;
     }
-  
+
     // Confirm with the user before deleting
     if (!window.confirm('Are you sure you want to delete this request?')) {
       return;
     }
-  
+
     try {
       // Send the delete request to the backend
       const response = await fetch(`/api/insearchof/delete/${item_id}`, {
@@ -288,7 +288,7 @@ export default function Page() {
         },
         body: JSON.stringify({ user_id: user.uid }), // Send necessary data if needed, e.g., user ID
       });
-  
+
       if (response.ok) {
         alert('Request deleted successfully!');
         // Clear the form and any states related to the deleted item
@@ -309,7 +309,41 @@ export default function Page() {
       alert('An error occurred during deletion. Please try again.');
     }
   };
-  
+
+
+  const markTransactionComplete = async () => {
+    if (!item_id) {
+      alert('No item ID provided for the update.');
+      return;
+    }
+
+    try {
+      // Make a request to your backend endpoint to mark the transaction as complete
+      console.log("before");
+      const response = await fetch(`/api/insearchof/mark/${item_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add any additional headers if needed
+        },
+        body: JSON.stringify({ user_id: user.uid }),
+      });
+      console.log("after");
+      const data = await response.json();
+      if (response.ok) {
+        // If the request is successful, show a success message
+        alert('Transaction marked as complete!');
+      } else {
+        // If there's an error, show the error message
+        alert('Failed to mark transaction as complete: ' + data.message);
+      }
+    } catch (error) {
+      // If there's a network error or other unexpected error, log and show a generic error message
+      console.error('Failed to mark transaction as complete:', error);
+      alert('An error occurred while marking transaction as complete. Please try again.');
+    }
+  };
+
 
   // Define the style for the tooltips outside of the return statement
   const tooltipStyle = {
@@ -477,6 +511,21 @@ export default function Page() {
         }}>
           Delete Request
         </button>
+        <button className="button is-light" onClick={markTransactionComplete} style={{
+          padding: '10px 20px',
+          fontSize: '16px',
+          backgroundColor: '#6c757d', // Grey color
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          width: '100%', // Make button full width
+          marginTop: '10px', // Space above the button
+        }}
+        >
+          Mark Transaction Complete
+        </button>
+
       </div>
     </>
   );
