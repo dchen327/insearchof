@@ -19,6 +19,9 @@ export default function Page() {
   const [showPriceTooltip, setShowPriceTooltip] = useState(false);
   const [showImageTooltip, setShowImageTooltip] = useState(false);
   const [isItemIdValid, setIsItemIdValid] = useState(false);
+  const [urgent, setUrgent] = useState(false);
+  const [showUrgentTooltip, setShowUrgentTooltip] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState([]);
 
 
 
@@ -74,28 +77,29 @@ export default function Page() {
           setDescription(data.itemDetails.description);
           setPrice(data.itemDetails.price.toString()); // Convert price to a string for the input field
           setImagePreviewUrl(data.itemDetails.image_url);
-          // Note: Handling the actual image file object for uploads will require additional logic
-          setIsItemIdValid(true);
+          setUrgent(data.itemDetails.urgent);
+          setSelectedCategories(data.itemDetails.categories);
 
         } else {
           console.error('Item ID validation error:', data.message);
-          setIsItemIdValid(false);
           setTitle('');
           setDescription('');
           setPrice('');
           setImagePreviewUrl('');
+          setSelectedCategories([]);
         }
+        console.log(urgent);
       } catch (error) {
         console.error('Failed to validate Item ID:', error);
-        setIsItemIdValid(false);
       }
     } else {
       // Reset the form and validation status if the item_id is not 20 characters long
-      setIsItemIdValid(false);
       setTitle('');
       setDescription('');
       setPrice('');
       setImagePreviewUrl('');
+      setUrgent(false);
+      setSelectedCategories([]);
 
     }
   };
@@ -147,20 +151,20 @@ export default function Page() {
       alert('Title is required.');
       return;
     }
-
+  
     // If price is empty, set it to 0
     const finalPrice = price === '' ? 0 : parseFloat(price);
     if (finalPrice < 0) {
       alert('Price cannot be negative.');
       return;
     }
-
+  
     // Check if the user is logged in
     if (!user) {
       alert('You need to be logged in to submit a request.');
       return;
     }
-
+  
     // Upload the image first, if it exists
     try {
       let imageUrl = '';
@@ -176,8 +180,8 @@ export default function Page() {
         alert('An error occurred. Please check the console for more details.');
         return;
       }
-
-      // Prepare request data
+  
+      // Prepare request data including categories
       const requestData = {
         title: title,
         description: description,
@@ -185,9 +189,11 @@ export default function Page() {
         image_url: imageUrl,
         type: 'request',
         trans_comp: false,
-        user_id: user.uid
+        user_id: user.uid,
+        urgent: urgent,
+        categories: selectedCategories // Include selected categories
       };
-
+  
       // Send the request data to the backend
       const response = await fetch('api/insearchof/upload', {
         method: 'POST',
@@ -196,16 +202,18 @@ export default function Page() {
         },
         body: JSON.stringify(requestData)
       });
-
+  
       const data = await response.json();
       if (response.ok) {
         alert('Request uploaded successfully!');
-        // Clear the form
+        // Clear the form and selected categories
         setTitle('');
         setDescription('');
         setPrice('');
         setImage(null);
         setImagePreviewUrl('');
+        setUrgent(false);
+        setSelectedCategories([]); // Clear selected categories
       } else {
         alert('Failed to upload request: ' + data.message);
       }
@@ -214,7 +222,7 @@ export default function Page() {
       alert('An error occurred. Please try again.');
     }
   };
-
+  
 
   const updateRequest = async () => {
     if (!item_id) {
@@ -345,7 +353,33 @@ export default function Page() {
   };
 
 
-  // Define the style for the tooltips outside of the return statement
+  const toggleUrgent = () => {
+    setUrgent(!urgent);
+  };
+
+
+  const categories = [
+    'Electronics',
+    'Textbooks and Study Materials',
+    'Furniture and Home Décor',
+    'Clothing and Accessories',
+    'Services',
+    'Appliances and Household Items',
+    'Sports and Outdoor Equipment',
+    'Tickets and Events',
+    'Transportation',
+    'Art and Creativity',
+    'Miscellaneous'
+  ];
+
+  const toggleCategory = (category) => {
+    if (selectedCategories.includes(category)) {
+      setSelectedCategories(selectedCategories.filter((c) => c !== category));
+    } else {
+      setSelectedCategories([...selectedCategories, category]);
+    }
+  };
+
   const tooltipStyle = {
     position: 'absolute',
     top: '100%',
@@ -355,9 +389,11 @@ export default function Page() {
     padding: '10px',
     borderRadius: '4px',
     boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-    zIndex: '10',
+    zIndex: '100',
     marginTop: '5px'
   };
+
+
 
 
 
@@ -381,7 +417,7 @@ export default function Page() {
         borderRadius: '8px',
         backgroundColor: '#fff',
       }}>
-        {['item id', 'title', 'description', 'price', 'image'].map((field) => (
+        {['item id', 'title', 'description', 'price', 'image', 'urgent'].map((field) => (
           // ITEM ID IS TEMPORARY, PLEASE DELETE
           <div key={field} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '5px' }}>
             {field === 'item id' && <input
@@ -391,6 +427,7 @@ export default function Page() {
               placeholder="Item ID (Temporary)"
               style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1 }}
             />}
+
             {field === 'title' && <input
               type="text"
               value={title}
@@ -415,7 +452,7 @@ export default function Page() {
               />
             </>}
             {field === 'image' && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+              <div style={{ position: 'relative' }}>
                 <label style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                   <span style={{ marginBottom: '10px', fontSize: '16px' }}>Image (optional)</span>
                   <input
@@ -431,8 +468,20 @@ export default function Page() {
                     }}
                   />
                 </label>
+                {/* Urgent button below the image file input */}
               </div>
             )}
+            {field === 'urgent' && (
+              <div>
+                <button onClick={toggleUrgent} style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: urgent ? '#FF0000' : '#FFFFFF', color: urgent ? '#FFFFFF' : '#000000' }}>
+                  Urgent
+                </button>
+              </div>
+            )}
+
+
+
+
             <button
               onClick={() => {
                 // Close any open tooltip and open the clicked one
@@ -440,6 +489,7 @@ export default function Page() {
                 setShowDescriptionTooltip(field === 'description' ? !showDescriptionTooltip : false);
                 setShowPriceTooltip(field === 'price' ? !showPriceTooltip : false);
                 setShowImageTooltip(field === 'image' ? !showImageTooltip : false);
+                setShowUrgentTooltip(field === 'urgent' ? !showUrgentTooltip : false);
               }}
               style={{ position: 'relative', zIndex: '20' }}
             >
@@ -457,8 +507,31 @@ export default function Page() {
             {showImageTooltip && field === 'image' && <div style={tooltipStyle}>
               The image of item or service you are requesting
             </div>}
+            {showUrgentTooltip && field === 'urgent' && <div style={tooltipStyle}>
+              For items or services needed urgently, preferably within 24 hours
+            </div>}
           </div>
         ))}
+
+
+        <div style={{ position: 'relative' }}>
+          <label style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <span style={{ marginBottom: '10px', fontSize: '16px' }}>Categories</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+              {categories.map((category, index) => (
+                <label key={index} style={{ marginRight: '10px', fontSize: '16px', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedCategories.includes(category)}
+                    onChange={() => toggleCategory(category)}
+                  />
+                  <span style={{ marginLeft: '5px' }}>{category}</span>
+                </label>
+              ))}
+            </div>
+          </label>
+        </div>
+
 
         {imagePreviewUrl && <img src={imagePreviewUrl} alt="Preview" style={{ maxWidth: '100%', marginTop: '20px' }} />}
       </div>
@@ -533,5 +606,16 @@ export default function Page() {
 }
 
 
-// TODO: UPDATING AND DELETING IMAGES
-// TODO: MARKING TRANSACTION COMPLETE
+// TODO: DELETE IMAGES, THEN UPDATE IMAGES
+// CATEGORIES
+// Electronics:
+// Textbooks and Study Materials:
+// Furniture and Home Décor:
+// Clothing and Accessories:
+// Services:
+// Appliances and Household Items:
+// Sports and Outdoor Equipment:
+// Tickets and Events:
+// Transportation:
+// Art and Creativity:
+// Miscellaneous:

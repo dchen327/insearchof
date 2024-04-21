@@ -1,7 +1,7 @@
 from fastapi import FastAPI, APIRouter, File, Form, UploadFile, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field
 from firebase_admin import storage
 from ..firebase_config import db
@@ -134,7 +134,9 @@ class RequestInformation(BaseModel):
     image_url: Optional[str] = None
     user_id: str
     type: str  # will be "request"
-    trans_comp: bool  # will be False
+    trans_comp: bool = False  # will be False
+    urgent: bool
+    categories: List[str]  # Add categories field
 
     def validate_price(cls, value):
         if value < 0:
@@ -319,8 +321,7 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
             status_code=500,
             content={"message": "Failed to upload image", "error": str(e)}
         )
-        
-        
+                
 @router.put("/update-image/{user_id}/{image_id}", response_model=dict)
 async def update_image(user_id: str, image_id: str, file: UploadFile = File(...)):
     pass
@@ -349,7 +350,9 @@ async def validate_item_id(item_id: str, user_data: dict):
                         "title": item.get("title", ""),
                         "description": item.get("description", ""),
                         "price": item.get("price", 0),
-                        "image_url": item.get("image_url", "")
+                        "image_url": item.get("image_url", ""),
+                        "urgent": item.get("urgent", False),
+                        "categories": item.get("categories", []) 
                     }
                 }
             else:
