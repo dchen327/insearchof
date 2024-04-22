@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 from ..firebase_config import db
 from fastapi.encoders import jsonable_encoder
+import os
 
 
 router = APIRouter(
@@ -56,57 +57,6 @@ class insearchoferFilters(BaseModel):
         if price < 0:
             raise ValueError('Price must be non-negative.')
         return price
-
-
-class insearchofer(BaseModel):
-    pass
-
-
-# class UploadRequestResponse(BaseModel):
-#     """
-#     Response model for uploading a request to the database.
-#     """
-
-#     message: str = Field(
-#         ..., description="Response message confirming the request has been uploaded.")
-
-
-# class UpdateRequestResponse(BaseModel):
-#     """
-#     Response model for updating a request in the database.
-#     """
-
-#     message: str = Field(
-#         ..., description="Response message confirming the request has been updated.")
-
-
-# class DeleteRequestResponse(BaseModel):
-#     """
-#     Response model for deleting a request from the database.
-#     """
-
-#     message: str = Field(
-#         ..., description="Response message confirming the request has been deleted.")
-
-
-# class MarkTransactionRequest(BaseModel):
-#     """
-#     Model for marking a transaction as complete in the database.
-#     """
-
-#     item_id: str = Field(...,
-#                          description="The ID of the item being requested.")
-#     requester_id: str = Field(..., description="The requester's email.")
-#     seller_id: str = Field(..., description="The seller's email.")
-
-
-# class MarkTransactionCompleteResponse(BaseModel):
-#     """
-#     Response model for marking a transaction as complete in the database.
-#     """
-
-#     message: str = Field(
-#         ..., description="Response message confirming the transaction has been marked as complete.")
 
 
 class NotificationService:
@@ -168,20 +118,8 @@ async def upload_request(iso_request: RequestInformation):
     return {"message": "Request uploaded successfully", "request_id": doc_ref.id}
 
 
-class UpdateRequest(BaseModel):
-    title: Optional[str]
-    description: Optional[str]
-    price: Optional[float]
-    image_url: Optional[str]
-    user_id: str
-    type: str  # should remain "request"
-    trans_comp: bool  # should remain False
-
-# Add the following endpoint to your router for updates
-
-
 @router.put("/update/{item_id}", response_model=dict)
-async def update_request(item_id: str, update_data: UpdateRequest):
+async def update_request(item_id: str, update_data: RequestInformation):
     """
     Updates an existing ISO request in the database using the item ID.
 
@@ -235,12 +173,17 @@ async def delete_request(item_id: str, user_data: dict):
             if item_data['user_id'] != user_data['user_id']:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                     detail="You do not have permission to delete this item.")
-            # Proceed with the deletion
+            
+            # Attempt to delete the image first, if it exists
+            if item_data.get('image_url'):
+                image_filename = item_data['image_url'].split('/')[-1]  # Extracting filename from URL
+                await delete_image(image_filename, user_data['user_id'])
+                            
+            # Proceed with the deletion of the database entry
             item_ref.delete()
-            return {"message": "Item deleted successfully"}
+            return {"message": "Item and associated image deleted successfully"}
         else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -326,8 +269,30 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
 async def update_image(user_id: str, image_id: str, file: UploadFile = File(...)):
     pass
 
-def delete_image():
-    pass
+
+@router.delete("/delete-image/{filename}", response_model=dict)
+async def delete_image(filename: str, user_id: str):
+    """
+    Deletes an image from Firebase Storage.
+
+    Parameters:
+    - filename: The filename of the image to delete.
+
+    Returns a JSON response indicating the outcome of the operation.
+    """
+    try:
+        bucket = storage.bucket()
+        blob = bucket.blob(f"images/{user_id}/{filename}")
+
+        # Delete the image from Firebase Storage
+        blob.delete()
+
+        return {"message": "Image deleted successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete image: {str(e)}"
+        )
 
 # In your FastAPI backend...
 

@@ -18,7 +18,6 @@ export default function Page() {
   const [showDescriptionTooltip, setShowDescriptionTooltip] = useState(false);
   const [showPriceTooltip, setShowPriceTooltip] = useState(false);
   const [showImageTooltip, setShowImageTooltip] = useState(false);
-  const [isItemIdValid, setIsItemIdValid] = useState(false);
   const [urgent, setUrgent] = useState(false);
   const [showUrgentTooltip, setShowUrgentTooltip] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -143,7 +142,7 @@ export default function Page() {
     const imageData = await imageResponse.json();
     return imageData.image_url; // Return the uploaded image URL
   };
-
+  
 
   const uploadRequest = async () => {
     // Validate input fields
@@ -250,6 +249,8 @@ export default function Page() {
         type: 'request',
         trans_comp: false,
         user_id: user.uid,
+        urgent: urgent,
+        categories: selectedCategories // Include selected categories
       };
 
       // Send the update request to the backend
@@ -306,6 +307,9 @@ export default function Page() {
         setPrice('');
         setImage(null);
         setImagePreviewUrl('');
+        setUrgent(false);
+        setSelectedCategories([]); // Clear selected categories
+
         // ... any other cleanup you need to do ...
       } else {
         // If the backend responds with an error
@@ -372,6 +376,7 @@ export default function Page() {
     'Miscellaneous'
   ];
 
+
   const toggleCategory = (category) => {
     if (selectedCategories.includes(category)) {
       setSelectedCategories(selectedCategories.filter((c) => c !== category));
@@ -379,6 +384,7 @@ export default function Page() {
       setSelectedCategories([...selectedCategories, category]);
     }
   };
+
 
   const tooltipStyle = {
     position: 'absolute',
@@ -392,9 +398,6 @@ export default function Page() {
     zIndex: '100',
     marginTop: '5px'
   };
-
-
-
 
 
   return (
