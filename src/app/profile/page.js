@@ -20,9 +20,10 @@ export default function Page() {
   const [locationFilled, setLocationFilled] = useState(false);
   const [listOfItems, setListOfItems] = useState(false);
 
-  const [uploadInfoButton, setUploadInfoButtonClicked] = useState(false);
+  const [uploadInfoButton, setShowUploadUserInfoButton] = useState(false);
   const [changeUserButton, setShowChangeUserButton] = useState(false);
   const [showItemModal, setShowItemModal] = useState(false);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
 
   const router = useRouter();
 
@@ -72,7 +73,7 @@ export default function Page() {
       setLocationFilled(true);
     }
 
-    setUploadInfoButtonClicked(true);
+    setShowUploadUserInfoButton(true);
     setShowLocationTooltip(true);
     setShowPhoneNumberTooltip(true);
 
@@ -96,8 +97,8 @@ export default function Page() {
       if (response.ok) {
         alert("Request uploaded successfully!");
         // Clear the form
-        setPhoneNumber();
-        setLocation();
+        setPhoneNumber('');
+        setLocation('');
       } else {
         alert("Failed to upload request: " + data.message);
       }
@@ -110,7 +111,7 @@ export default function Page() {
 
   const handleChangeUserInfo = () => {
     // Hide the "Upload user info" button and tooltips
-    setUploadInfoButtonClicked(false);
+    setShowUploadUserInfoButton(false);
     setShowLocationTooltip(false);
     setShowPhoneNumberTooltip(false);
   };
@@ -321,7 +322,7 @@ export default function Page() {
                   className="button is-primary"
                   onClick={() => {
                     fetchTransactionHistory();
-                    setShowItemModal(true);
+                    setShowTransactionModal(true);
                   }}
                   style={{
                     padding: "10px 20px",
@@ -362,12 +363,18 @@ export default function Page() {
                     className="modal-background"
                     onClick={() => setShowItemModal(false)}
                   ></div>
-                  <div className="modal-card">
-                    <section className="modal-card-body">
-                      <div className="card is-shadowless">
+                  <div className="modal-card" style={{ width: "90%", margin: "auto" }}>
+                  <section className="modal-card-body" style={{ maxHeight: "60vh", overflowY: "auto" }}>
+                       <div className="card is-shadowless">
                         <div className="card-content px-4 py-">
-                          <div className="media mb-2 flex items-center"></div>
-                          
+                          <h2 className="is-size-5">List of Items</h2>
+                          {items.map((item, index) => (
+                            <div key={index}>
+                              <p>{item.name}</p>
+                              <p>{item.description}</p>
+                              {/* Add more details as needed */}
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </section>
@@ -376,6 +383,34 @@ export default function Page() {
                       <button
                         className="button"
                         onClick={() => setShowItemModal(false)}
+                      >
+                        Close
+                      </button>
+                    </footer>
+                  </div>
+                </div>
+              )}
+
+              {showTransactionModal && (
+                <div className="modal is-active">
+                  <div
+                    className="modal-background"
+                    onClick={() => setShowTransactionModal(false)}
+                  ></div>
+                  <div className="modal-card" style={{ width: "90%", margin: "auto" }}>
+                    <section className="modal-card-body">
+                      <div className="card is-shadowless">
+                        <div className="card-content px-4 py-">
+                          <h2 className="is-size-5">Transaction History</h2>
+                          
+                        </div>
+                      </div>
+                    </section>
+                    <footer className="modal-card-foot">
+                      <button className="button is-success">Delete item</button>
+                      <button
+                        className="button"
+                        onClick={() => setShowTransactionModal(false)}
                       >
                         Close
                       </button>
