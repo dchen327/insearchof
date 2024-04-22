@@ -89,6 +89,7 @@ class UserProfile(BaseModel):
         Uploads a users contact information, including their name, email, profile picture, optional
         phone number, to the user database, making it visible to buyers.
         """
+        print("hello")
         doc_ref = db.collection('items').document()
         profile_data = profile.dict()
         doc_ref.set(profile_data)

@@ -21,7 +21,7 @@ export default function Page() {
   const [listOfItems, setListOfItems] = useState(false);
 
   const [uploadInfoButton, setUploadInfoButtonClicked] = useState(false);
-
+  const [changeUserButton, setShowChangeUserButton] = useState(false);
   const [showItemModal, setShowItemModal] = useState(false);
 
   const router = useRouter();
@@ -34,8 +34,8 @@ export default function Page() {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        fetchListOfItems(currentUser.email);
-        fetchTransactionHistory(currentUser.email);
+        // fetchListOfItems(currentUser.email);
+        // fetchTransactionHistory(currentUser.email);
       } else {
         router.push("/");
       }
@@ -73,7 +73,6 @@ export default function Page() {
     }
 
     setUploadInfoButtonClicked(true);
-
     setShowLocationTooltip(true);
     setShowPhoneNumberTooltip(true);
 
@@ -107,6 +106,7 @@ export default function Page() {
       alert("An error occurred. Please try again.");
     }
   };
+  
 
   const handleChangeUserInfo = () => {
     // Hide the "Upload user info" button and tooltips
@@ -114,6 +114,7 @@ export default function Page() {
     setShowLocationTooltip(false);
     setShowPhoneNumberTooltip(false);
   };
+  
 
   const tooltipStyle = {
     position: "absolute",
@@ -168,20 +169,6 @@ export default function Page() {
     }
   };
 
-  // updates the user's profile data by taking new profile data as input
-  // and then uses updateProfile from firebase to update a user's profile
-  const updateUserProfile = async (newProfileData) => {
-    try {
-      // Update user profile data
-      await auth.currentUser.updateProfile(newProfileData);
-      // Update the user state with the new profile data
-      setUser({ ...user, ...newProfileData });
-    } catch (err) {
-      console.error(err);
-      setError("Failed to update profile");
-    }
-  };
-
   return (
     <>
       <div>
@@ -209,26 +196,26 @@ export default function Page() {
                 backgroundColor: "#fff",
               }}
             >
-               {uploadInfoButton && (
-                <div style={{ textAlign: "center" }}>
-                  <p>Phone Number: {phoneNumber}</p>
-                  <p>Location: {location}</p>
-                  <button
-                    className="button is-primary"
-                    onClick={(handleChangeUserInfo)}
-                    style={{
-                      padding: "10px 20px",
-                      fontSize: "16px",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "2px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Change user info
-                  </button>
-                </div>
-              )}
+               {uploadInfoButton && !showItemModal && (
+                  <div style={{ textAlign: "center"}}>
+                    <p style={{ marginBottom: "30px" }}>Phone Number: {phoneNumber}</p>
+                    <p style={{ marginBottom: "30px" }}>Location: {location}</p>
+                    <button
+                      className="button is-primary"
+                      onClick={handleChangeUserInfo}
+                      style={{
+                        padding: "15px 20px", // Increased padding for the button
+                        fontSize: "16px",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "2px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Change user info
+                    </button>
+                  </div>
+                )}
               {["phoneNumber", "location", "image"].map((field) => (
                 <div
                   key={field}
@@ -273,9 +260,7 @@ export default function Page() {
                   <button
                     onClick={() => {
                       setShowPhoneNumberTooltip(
-                        field === "phoneNumber"
-                          ? !showPhoneNumberTooltip
-                          : false
+                        field === "phoneNumber" ? !showPhoneNumberTooltip : false
                       );
                       setShowLocationTooltip(
                         field === "location" ? !showLocationTooltip : false
@@ -298,7 +283,7 @@ export default function Page() {
                     cursor: "pointer",
                   }}
                 >
-                  Update user info
+                  Upload user info
                 </button>
               )}
             </div>
