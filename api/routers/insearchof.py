@@ -144,7 +144,6 @@ async def update_request(item_id: str, update_data: RequestInformation):
             item_ref.set(item_data)
             return {"message": "Item updated successfully"}
 
-        # MAYBE UPDATE TIMESTAMP AS WELL?
         else:
             raise HTTPException(status_code=404, detail="Item not found")
     except Exception as e:
@@ -265,12 +264,8 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
             content={"message": "Failed to upload image", "error": str(e)}
         )
                 
-@router.put("/update-image/{user_id}/{image_id}", response_model=dict)
-async def update_image(user_id: str, image_id: str, file: UploadFile = File(...)):
-    pass
 
-
-@router.delete("/delete-image/{filename}", response_model=dict)
+@router.delete("/delete-image/{filename}/{user_id}", response_model=dict)
 async def delete_image(filename: str, user_id: str):
     """
     Deletes an image from Firebase Storage.
@@ -326,3 +321,32 @@ async def validate_item_id(item_id: str, user_data: dict):
             return {"isValid": False}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/item-details/{item_id}", response_model=dict)
+async def get_item_details(item_id: str):
+    """
+    Retrieves the details of a specific item by its ID.
+
+    Parameters:
+    - item_id: The unique identifier of the item.
+
+    Returns:
+    - A JSON response containing the item details or an error message.
+    """
+    try:
+        # Fetch the document from Firestore
+        item_ref = db.collection('items').document(item_id)
+        item_doc = item_ref.get()
+
+        if item_doc.exists:
+            item_data = item_doc.to_dict()
+            return {
+                "message": "Item details fetched successfully",
+                "itemDetails": item_data
+            }
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    except Exception as e:
+        print(f"Error fetching item details: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

@@ -87,7 +87,6 @@ export default function Page() {
           setImagePreviewUrl('');
           setSelectedCategories([]);
         }
-        console.log(urgent);
       } catch (error) {
         console.error('Failed to validate Item ID:', error);
       }
@@ -228,45 +227,68 @@ export default function Page() {
       alert('No item ID provided for the update.');
       return;
     }
-
-    // Validate other fields just like in the uploadRequest function
-    // ...
-
-    let imageUrl = imagePreviewUrl; // Keep the existing image URL by default
-
+  
+    if (!title) {
+      alert('Title is required.');
+      return;
+    }
+  
+    const finalPrice = price === '' ? 0 : parseFloat(price);
+    if (finalPrice < 0) {
+      alert('Price cannot be negative.');
+      return;
+    }
+  
+    if (!user) {
+      alert('You need to be logged in to submit a request.');
+      return;
+    }
+  
     try {
-      // If a new image is provided, upload it and get the new image URL
+      // Fetch current item details including the image_url from the database
+      const itemDetailsResponse = await fetch(`/api/insearchof/item-details/${item_id}`);
+      const itemDetails = await itemDetailsResponse.json();
+      let imageUrl = itemDetails.itemDetails.image_url;  // Retrieve the current image URL from the item details
+      console.log('Current image URL:', imageUrl);
+  
       if (image) {
+        // Check if there is already an image and delete it if new image is uploaded
+        if (imageUrl) {
+          const filenameToDelete = imageUrl.split('/').pop();
+          console.log('Deleting image:', filenameToDelete);
+          await fetch(`/api/insearchof/delete-image/${filenameToDelete}/${user.uid}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+  
+        // Upload new image and update the imageUrl
         imageUrl = await uploadImage(image);
       }
-
-      // Prepare request data with the possibly updated image URL
+  
+      // Prepare the request data for updating the item
       const requestData = {
         title,
         description,
-        price: parseFloat(price),
+        price: parseFloat(finalPrice),
         image_url: imageUrl,
         type: 'request',
         trans_comp: false,
         user_id: user.uid,
-        urgent: urgent,
-        categories: selectedCategories // Include selected categories
+        urgent,
+        categories: selectedCategories
       };
-
+  
       // Send the update request to the backend
       const response = await fetch(`/api/insearchof/update/${item_id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestData),
       });
-
+  
       const data = await response.json();
       if (response.ok) {
         alert('Request updated successfully!');
-        // ... Code to handle successful update ...
-        // Optionally reset form fields here, if required
       } else {
         alert('Failed to update request: ' + data.message);
       }
@@ -275,7 +297,7 @@ export default function Page() {
       alert('An error occurred. Please try again.');
     }
   };
-
+    
 
   const deleteRequest = async () => {
     if (!item_id) {
@@ -331,7 +353,6 @@ export default function Page() {
 
     try {
       // Make a request to your backend endpoint to mark the transaction as complete
-      console.log("before");
       const response = await fetch(`/api/insearchof/mark/${item_id}`, {
         method: 'PUT',
         headers: {
@@ -340,7 +361,6 @@ export default function Page() {
         },
         body: JSON.stringify({ user_id: user.uid }),
       });
-      console.log("after");
       const data = await response.json();
       if (response.ok) {
         // If the request is successful, show a success message
