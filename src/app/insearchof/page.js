@@ -23,7 +23,6 @@ export default function Page() {
   const [selectedCategories, setSelectedCategories] = useState([]);
 
 
-
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -54,7 +53,7 @@ export default function Page() {
       return null;
     }
 
-    return finalPrice; // Return the validated and possibly corrected price value
+    return finalPrice; 
   }
 
 
@@ -66,7 +65,7 @@ export default function Page() {
     setImage(null);
     setImagePreviewUrl('');
     setUrgent(false);
-    setSelectedCategories([]); // Clear selected categories
+    setSelectedCategories([]);
   }
 
 
@@ -91,7 +90,7 @@ export default function Page() {
     const newItemId = e.target.value;
     setItem_id(newItemId); 
   
-    if (newItemId.length === 20) {
+    if (newItemId.length === 20) {  // length of item id
       try {
         const response = await fetch(`/api/insearchof/validate-item-id/${newItemId}/${user.uid}`, {
           method: 'POST',
@@ -101,7 +100,7 @@ export default function Page() {
         });
   
         const data = await response.json();
-        if (response.ok && data.isValid) {
+        if (response.ok && data.isValid) {  // fill in form
           setTitle(data.itemDetails.title);
           setDescription(data.itemDetails.description);
           setPrice(data.itemDetails.price.toString()); 
@@ -111,14 +110,14 @@ export default function Page() {
   
         } else {
           console.error('Item ID validation error:', data.message);
-          resetForm(); // Call resetForm to clear fields
+          resetForm();
         }
       } catch (error) {
         console.error('Failed to validate Item ID:', error);
-        resetForm(); // Use the resetForm function here as well
+        resetForm();
       }
     } else {
-      resetForm(); // Use the resetForm function for consistency
+      resetForm();
     }
   };
   
@@ -141,8 +140,7 @@ export default function Page() {
 
 
   const uploadImage = async (imageFile) => {
-    if (!imageFile) {
-      // If no image is provided, we don't need to upload anything
+    if (!imageFile) {  // no image provided
       return '';
     }
 
