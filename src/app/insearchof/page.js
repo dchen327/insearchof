@@ -37,6 +37,39 @@ export default function Page() {
   }, [router]);
 
 
+  function validateFormAndUser(title, price, user) {
+    if (!title) {
+      alert('Title is required.');
+      return null;
+    }
+
+    const finalPrice = price === '' ? 0 : parseFloat(price);
+    if (isNaN(finalPrice) || finalPrice < 0) {
+      alert('Price must be a valid number and cannot be negative.');
+      return null;
+    }
+
+    if (!user) {
+      alert('You need to be logged in to submit a request.');
+      return null;
+    }
+
+    return finalPrice; // Return the validated and possibly corrected price value
+  }
+
+
+  function resetForm() {
+    setItem_id('');
+    setTitle('');
+    setDescription('');
+    setPrice('');
+    setImage(null);
+    setImagePreviewUrl('');
+    setUrgent(false);
+    setSelectedCategories([]); // Clear selected categories
+  }
+
+
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     setImage(file);
@@ -56,52 +89,39 @@ export default function Page() {
 
   const handleItemIDChange = async (e) => {
     const newItemId = e.target.value;
-    setItem_id(newItemId); // Assuming setItem_id is your state setter for item_id
-
+    setItem_id(newItemId); 
+  
     if (newItemId.length === 20) {
       try {
-        // Make an API call to your backend to validate the item_id
-        const response = await fetch(`/api/insearchof/validate-item-id/${newItemId}`, {
+        const response = await fetch(`/api/insearchof/validate-item-id/${newItemId}/${user.uid}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ user_id: user.uid }) // Send the current user's uid for validation
         });
-
+  
         const data = await response.json();
         if (response.ok && data.isValid) {
-          // Set the form fields with the item details
           setTitle(data.itemDetails.title);
           setDescription(data.itemDetails.description);
-          setPrice(data.itemDetails.price.toString()); // Convert price to a string for the input field
+          setPrice(data.itemDetails.price.toString()); 
           setImagePreviewUrl(data.itemDetails.image_url);
           setUrgent(data.itemDetails.urgent);
           setSelectedCategories(data.itemDetails.categories);
-
+  
         } else {
           console.error('Item ID validation error:', data.message);
-          setTitle('');
-          setDescription('');
-          setPrice('');
-          setImagePreviewUrl('');
-          setSelectedCategories([]);
+          resetForm(); // Call resetForm to clear fields
         }
       } catch (error) {
         console.error('Failed to validate Item ID:', error);
+        resetForm(); // Use the resetForm function here as well
       }
     } else {
-      // Reset the form and validation status if the item_id is not 20 characters long
-      setTitle('');
-      setDescription('');
-      setPrice('');
-      setImagePreviewUrl('');
-      setUrgent(false);
-      setSelectedCategories([]);
-
+      resetForm(); // Use the resetForm function for consistency
     }
   };
-
+  
 
   const handlePriceChange = (e) => {
     const value = e.target.value;
@@ -141,28 +161,35 @@ export default function Page() {
     const imageData = await imageResponse.json();
     return imageData.image_url; // Return the uploaded image URL
   };
-  
+
+
+  const deleteImage = async (filename, user_id) => {
+    try {
+      const response = await fetch(`/api/insearchof/delete-image/${filename}/${user_id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete image.');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to delete image:', error);
+      alert('An error occurred while deleting the image. Please try again.');
+      return null;
+    }
+  };
+
 
   const uploadRequest = async () => {
-    // Validate input fields
-    if (!title) {
-      alert('Title is required.');
+    const finalPrice = validateFormAndUser(title, price, user);
+    if (finalPrice === null) {
       return;
     }
-  
-    // If price is empty, set it to 0
-    const finalPrice = price === '' ? 0 : parseFloat(price);
-    if (finalPrice < 0) {
-      alert('Price cannot be negative.');
-      return;
-    }
-  
-    // Check if the user is logged in
-    if (!user) {
-      alert('You need to be logged in to submit a request.');
-      return;
-    }
-  
+
     // Upload the image first, if it exists
     try {
       let imageUrl = '';
@@ -178,8 +205,7 @@ export default function Page() {
         alert('An error occurred. Please check the console for more details.');
         return;
       }
-  
-      // Prepare request data including categories
+
       const requestData = {
         title: title,
         description: description,
@@ -189,9 +215,9 @@ export default function Page() {
         trans_comp: false,
         user_id: user.uid,
         urgent: urgent,
-        categories: selectedCategories // Include selected categories
+        categories: selectedCategories 
       };
-  
+
       // Send the request data to the backend
       const response = await fetch('api/insearchof/upload', {
         method: 'POST',
@@ -200,19 +226,12 @@ export default function Page() {
         },
         body: JSON.stringify(requestData)
       });
-  
+
       const data = await response.json();
       if (response.ok) {
         alert('Request uploaded successfully!');
-        // Clear the form and selected categories
-        setTitle('');
-        setDescription('');
-        setPrice('');
-        setImage(null);
-        setImagePreviewUrl('');
-        setUrgent(false);
-        setSelectedCategories([]); // Clear selected categories
-      } else {
+        resetForm();
+        } else {
         alert('Failed to upload request: ' + data.message);
       }
     } catch (error) {
@@ -220,75 +239,68 @@ export default function Page() {
       alert('An error occurred. Please try again.');
     }
   };
-  
+
 
   const updateRequest = async () => {
     if (!item_id) {
       alert('No item ID provided for the update.');
       return;
     }
-  
-    if (!title) {
-      alert('Title is required.');
+
+    const finalPrice = validateFormAndUser(title, price, user);
+    if (finalPrice === null) {
       return;
     }
-  
-    const finalPrice = price === '' ? 0 : parseFloat(price);
-    if (finalPrice < 0) {
-      alert('Price cannot be negative.');
-      return;
-    }
-  
-    if (!user) {
-      alert('You need to be logged in to submit a request.');
-      return;
-    }
-  
+
     try {
       // Fetch current item details including the image_url from the database
       const itemDetailsResponse = await fetch(`/api/insearchof/item-details/${item_id}`);
+      if (!itemDetailsResponse.ok) {
+        throw new Error('Failed to fetch item details.');
+      }
       const itemDetails = await itemDetailsResponse.json();
       let imageUrl = itemDetails.itemDetails.image_url;  // Retrieve the current image URL from the item details
-      console.log('Current image URL:', imageUrl);
-  
+
+      // If there is a new image to upload, handle the previous image's deletion and upload the new one
       if (image) {
-        // Check if there is already an image and delete it if new image is uploaded
         if (imageUrl) {
           const filenameToDelete = imageUrl.split('/').pop();
-          console.log('Deleting image:', filenameToDelete);
-          await fetch(`/api/insearchof/delete-image/${filenameToDelete}/${user.uid}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
-          });
+          await deleteImage(filenameToDelete, user.uid);
         }
-  
-        // Upload new image and update the imageUrl
-        imageUrl = await uploadImage(image);
+
+        try {
+          imageUrl = await uploadImage(image);
+        } catch (error) {
+          console.error('Image upload failed:', error);
+          alert('Failed to upload new image. Please try again.');
+          return;
+        }
       }
-  
+
       // Prepare the request data for updating the item
       const requestData = {
-        title,
-        description,
-        price: parseFloat(finalPrice),
+        title: title,
+        description: description,
+        price: parseFloat(price),
         image_url: imageUrl,
         type: 'request',
         trans_comp: false,
         user_id: user.uid,
-        urgent,
-        categories: selectedCategories
+        urgent: urgent,
+        categories: selectedCategories // Include selected categories
       };
-  
+
       // Send the update request to the backend
       const response = await fetch(`/api/insearchof/update/${item_id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestData),
       });
-  
+
       const data = await response.json();
       if (response.ok) {
         alert('Request updated successfully!');
+        resetForm();
       } else {
         alert('Failed to update request: ' + data.message);
       }
@@ -297,7 +309,7 @@ export default function Page() {
       alert('An error occurred. Please try again.');
     }
   };
-    
+
 
   const deleteRequest = async () => {
     if (!item_id) {
@@ -305,13 +317,11 @@ export default function Page() {
       return;
     }
 
-    // Confirm with the user before deleting
     if (!window.confirm('Are you sure you want to delete this request?')) {
       return;
     }
 
     try {
-      // Send the delete request to the backend
       const response = await fetch(`/api/insearchof/delete/${item_id}`, {
         method: 'DELETE',
         headers: {
@@ -322,19 +332,8 @@ export default function Page() {
 
       if (response.ok) {
         alert('Request deleted successfully!');
-        // Clear the form and any states related to the deleted item
-        setItem_id('');
-        setTitle('');
-        setDescription('');
-        setPrice('');
-        setImage(null);
-        setImagePreviewUrl('');
-        setUrgent(false);
-        setSelectedCategories([]); // Clear selected categories
-
-        // ... any other cleanup you need to do ...
+        resetForm();
       } else {
-        // If the backend responds with an error
         const errorData = await response.json();
         alert(`Failed to delete request: ${errorData.message}`);
       }
@@ -352,25 +351,22 @@ export default function Page() {
     }
 
     try {
-      // Make a request to your backend endpoint to mark the transaction as complete
       const response = await fetch(`/api/insearchof/mark/${item_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          // Add any additional headers if needed
         },
         body: JSON.stringify({ user_id: user.uid }),
       });
       const data = await response.json();
+      console.log(data);
       if (response.ok) {
-        // If the request is successful, show a success message
-        alert('Transaction marked as complete!');
+        alert(`Transaction Complete is now ${data['trans_comp_value']}`);
       } else {
-        // If there's an error, show the error message
         alert('Failed to mark transaction as complete: ' + data.message);
       }
     } catch (error) {
-      // If there's a network error or other unexpected error, log and show a generic error message
+      // network failure?
       console.error('Failed to mark transaction as complete:', error);
       alert('An error occurred while marking transaction as complete. Please try again.');
     }
@@ -627,18 +623,3 @@ export default function Page() {
   );
 
 }
-
-
-// TODO: DELETE IMAGES, THEN UPDATE IMAGES
-// CATEGORIES
-// Electronics:
-// Textbooks and Study Materials:
-// Furniture and Home Décor:
-// Clothing and Accessories:
-// Services:
-// Appliances and Household Items:
-// Sports and Outdoor Equipment:
-// Tickets and Events:
-// Transportation:
-// Art and Creativity:
-// Miscellaneous:
