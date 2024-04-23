@@ -84,19 +84,19 @@ class UserProfile(BaseModel):
             ..., description="User's transaction history.")
 
     @router.post("/upload_contact_info", response_model=dict)
-    async def upload_contact_info(profile: UploadContactInformation):
+    async def upload_contact_info(user_profile: UploadContactInformation):
         """
         Uploads a users contact information, including their name, email, profile picture, optional
         phone number, to the user database, making it visible to buyers.
         """
         print("hello")
         doc_ref = db.collection('items').document()
-        profile_data = profile.dict()
-        doc_ref.set(profile_data)
+        user_profile_data = user_profile.dict()
+        doc_ref.set(user_profile_data)
         return {"message": "Uploads users contact info successfully"}
 
     @router.get("/get_list_of_items")
-    def get_list_of_items(requester_id: str = Query(description="The requester's uid")) -> GetListOfItemsResponse:
+    async def get_list_of_items(requester_id: str = Query(description="The requester's uid")) -> GetListOfItemsResponse:
         """
         Retrieves a list of items associated with a given user from the itemsForSale and itemsForRent 
         database and stores it within the user database, making it visible to buyers. 
@@ -112,6 +112,35 @@ class UserProfile(BaseModel):
 
         print(items)
         return {"listingOfItems": items}
+    
+    @router.delete("/delete/{item_id}", response_model=dict)
+    async def delete_request(item_id: str, user_data: dict):
+    
+        try:
+            item_ref = db.collection('items').document(item_id)
+            item = item_ref.get()
+            if item.exists:
+                item_data = item.to_dict()
+                # Check if the item's user_id matches the logged-in user's uid
+                if item_data['user_id'] != user_data['user_id']:
+                    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                        detail="You do not have permission to delete this item.")
+                
+                # Attempt to delete the image first, if it exists
+                if item_data.get('image_url'):
+                    image_filename = item_data['image_url'].split('/')[-1]  # Extracting filename from URL
+                    # await delete_image(image_filename, user_data['user_id'])
+                                
+                # Proceed with the deletion of the database entry
+                item_ref.delete()
+                return {"message": "Item and associated image deleted successfully"}
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
 
     @router.get("/get_transaction_history")
     def get_transaction_history(get_transactions: GetTransactionHistoryRequest) -> GetTransactionHistoryResponse:
