@@ -53,7 +53,7 @@ export default function Page() {
       return null;
     }
 
-    return finalPrice; 
+    return finalPrice;
   }
 
 
@@ -88,8 +88,8 @@ export default function Page() {
 
   const handleItemIDChange = async (e) => {
     const newItemId = e.target.value;
-    setItem_id(newItemId); 
-  
+    setItem_id(newItemId);
+
     if (newItemId.length === 20) {  // length of item id
       try {
         const response = await fetch(`/api/insearchof/validate-item-id/${newItemId}/${user.uid}`, {
@@ -98,16 +98,16 @@ export default function Page() {
             'Content-Type': 'application/json'
           },
         });
-  
+
         const data = await response.json();
         if (response.ok && data.isValid) {  // fill in form
           setTitle(data.itemDetails.title);
           setDescription(data.itemDetails.description);
-          setPrice(data.itemDetails.price.toString()); 
+          setPrice(data.itemDetails.price.toString());
           setImagePreviewUrl(data.itemDetails.image_url);
           setUrgent(data.itemDetails.urgent);
           setSelectedCategories(data.itemDetails.categories);
-  
+
         } else {
           console.error('Item ID validation error:', data.message);
           resetForm();
@@ -120,7 +120,7 @@ export default function Page() {
       resetForm();
     }
   };
-  
+
 
   const handlePriceChange = (e) => {
     const value = e.target.value;
@@ -213,7 +213,7 @@ export default function Page() {
         trans_comp: false,
         user_id: user.uid,
         urgent: urgent,
-        categories: selectedCategories 
+        categories: selectedCategories
       };
 
       // Send the request data to the backend
@@ -229,7 +229,7 @@ export default function Page() {
       if (response.ok) {
         alert('Request uploaded successfully!');
         resetForm();
-        } else {
+      } else {
         alert('Failed to upload request: ' + data.message);
       }
     } catch (error) {
@@ -456,7 +456,15 @@ export default function Page() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Description (Optional)"
-              style={{ height: '100px', padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, resize: 'none' }}
+              style={{
+                height: '100px',
+                padding: '10px',
+                fontSize: '16px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                flexGrow: 1,
+                resize: 'vertical' // Allow resizing only vertically
+              }}
             />}
             {field === 'price' && <>
               <label style={{ marginRight: '5px', fontSize: '16px' }}>$</label>
