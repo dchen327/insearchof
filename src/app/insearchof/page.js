@@ -377,17 +377,10 @@ export default function Page() {
 
 
   const categories = [
+    'Food',
     'Electronics',
-    'Textbooks and Study Materials',
-    'Furniture and Home Décor',
-    'Clothing and Accessories',
-    'Services',
-    'Appliances and Household Items',
-    'Sports and Outdoor Equipment',
-    'Tickets and Events',
-    'Transportation',
-    'Art and Creativity',
-    'Miscellaneous'
+    'Furniture',
+    'Clothing'
   ];
 
 
