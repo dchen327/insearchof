@@ -5,6 +5,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
 
+
 export default function Page() {
   const [user, setUser] = useState(null);
   const router = useRouter();
@@ -428,7 +429,6 @@ export default function Page() {
         backgroundColor: '#fff',
       }}>
         {['item id', 'title', 'description', 'price', 'image', 'urgent'].map((field) => (
-          // ITEM ID IS TEMPORARY, PLEASE DELETE
           <div key={field} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '5px' }}>
             {field === 'item id' && <input
               type="text"
