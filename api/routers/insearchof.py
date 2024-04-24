@@ -10,6 +10,8 @@ from uuid import uuid4
 from ..firebase_config import db
 from fastapi.encoders import jsonable_encoder
 import os
+from PIL import Image
+import io
 
 
 router = APIRouter(
@@ -156,21 +158,41 @@ def mark_transaction_complete(item_id: str, current_user: dict):
 @router.post("/upload-image/{user_id}", response_model=dict)
 async def upload_image(user_id: str, file: UploadFile = File(...)):
     """
-    Uploads an image to Firebase Storage and returns the URL of the uploaded image.
+    Uploads an image to Firebase Storage after resizing and compressing it if necessary.
     """
-
     try:
-        bucket = storage.bucket()
+        # Read the image data
+        image_data = await file.read()
+        image = Image.open(io.BytesIO(image_data))
 
-        # Create a unique file name
+        # Resize the image if it is larger than 1080px in height or width
+        max_size = 1080
+        if image.height > max_size or image.width > max_size:
+            scale_ratio = min(max_size / image.height, max_size / image.width)
+            new_size = (int(image.width * scale_ratio), int(image.height * scale_ratio))
+            image = image.resize(new_size, Image.Resampling.LANCZOS)
+            print('scaled')
+
+        # Convert to JPEG to compress and adjust quality
+        img_byte_arr = io.BytesIO()
+        quality = 90
+        while True:
+            image.save(img_byte_arr, format='JPEG', quality=quality)
+            if img_byte_arr.tell() <= 1_000_000 or quality <= 10:  # Stop if size is under 1MB or quality too low
+                break
+            quality -= 10
+            img_byte_arr.seek(0) 
+            print('compressed')
+
+        img_byte_arr.seek(0)
+
+        bucket = storage.bucket()
         unique_filename = f"{uuid4()}_{file.filename}"
         file_name = f"images/{user_id}/{unique_filename}"
         blob = bucket.blob(file_name)
 
-        file_content = await file.read()
-
-        # Upload the file
-        blob.upload_from_string(file_content, content_type=file.content_type)
+        # Upload the compressed image
+        blob.upload_from_string(img_byte_arr.getvalue(), content_type='image/jpeg')
 
         # Make the blob publicly viewable
         blob.make_public()
