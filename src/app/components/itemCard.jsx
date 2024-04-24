@@ -10,16 +10,7 @@ export const ItemCard = ({ item }) => {
     : parseFloat(item.price).toFixed(2);
 
   return (
-    <div className="flex">
-      <div
-        className={`w-1 ${
-          item.type === "sell"
-            ? "bg-blue-500"
-            : item.type === "rent"
-            ? "bg-green-500"
-            : "bg-purple-500"
-        }`}
-      />
+    <div className="">
       <div className="card is-shadowless">
         <div className="card-content px-4 py-">
           <div className="media mb-2 flex items-center">
@@ -31,8 +22,17 @@ export const ItemCard = ({ item }) => {
                 <p className="is-6">{item.time_since_listing}</p>
               </div>
             </div>
-            <div className="bg-gray-100 rounded">
+            <div className="bg-gray-100 rounded flex flex-row">
               <p className="p-1 text-lg text-black is-4">${price}</p>
+              <div
+                className={`w-1 ${
+                  item.type === "sell"
+                    ? "bg-blue-500"
+                    : item.type === "rent"
+                    ? "bg-green-500"
+                    : "bg-purple-500"
+                }`}
+              />
             </div>
           </div>
           <div className="content">{description}</div>
