@@ -6,7 +6,7 @@ from typing import Annotated, Optional, List
 from pydantic import BaseModel, Field
 from firebase_admin import credentials, firestore, auth
 from dotenv import load_dotenv
-from ..firebase_config import db
+from api.firebase_config import db
 from datetime import datetime, timezone
 from google.cloud.firestore_v1 import FieldFilter
 
