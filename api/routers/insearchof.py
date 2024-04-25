@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from firebase_admin import storage
-from api.firebase_config import db
+from ..firebase_config import db
 from datetime import datetime, timezone
 from uuid import uuid4
 from fastapi.encoders import jsonable_encoder
@@ -281,4 +281,3 @@ async def get_item_details(item_id: str):
     except Exception as e:
         print(f"Error fetching item details: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-
