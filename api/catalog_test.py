@@ -1,10 +1,11 @@
 import os
+os.environ['TESTING'] = 'True'
+from routers.catalog import get_listings
 import requests
 import unittest
 from google.auth.credentials import AnonymousCredentials
 from google.cloud.firestore import Client
 from dotenv import load_dotenv
-from routers.catalog import get_listings
 
 load_dotenv()
 
@@ -43,10 +44,12 @@ def clear_db():
 
 class CatalogTests(unittest.TestCase):
     def setUp(self):
-        clear_db()
+        # clear_db()
+        pass
 
     def test_query_empty_db(self):
-        listings = get_listings()
+        listings = get_listings(search='', sort='uploadDateAsc', listing_types=[
+                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
         self.assertEqual(listings, {"listings": [1]})
 
 
