@@ -4,10 +4,9 @@ from fastapi.responses import JSONResponse
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from firebase_admin import storage
-from ..firebase_config import db
+from api.firebase_config import db
 from datetime import datetime, timezone
 from uuid import uuid4
-from ..firebase_config import db
 from fastapi.encoders import jsonable_encoder
 import os
 from PIL import Image

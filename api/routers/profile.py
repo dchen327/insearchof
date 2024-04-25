@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from firebase_admin import auth
-from ..firebase_config import db
+from api.firebase_config import db
 import os
 import json
 from dotenv import load_dotenv
