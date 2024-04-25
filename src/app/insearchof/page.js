@@ -425,7 +425,6 @@ export default function Page() {
       >
         {["item id", "title", "description", "price", "image", "urgent"].map(
           (field) => (
-            // ITEM ID IS TEMPORARY, PLEASE DELETE
             <div
               key={field}
               style={{
@@ -478,7 +477,7 @@ export default function Page() {
                     border: "1px solid #ccc",
                     borderRadius: "4px",
                     flexGrow: 1,
-                    resize: "none",
+                    resize: "vertical", // Allow resizing only vertically
                   }}
                 />
               )}
