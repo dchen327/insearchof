@@ -50,8 +50,9 @@ class CatalogTests(unittest.TestCase):
     def test_query_empty_db(self):
         listings = get_listings(search='', sort='uploadDateAsc', listing_types=[
                                 'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
-        self.assertEqual(listings, {"listings": [1]})
+        self.assertEqual(listings, {"listings": []})
 
+    
 
 if __name__ == '__main__':
     unittest.main()
