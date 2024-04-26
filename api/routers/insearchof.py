@@ -153,7 +153,6 @@ def mark_transaction_complete(item_id: str, current_user: dict):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
-
 @router.post("/upload-image/{user_id}", response_model=dict)
 async def upload_image(user_id: str, file: UploadFile = File(...)):
     """
@@ -164,6 +163,12 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
         image_data = await file.read()
         image = Image.open(io.BytesIO(image_data))
 
+        # Convert the image to RGB if not already
+        # Prevents errors when converting to JPEG
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+            print('converted to RGB')
+
         # Resize the image if it is larger than 1080px in height or width
         max_size = 1080
         if image.height > max_size or image.width > max_size:
@@ -172,7 +177,7 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
             image = image.resize(new_size, Image.Resampling.LANCZOS)
             print('scaled')
 
-        # Convert to JPEG to compress and adjust quality
+        # Compress the image to ensure the size is under 1MB with decent quality
         img_byte_arr = io.BytesIO()
         quality = 90
         while True:
@@ -185,6 +190,7 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
 
         img_byte_arr.seek(0)
 
+        # Configure Firebase Storage
         bucket = storage.bucket()
         unique_filename = f"{uuid4()}_{file.filename}"
         file_name = f"images/{user_id}/{unique_filename}"
