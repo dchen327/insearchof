@@ -46,7 +46,7 @@ def clear_db():
 
 class CatalogTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        # clear_db()
+        clear_db()
         pass
 
     def test_query_empty_db(self):
