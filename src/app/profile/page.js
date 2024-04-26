@@ -143,7 +143,7 @@ export default function Page() {
       }
       const data = await response.json();
       console.log(data);
-      setItems(data.listingOfItems);
+      setListings(data.listingOfItems);
     } catch (err) {
       console.error(err);
       setError("Failed to fetch list of items");
@@ -165,7 +165,7 @@ export default function Page() {
       }
       const data = await response.json();
       console.log(data);
-      setItems(data.listingOfItems);
+      setItems(data.transactionHistory);
     } catch (err) {
       console.error(err);
       setError("Failed to fetch transaction history");
@@ -385,7 +385,7 @@ export default function Page() {
                           {items.length > 0 ? (
                             items.map((item, index) => (
                               <div key={index}>
-                                <p>{item.name}</p>
+                                <p>{item.title}</p>
                                 <p>{item.description}</p>
                                 {/* Add more details as needed */}
                               </div>
