@@ -79,7 +79,7 @@ export default function Home() {
     params.append("max_price", maxPrice || 0);
 
     listingTypes.forEach((type) => params.append("listing_types", type));
-    params.append("categories", category);
+    params.append("categories", [category]);
 
     const response = await fetch(`/api/catalog/listings?${params.toString()}`, {
       method: "GET",

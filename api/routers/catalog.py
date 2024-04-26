@@ -38,7 +38,7 @@ class ListingsFilters(BaseModel):
     max_price: float = Field(
         0, description="Maximum price of returned items. Must at least the minimum price, and be a non-negative float with max 2 decimal places.")
     categories: List[str] = Field(
-        ['None'], description="Categories to filter by (e.g. electronics, furniture, clothing)")
+        ['All'], description="Categories to filter by (e.g. electronics, furniture, clothing)")
     user_name: Optional[str] = Field(None, description='User display name')
     email: Optional[str] = Field(None, description='User email')
 
@@ -115,7 +115,7 @@ def get_listings(
     max_price: float = Query(
         default=0, description="Maximum price of returned items. Must at least the minimum price, and be a non-negative float with max 2 decimal places."),
     categories: List[str] = Query(default=[
-                                  'None'], description="Categories to filter by (e.g. electronics, furniture, clothing)")
+                                  'All'], description="Categories to filter by (e.g. electronics, furniture, clothing)")
 
 ) -> ListingsResponse:
     ''' Get item listings based on search parameters. '''
@@ -136,8 +136,7 @@ def get_listings(
     # This allows the frontend to display the error to the users
     # query from database items collection, filter and order correctly
     # print items in db.items collection
-    for item in db.collection('items').stream():
-        print(item.to_dict())
+    print(categories)
 
     if max_price == 0:
         max_price = float('inf')
@@ -161,7 +160,7 @@ def get_listings(
     query = db.collection('items').where(filter=type_filter).where(
         filter=min_price_filter).where(filter=max_price_filter)
     
-    if categories != ['None']:
+    if categories != ['All']:
         query = query.where(filter=category_filter)
 
     docs = query.order_by(field, direction=direction).stream()
