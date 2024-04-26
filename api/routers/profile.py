@@ -91,6 +91,7 @@ class UserProfile(BaseModel):
         phone number, to the user database, making it visible to buyers.
         """
         doc_ref = db.collection('users').document()
+        # query = db.collection('users').where('user_id', '==', requester_id)
         user_profile_data = user_profile.dict()
         doc_ref.set(user_profile_data)
         return {"message": "Uploads users contact info successfully"}
