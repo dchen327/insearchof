@@ -7,15 +7,16 @@ import unittest
 from google.auth.credentials import AnonymousCredentials
 from google.cloud.firestore import Client
 from dotenv import load_dotenv
+from firebase_config import db
 
 load_dotenv()
 
 FIREBASE_ID = os.getenv('NEXT_PUBLIC_FIREBASE_PROJECT_ID')
 FIRESTORE_EMULATORS_PORT = 'localhost:8080'
 
-os.environ['FIRESTORE_EMULATOR_HOST'] = FIRESTORE_EMULATORS_PORT
-cred = AnonymousCredentials()
-db = Client(project=FIREBASE_ID, credentials=cred)
+# os.environ['FIRESTORE_EMULATOR_HOST'] = FIRESTORE_EMULATORS_PORT
+# cred = AnonymousCredentials()
+# db = Client(project=FIREBASE_ID, credentials=cred)
 
 
 def clear_db():
@@ -64,6 +65,10 @@ class CatalogTests(unittest.IsolatedAsyncioTestCase):
             categories=["Test category"]
         )
         await upload_request(test_request)
+
+        # listings = get_listings(search='', sort='uploadDateAsc', listing_types=[
+        #                         'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
+        # self.assertEqual(len(listings['listings']), 1)
     
 
 if __name__ == '__main__':
