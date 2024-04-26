@@ -46,6 +46,7 @@ class UserProfile(BaseModel):
     # phone_number: Optional[constr(regex=r'^\(\d{3}\)\s\d{3}-\d{4}$')]  = Field(None, description="The user's phone number") # type: ignore
 
     class UploadContactInformation(BaseModel):
+        userID: str
         location: str
         phoneNumber: str
 

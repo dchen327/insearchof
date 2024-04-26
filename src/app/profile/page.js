@@ -79,13 +79,14 @@ export default function Page() {
 
     try {
       // Then, create a document in Firestore with the item data
+      console.log(user.uid);
       const userData = {
+        userID: user.uid,
         phoneNumber: phoneNumber,
         location: location,
-        type: "request",
       };
 
-      const response = await fetch("api/profile/update_contact_info", {
+      const response = await fetch("api/profile/upload_contact_info", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -97,8 +98,8 @@ export default function Page() {
       if (response.ok) {
         alert("Request uploaded successfully!");
         // Clear the form
-        setPhoneNumber('');
-        setLocation('');
+        setPhoneNumber("");
+        setLocation("");
       } else {
         alert("Failed to upload request: " + data.message);
       }
@@ -107,7 +108,6 @@ export default function Page() {
       alert("An error occurred. Please try again.");
     }
   };
-  
 
   const handleChangeUserInfo = () => {
     // Hide the "Upload user info" button and tooltips
@@ -115,7 +115,6 @@ export default function Page() {
     setShowLocationTooltip(false);
     setShowPhoneNumberTooltip(false);
   };
-  
 
   const tooltipStyle = {
     position: "absolute",
@@ -197,26 +196,28 @@ export default function Page() {
                 backgroundColor: "#fff",
               }}
             >
-               {uploadInfoButton && !showItemModal && (
-                  <div style={{ textAlign: "center"}}>
-                    <p style={{ marginBottom: "30px" }}>Phone Number: {phoneNumber}</p>
-                    <p style={{ marginBottom: "30px" }}>Location: {location}</p>
-                    <button
-                      className="button is-primary"
-                      onClick={handleChangeUserInfo}
-                      style={{
-                        padding: "15px 20px", // Increased padding for the button
-                        fontSize: "16px",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "2px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Change user info
-                    </button>
-                  </div>
-                )}
+              {uploadInfoButton && !showItemModal && (
+                <div style={{ textAlign: "center" }}>
+                  <p style={{ marginBottom: "30px" }}>
+                    Phone Number: {phoneNumber}
+                  </p>
+                  <p style={{ marginBottom: "30px" }}>Location: {location}</p>
+                  <button
+                    className="button is-primary"
+                    onClick={handleChangeUserInfo}
+                    style={{
+                      padding: "15px 20px", // Increased padding for the button
+                      fontSize: "16px",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "2px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Change user info
+                  </button>
+                </div>
+              )}
               {["phoneNumber", "location", "image"].map((field) => (
                 <div
                   key={field}
@@ -229,7 +230,7 @@ export default function Page() {
                 >
                   {!uploadInfoButton && field === "phoneNumber" && (
                     <input
-                      type="text"
+                      type="number"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="Phone Number"
@@ -261,7 +262,9 @@ export default function Page() {
                   <button
                     onClick={() => {
                       setShowPhoneNumberTooltip(
-                        field === "phoneNumber" ? !showPhoneNumberTooltip : false
+                        field === "phoneNumber"
+                          ? !showPhoneNumberTooltip
+                          : false
                       );
                       setShowLocationTooltip(
                         field === "location" ? !showLocationTooltip : false
@@ -363,9 +366,15 @@ export default function Page() {
                     className="modal-background"
                     onClick={() => setShowItemModal(false)}
                   ></div>
-                  <div className="modal-card" style={{ width: "90%", margin: "auto" }}>
-                  <section className="modal-card-body" style={{ maxHeight: "60vh", overflowY: "auto" }}>
-                       <div className="card is-shadowless">
+                  <div
+                    className="modal-card"
+                    style={{ width: "90%", margin: "auto" }}
+                  >
+                    <section
+                      className="modal-card-body"
+                      style={{ maxHeight: "60vh", overflowY: "auto" }}
+                    >
+                      <div className="card is-shadowless">
                         <div className="card-content px-4 py-">
                           <h2 className="is-size-5">List of Items</h2>
                           {items.map((item, index) => (
@@ -397,12 +406,14 @@ export default function Page() {
                     className="modal-background"
                     onClick={() => setShowTransactionModal(false)}
                   ></div>
-                  <div className="modal-card" style={{ width: "90%", margin: "auto" }}>
+                  <div
+                    className="modal-card"
+                    style={{ width: "90%", margin: "auto" }}
+                  >
                     <section className="modal-card-body">
                       <div className="card is-shadowless">
                         <div className="card-content px-4 py-">
                           <h2 className="is-size-5">Transaction History</h2>
-                          
                         </div>
                       </div>
                     </section>
