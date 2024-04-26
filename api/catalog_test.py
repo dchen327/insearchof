@@ -66,9 +66,9 @@ class CatalogTests(unittest.IsolatedAsyncioTestCase):
         )
         await upload_request(test_request)
 
-        # listings = get_listings(search='', sort='uploadDateAsc', listing_types=[
-        #                         'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
-        # self.assertEqual(len(listings['listings']), 1)
+        listings = get_listings(search='', sort='uploadDateAsc', listing_types=[
+                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
+        self.assertEqual(len(listings['listings']), 1)
     
 
 if __name__ == '__main__':

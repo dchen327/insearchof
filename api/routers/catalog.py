@@ -39,6 +39,8 @@ class ListingsFilters(BaseModel):
         0, description="Maximum price of returned items. Must at least the minimum price, and be a non-negative float with max 2 decimal places.")
     categories: List[str] = Field(
         ['None'], description="Categories to filter by (e.g. electronics, furniture, clothing)")
+    user_name: Optional[str] = Field(None, description='User display name')
+    email: Optional[str] = Field(None, description='User email')
 
 
 class Listing(BaseModel):
@@ -114,6 +116,7 @@ def get_listings(
         default=0, description="Maximum price of returned items. Must at least the minimum price, and be a non-negative float with max 2 decimal places."),
     categories: List[str] = Query(default=[
                                   'None'], description="Categories to filter by (e.g. electronics, furniture, clothing)")
+
 ) -> ListingsResponse:
     ''' Get item listings based on search parameters. '''
     # First check that input is valid, then query the database for items that match the search parameters
@@ -172,12 +175,6 @@ def get_listings(
         timestamp = item['timestamp']
         diff = now - timestamp
         item['time_since_listing'] = format_timedelta(diff)
-
-        # from user_id, get user's name and email
-        user_id = item['user_id']
-        user = auth.get_user(user_id)
-        item['user_name'] = user.display_name
-        item['email'] = user.email
 
     # print all
     print(search, sort, listing_types, min_price, max_price, categories)

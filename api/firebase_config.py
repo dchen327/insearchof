@@ -8,12 +8,14 @@ from google.auth.credentials import AnonymousCredentials
 
 load_dotenv()
 
-# print('TESTING ENV', os.getenv('TESTING'))
+print('TESTING ENV', os.getenv('TESTING'))
 if os.getenv('TESTING'):
     FIREBASE_ID = os.getenv('NEXT_PUBLIC_FIREBASE_PROJECT_ID')
     FIRESTORE_EMULATORS_PORT = 'localhost:8080'
+    FIREBASE_STORAGE_EMULATOR_HOST = 'localhost:9199'
 
     os.environ['FIRESTORE_EMULATOR_HOST'] = FIRESTORE_EMULATORS_PORT
+    os.environ['STORAGE_EMULATOR_HOST'] = FIREBASE_STORAGE_EMULATOR_HOST
     cred = AnonymousCredentials()
     db = Client(project=FIREBASE_ID, credentials=cred)
 else:
