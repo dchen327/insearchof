@@ -177,7 +177,7 @@ def get_listings(
         item['time_since_listing'] = format_timedelta(diff)
 
     # print all
-    print(search, sort, listing_types, min_price, max_price, categories)
+    # print(search, sort, listing_types, min_price, max_price, categories)
     # print(items)
 
     return {"listings": items}
