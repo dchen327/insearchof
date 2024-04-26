@@ -28,6 +28,8 @@ class RequestInformation(BaseModel):
     description: Optional[str] = None
     price: float
     image_url: Optional[str] = None
+    display_name: str
+    email: str
     user_id: str
     type: str  # will be "request"
     trans_comp: bool = False  # will be False
@@ -38,6 +40,17 @@ class RequestInformation(BaseModel):
         if value < 0:
             raise ValueError("Price must be non-negative")
         return value
+    
+    
+def validateRequestInformation(request: RequestInformation):
+    if request.price < 0:
+        raise HTTPException(status_code=422, detail="Price must be non-negative")
+    if request.title == "":
+        raise HTTPException(status_code=422, detail="Title cannot be empty")
+    if request.user_id == "":
+        raise HTTPException(status_code=422, detail="User ID cannot be empty")
+    
+    return True
 
 
 @router.post("/upload", response_model=dict)
@@ -50,6 +63,9 @@ async def upload_request(iso_request: RequestInformation):
 
     Returns a JSON response with the result of the operation.
     '''
+    if not validateRequestInformation(iso_request):
+        raise HTTPException(status_code=422, detail="Invalid request data")
+    
     doc_ref = db.collection('items').document()
     iso_request_data = iso_request.model_dump()
     iso_request_data["timestamp"] = datetime.now(timezone.utc)
@@ -167,7 +183,6 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
         # Prevents errors when converting to JPEG
         if image.mode != 'RGB':
             image = image.convert('RGB')
-            print('converted to RGB')
 
         # Resize the image if it is larger than 1080px in height or width
         max_size = 1080
@@ -175,7 +190,6 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
             scale_ratio = min(max_size / image.height, max_size / image.width)
             new_size = (int(image.width * scale_ratio), int(image.height * scale_ratio))
             image = image.resize(new_size, Image.Resampling.LANCZOS)
-            print('scaled')
 
         # Compress the image to ensure the size is under 1MB with decent quality
         img_byte_arr = io.BytesIO()
@@ -186,7 +200,6 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
                 break
             quality -= 10
             img_byte_arr.seek(0) 
-            print('compressed')
 
         img_byte_arr.seek(0)
 
@@ -235,18 +248,14 @@ async def delete_image(filename: str, user_id: str):
             detail=f"Failed to delete image: {str(e)}"
         )
 
-# In your FastAPI backend...
-
 
 @router.post("/validate-item-id/{item_id}/{user_id}", response_model=dict)
 async def validate_item_id(item_id: str, user_id: str):
     try:
         item_details_response = await get_item_details(item_id)        
         item = item_details_response['itemDetails']
-        print(item)
 
         is_valid = item['user_id'] == user_id
-        print("This item is yours" if is_valid else "This item is not yours")
         
         if is_valid:
             return {
