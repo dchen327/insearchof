@@ -336,7 +336,7 @@ export default function Home() {
                         <div className="media-content">
                           <p className="title is-4 mb-2">{currentItem.title}</p>
                           <div className="flex flex-row mb-0">
-                            <p className="is-6">{currentItem.user_name}</p>
+                            <p className="is-6">{currentItem.display_name}</p>
                             <p className="is-6 font-thin">•</p>
                             {/* todo: backend calculations  */}
                             <p className="is-6">
@@ -352,14 +352,13 @@ export default function Home() {
                       </div>
                       <div className="content">
                         <p>{currentItem.description}</p>
-                        <div>
-                          <Image
+                        {currentItem.image_url && (
+                          <img
+                            className="px-10"
                             src={currentItem.image_url}
                             alt="Image"
-                            fill="true"
-                            objectFit="contain"
                           />
-                        </div>
+                        )}
                       </div>
                     </div>
                   </div>
