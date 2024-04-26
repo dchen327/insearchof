@@ -153,10 +153,16 @@ def get_listings(
 
     max_price_filter = FieldFilter(
         field_path='price', op_string='<=', value=max_price)
+    
+    category_filter = FieldFilter(
+        field_path='categories', op_string='array_contains_any', value=categories)
 
     # Use FieldFilter objects with where method
     query = db.collection('items').where(filter=type_filter).where(
         filter=min_price_filter).where(filter=max_price_filter)
+    
+    if categories != ['None']:
+        query = query.where(filter=category_filter)
 
     docs = query.order_by(field, direction=direction).stream()
 
