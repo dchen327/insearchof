@@ -136,7 +136,6 @@ def get_listings(
     # This allows the frontend to display the error to the users
     # query from database items collection, filter and order correctly
     # print items in db.items collection
-    print(categories)
 
     if max_price == 0:
         max_price = float('inf')

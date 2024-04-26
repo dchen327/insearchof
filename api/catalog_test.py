@@ -33,7 +33,7 @@ class CatalogTests(unittest.IsolatedAsyncioTestCase):
 
     def test_query_empty_db(self):
         listings = get_listings(search='', sort='uploadDateAsc', listing_types=[
-                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
+                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['All'])
         self.assertEqual(listings, {"listings": []})
 
     async def test_type(self):
@@ -52,12 +52,12 @@ class CatalogTests(unittest.IsolatedAsyncioTestCase):
         await upload_request(test_request)
 
         request_listings = get_listings(search='', sort='uploadDateAsc', listing_types=[
-                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
+                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['All'])
         self.assertEqual(len(request_listings['listings']), 1)
         self.assertEqual(request_listings['listings'][0]['type'], 'request')
 
         other_listings = get_listings(search='', sort='uploadDateAsc', listing_types=[
-                                'buy', 'rent'], min_price=0, max_price=0, categories=['None'])
+                                'buy', 'rent'], min_price=0, max_price=0, categories=['All'])
         self.assertEqual(len(other_listings['listings']), 0)
 
     async def test_price(self):
@@ -76,15 +76,15 @@ class CatalogTests(unittest.IsolatedAsyncioTestCase):
         await upload_request(test_request)
 
         listings_under_10 = get_listings(search='', sort='uploadDateAsc', listing_types=[
-                                'buy', 'rent', 'request'], min_price=0, max_price=10, categories=['None'])    
+                                'buy', 'rent', 'request'], min_price=0, max_price=10, categories=['All'])    
         self.assertEqual(len(listings_under_10['listings']), 0)
 
         listings_over_100 = get_listings(search='', sort='uploadDateAsc', listing_types=[
-                                'buy', 'rent', 'request'], min_price=100, max_price=0, categories=['None'])
+                                'buy', 'rent', 'request'], min_price=100, max_price=0, categories=['All'])
         self.assertEqual(len(listings_over_100['listings']), 0)
 
         listings_50 = get_listings(search='', sort='uploadDateAsc', listing_types=[
-                                'buy', 'rent', 'request'], min_price=50, max_price=50, categories=['None'])
+                                'buy', 'rent', 'request'], min_price=50, max_price=50, categories=['All'])
         self.assertEqual(len(listings_50['listings']), 1)
     
     async def test_sort(self):
@@ -117,13 +117,13 @@ class CatalogTests(unittest.IsolatedAsyncioTestCase):
         await upload_request(test_request2)
 
         listings_upload_desc = get_listings(search='', sort='uploadDateDesc', listing_types=[
-                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
+                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['All'])
         self.assertEqual(len(listings_upload_desc['listings']), 2)
         self.assertEqual(listings_upload_desc['listings'][0]['title'], 'Test title 2')
         self.assertEqual(listings_upload_desc['listings'][1]['title'], 'Test title 1')
 
         listings_price_desc = get_listings(search='', sort='priceDesc', listing_types=[
-                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
+                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['All'])
         self.assertEqual(len(listings_price_desc['listings']), 2)
         self.assertEqual(listings_price_desc['listings'][0]['price'], 100)
         self.assertEqual(listings_price_desc['listings'][1]['price'], 50)
@@ -185,13 +185,13 @@ class CatalogTests(unittest.IsolatedAsyncioTestCase):
 
         # search title
         listings_title = get_listings(search='wave', sort='uploadDateAsc', listing_types=[
-                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
+                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['All'])
         self.assertEqual(len(listings_title['listings']), 1)
         self.assertEqual(listings_title['listings'][0]['title'], 'microwave')
 
         # search description
         listings_desc = get_listings(search='heat', sort='uploadDateAsc', listing_types=[
-                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
+                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['All'])
         self.assertEqual(len(listings_desc['listings']), 1)
         self.assertEqual(listings_desc['listings'][0]['description'], 'the description has the word heat in it')
         
