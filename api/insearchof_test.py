@@ -1,11 +1,12 @@
 import os
 os.environ['TESTING'] = 'True'
-from routers.catalog import get_listings
+from routers.insearchof import *
 import requests
 import unittest
 from google.auth.credentials import AnonymousCredentials
 from google.cloud.firestore import Client
 from dotenv import load_dotenv
+from datetime import datetime, timezone
 
 
 load_dotenv()
@@ -26,31 +27,111 @@ def clear_db():
     else:
         print('Error clearing database', response.status_code)
 
-# doc_ref = db.collection("users").document("alovelace")
-# doc_ref.set({"first": "Ada", "last": "Lovelace", "born": 1815})
 
-# doc_ref = db.collection("users").document("aturing")
-# doc_ref.set({"first": "Alan", "middle": "Mathison",
-#             "last": "Turing", "born": 1912})
+class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
+    # async def test_upload_request_successful(self):
+    #     test_request = RequestInformation(
+    #         title="Test Title",
+    #         description="Test Description",
+    #         price=25.0,  
+    #         timestamp=datetime.now(timezone.utc),
+    #         image_url="",
+    #         user_id="testuserid",
+    #         type="request",
+    #         trans_comp=False,
+    #         urgent=False,
+    #         categories=["Electronics"]
+    #     )
+    #     response = await upload_request(test_request)
+    #     self.assertEqual(response['message'], "Request uploaded successfully")
 
-# users_ref = db.collection("users")
-# docs = users_ref.stream()
+    # async def test_upload_request_negative_price(self):
+    #     test_request = RequestInformation(
+    #         title="Test Title",
+    #         description="Test Description",
+    #         price=-25.0,  
+    #         timestamp=datetime.now(timezone.utc),
+    #         image_url="",
+    #         user_id="testuserid",
+    #         type="request",
+    #         trans_comp=False,
+    #         urgent=False,
+    #         categories=["Electronics"]
+    #     )
+    #     with self.assertRaises(HTTPException) as context:
+    #         await upload_request(test_request)
+    #     self.assertEqual(context.exception.status_code, 422)
+        
+    # async def test_upload_request_empty_title(self):
+    #     test_request = RequestInformation(
+    #         title="",
+    #         description="Test Description",
+    #         price=25.0,  
+    #         timestamp=datetime.now(timezone.utc),
+    #         image_url="",
+    #         user_id="testuserid",
+    #         type="request",
+    #         trans_comp=False,
+    #         urgent=False,
+    #         categories=["Electronics"]
+    #     )
+    #     with self.assertRaises(HTTPException) as context:
+    #         await upload_request(test_request)
+    #     self.assertEqual(context.exception.status_code, 422)
+        
+    # async def test_upload_request_not_logged_in(self):
+    #     test_request = RequestInformation(
+    #         title="Test Title",
+    #         description="Test Description",
+    #         price=25.0,  
+    #         timestamp=datetime.now(timezone.utc),
+    #         image_url="",
+    #         user_id="",
+    #         type="request",
+    #         trans_comp=False,
+    #         urgent=False,
+    #         categories=["Electronics"]
+    #     )
+    #     with self.assertRaises(HTTPException) as context:
+    #         await upload_request(test_request)
+    #     self.assertEqual(context.exception.status_code, 422)
+        
+    async def asyncSetUp(self):
+        self.test_item_id = "fixed_test_item_id"
+        self.user_id = "testuserid"
+        item_ref = db.collection('items').document(self.test_item_id)
+        item_ref.delete()  # Notice `await` is removed if it's not an async call
+        
+        initial_data = RequestInformation(
+            title="Initial Title",
+            description="Initial Description",
+            price=100.0,
+            image_url="",
+            user_id=self.user_id,
+            type="request",
+            trans_comp=False,
+            urgent=False,
+            categories=["Books"]
+        )
+        
+        item_ref.set(jsonable_encoder(initial_data))  # Same here, `await` is removed if not needed
 
-# for doc in docs:
-#     print(f"{doc.id} => {doc.to_dict()}")
-
-# print('hi')
-# clear_db()
-
-class CatalogTests(unittest.TestCase):
-    def setUp(self):
-        # clear_db()
-        pass
-
-    def test_query_empty_db(self):
-        listings = get_listings(search='', sort='uploadDateAsc', listing_types=[
-                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
-        self.assertEqual(listings, {"listings": [1]})
+    async def test_update_request_successful(self):
+        update_data = RequestInformation(
+            title="Updated Title",
+            description="Updated Description",
+            price=120.0,
+            timestamp=datetime.now(timezone.utc),
+            image_url="",
+            user_id=self.user_id,
+            type="request",
+            trans_comp=False,
+            urgent=True,
+            categories=["Books", "Education"]
+        )
+        print(self.test_item_id)
+        response = await update_request(self.test_item_id, update_data)
+        self.assertEqual(response['message'], "Item updated successfully")
 
 
 if __name__ == '__main__':

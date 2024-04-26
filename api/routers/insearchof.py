@@ -38,6 +38,17 @@ class RequestInformation(BaseModel):
         if value < 0:
             raise ValueError("Price must be non-negative")
         return value
+    
+    
+def validateRequestInformation(request: RequestInformation):
+    if request.price < 0:
+        raise HTTPException(status_code=422, detail="Price must be non-negative")
+    if request.title == "":
+        raise HTTPException(status_code=422, detail="Title cannot be empty")
+    if request.user_id == "":
+        raise HTTPException(status_code=422, detail="User ID cannot be empty")
+    
+    return True
 
 
 @router.post("/upload", response_model=dict)
@@ -50,6 +61,9 @@ async def upload_request(iso_request: RequestInformation):
 
     Returns a JSON response with the result of the operation.
     '''
+    if not validateRequestInformation(iso_request):
+        raise HTTPException(status_code=422, detail="Invalid request data")
+    
     doc_ref = db.collection('items').document()
     iso_request_data = iso_request.model_dump()
     iso_request_data["timestamp"] = datetime.now(timezone.utc)
@@ -231,8 +245,6 @@ async def delete_image(filename: str, user_id: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete image: {str(e)}"
         )
-
-# In your FastAPI backend...
 
 
 @router.post("/validate-item-id/{item_id}/{user_id}", response_model=dict)
