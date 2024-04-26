@@ -53,7 +53,7 @@ class Listing(BaseModel):
     trans_comp: bool
     type: str
     user_id: str
-    user_name: str
+    display_name: str
     email: str
 
 
