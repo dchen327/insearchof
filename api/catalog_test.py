@@ -143,8 +143,44 @@ class CatalogTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(listings_price_desc['listings']), 2)
         self.assertEqual(listings_price_desc['listings'][0]['price'], 100)
         self.assertEqual(listings_price_desc['listings'][1]['price'], 50)
+    
+    async def test_categories(self):
+        ''' Check categories filter '''
+        test_request1 = RequestInformation(
+            title="Test title 1",
+            description="Test description",
+            price=50,
+            user_id="userid",
+            type="request",
+            urgent=False,
+            categories=["Clothing"],
+            display_name='test user',
+            email='testemail@gmail.com'
+        )
+
+        test_request2 = RequestInformation(
+            title="Test title 2",
+            description="Test description",
+            price=100,
+            user_id="userid",
+            type="request",
+            urgent=False,
+            categories=["Electronics"],
+            display_name='test user',
+            email='testemail@gmail.com'
+        )
+
+        await upload_request(test_request1)
+        await upload_request(test_request2)
+
+        listings_clothing = get_listings(search='', sort='uploadDateAsc', listing_types=[
+                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['Clothing'])
+        
+        self.assertEqual(len(listings_clothing['listings']), 1)
+        self.assertEqual(listings_clothing['listings'][0]['categories'], ['Clothing'])
 
         
+
 
 
 
