@@ -167,7 +167,6 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
         # Prevents errors when converting to JPEG
         if image.mode != 'RGB':
             image = image.convert('RGB')
-            print('converted to RGB')
 
         # Resize the image if it is larger than 1080px in height or width
         max_size = 1080
@@ -175,7 +174,6 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
             scale_ratio = min(max_size / image.height, max_size / image.width)
             new_size = (int(image.width * scale_ratio), int(image.height * scale_ratio))
             image = image.resize(new_size, Image.Resampling.LANCZOS)
-            print('scaled')
 
         # Compress the image to ensure the size is under 1MB with decent quality
         img_byte_arr = io.BytesIO()
@@ -186,7 +184,6 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
                 break
             quality -= 10
             img_byte_arr.seek(0) 
-            print('compressed')
 
         img_byte_arr.seek(0)
 
@@ -243,10 +240,8 @@ async def validate_item_id(item_id: str, user_id: str):
     try:
         item_details_response = await get_item_details(item_id)        
         item = item_details_response['itemDetails']
-        print(item)
 
         is_valid = item['user_id'] == user_id
-        print("This item is yours" if is_valid else "This item is not yours")
         
         if is_valid:
             return {
