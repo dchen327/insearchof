@@ -22,9 +22,7 @@ FIRESTORE_EMULATORS_PORT = 'localhost:8080'
 def clear_db():
     url = f"http://{FIRESTORE_EMULATORS_PORT}/emulator/v1/projects/{FIREBASE_ID}/databases/(default)/documents"
     response = requests.delete(url)
-    if response.status_code == 200:
-        print('Database cleared')
-    else:
+    if response.status_code != 200:
         print('Error clearing database', response.status_code)
 
 
@@ -66,9 +64,18 @@ class CatalogTests(unittest.IsolatedAsyncioTestCase):
         )
         await upload_request(test_request)
 
-        listings = get_listings(search='', sort='uploadDateAsc', listing_types=[
+        request_listings = get_listings(search='', sort='uploadDateAsc', listing_types=[
                                 'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
-        self.assertEqual(len(listings['listings']), 1)
+        self.assertEqual(len(request_listings['listings']), 1)
+        self.assertEqual(request_listings['listings'][0]['type'], 'request')
+
+        other_listings = get_listings(search='', sort='uploadDateAsc', listing_types=[
+                                'buy', 'rent'], min_price=0, max_price=0, categories=['None'])
+        self.assertEqual(len(other_listings['listings']), 0)
+
+    
+
+
     
 
 if __name__ == '__main__':
