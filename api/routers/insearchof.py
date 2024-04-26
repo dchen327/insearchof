@@ -41,7 +41,7 @@ class RequestInformation(BaseModel):
 
 
 @router.post("/upload", response_model=dict)
-def upload_request(iso_request: RequestInformation):
+async def upload_request(iso_request: RequestInformation):
     '''
     Uploads the ISO request to the database. 
 
@@ -58,7 +58,7 @@ def upload_request(iso_request: RequestInformation):
 
 
 @router.put("/update/{item_id}", response_model=dict)
-def update_request(item_id: str, update_data: RequestInformation):
+async def update_request(item_id: str, update_data: RequestInformation):
     """
     Updates an existing ISO request in the database using the item ID.
     Parameters:
@@ -77,7 +77,7 @@ def update_request(item_id: str, update_data: RequestInformation):
                                     detail="You do not have permission to update this item.")
 
             # Proceed with the update
-            item_data.update(update_data.dict(exclude_unset=True))
+            item_data.update(update_data.model_dump(exclude_unset=True))
             item_ref.set(item_data)
             return {"message": "Item updated successfully"}
 
@@ -88,7 +88,7 @@ def update_request(item_id: str, update_data: RequestInformation):
 
 
 @router.delete("/delete/{item_id}", response_model=dict)
-def delete_request(item_id: str, user_data: dict):
+async def delete_request(item_id: str, user_data: dict):
     """
     Deletes an ISO request from the database. This endpoint requires user authentication.
     Security: Only the user who created the ISO request or an admin can delete it.
@@ -110,7 +110,7 @@ def delete_request(item_id: str, user_data: dict):
             # Attempt to delete the image first, if it exists
             if item_data.get('image_url'):
                 image_filename = item_data['image_url'].split('/')[-1]  # Extracting filename from URL
-                delete_image(image_filename, user_data['user_id'])
+                await delete_image(image_filename, user_data['user_id'])
                             
             # Proceed with the deletion of the database entry
             item_ref.delete()
@@ -154,13 +154,13 @@ def mark_transaction_complete(item_id: str, current_user: dict):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 @router.post("/upload-image/{user_id}", response_model=dict)
-def upload_image(user_id: str, file: UploadFile = File(...)):
+async def upload_image(user_id: str, file: UploadFile = File(...)):
     """
     Uploads an image to Firebase Storage after resizing and compressing it if necessary.
     """
     try:
         # Read the image data
-        image_data = file.read()
+        image_data = await file.read()
         image = Image.open(io.BytesIO(image_data))
 
         # Convert the image to RGB if not already
@@ -212,7 +212,7 @@ def upload_image(user_id: str, file: UploadFile = File(...)):
                 
 
 @router.delete("/delete-image/{filename}/{user_id}", response_model=dict)
-def delete_image(filename: str, user_id: str):
+async def delete_image(filename: str, user_id: str):
     """
     Deletes an image from Firebase Storage.
 
@@ -239,9 +239,9 @@ def delete_image(filename: str, user_id: str):
 
 
 @router.post("/validate-item-id/{item_id}/{user_id}", response_model=dict)
-def validate_item_id(item_id: str, user_id: str):
+async def validate_item_id(item_id: str, user_id: str):
     try:
-        item_details_response = get_item_details(item_id)        
+        item_details_response = await get_item_details(item_id)        
         item = item_details_response['itemDetails']
         print(item)
 
@@ -261,7 +261,7 @@ def validate_item_id(item_id: str, user_id: str):
 
 
 @router.get("/item-details/{item_id}", response_model=dict)
-def get_item_details(item_id: str):
+async def get_item_details(item_id: str):
     """
     Retrieves the details of a specific item by its ID.
 

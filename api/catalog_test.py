@@ -43,7 +43,7 @@ def clear_db():
 # print('hi')
 # clear_db()
 
-class CatalogTests(unittest.TestCase):
+class CatalogTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         # clear_db()
         pass
@@ -53,9 +53,9 @@ class CatalogTests(unittest.TestCase):
                                 'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
         self.assertEqual(listings, {"listings": []})
 
-    def test_type(self):
+    async def test_type(self):
         test_request = RequestInformation(
-            title="Test title",
+            title="Test title 2",
             description="Test description",
             price=50,
             user_id="userid",
@@ -63,7 +63,7 @@ class CatalogTests(unittest.TestCase):
             urgent=False,
             categories=["Test category"]
         )
-        upload_request(test_request)
+        await upload_request(test_request)
     
 
 if __name__ == '__main__':

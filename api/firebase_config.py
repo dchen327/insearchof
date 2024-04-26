@@ -8,6 +8,7 @@ from google.auth.credentials import AnonymousCredentials
 
 load_dotenv()
 
+# print('TESTING ENV', os.getenv('TESTING'))
 if os.getenv('TESTING'):
     FIREBASE_ID = os.getenv('NEXT_PUBLIC_FIREBASE_PROJECT_ID')
     FIRESTORE_EMULATORS_PORT = 'localhost:8080'
