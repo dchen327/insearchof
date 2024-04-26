@@ -9,6 +9,7 @@ export default function Page() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([]);
+  const [listings, setListings] = useState([]);
   const [transactionHistory, setTransactionHistory] = useState([]);
   const [showPhoneNumberTooltip, setShowPhoneNumberTooltip] = useState(false);
   const [showLocationTooltip, setShowLocationTooltip] = useState(false);
@@ -137,6 +138,7 @@ export default function Page() {
         `/api/profile/get_list_of_items?requester_id=${user.uid}`
       );
       if (!response.ok) {
+        console.log(response);
         throw new Error("Failed to fetch list of items");
       }
       const data = await response.json();
@@ -153,14 +155,17 @@ export default function Page() {
   const fetchTransactionHistory = async (email) => {
     try {
       setLoading(true);
+      console.log("hi");
       const response = await fetch(
-        "/profile/get_transaction_history?requester_id=${email}"
+        `/api/profile/get_transaction_history?requester_id=${user.uid}`
       );
       if (!response.ok) {
+        console.log(response);
         throw new Error("Failed to fetch transaction history");
       }
       const data = await response.json();
-      setTransactionHistory(data.listingOfTransactionHistory);
+      console.log(data);
+      setItems(data.listingOfItems);
     } catch (err) {
       console.error(err);
       setError("Failed to fetch transaction history");
@@ -359,7 +364,7 @@ export default function Page() {
                   Get list of items
                 </button>
               </div>
-
+                  
               {showItemModal && (
                 <div className="modal is-active">
                   <div
@@ -377,13 +382,17 @@ export default function Page() {
                       <div className="card is-shadowless">
                         <div className="card-content px-4 py-">
                           <h2 className="is-size-5">List of Items</h2>
-                          {items.map((item, index) => (
-                            <div key={index}>
-                              <p>{item.name}</p>
-                              <p>{item.description}</p>
-                              {/* Add more details as needed */}
-                            </div>
-                          ))}
+                          {items.length > 0 ? (
+                            items.map((item, index) => (
+                              <div key={index}>
+                                <p>{item.name}</p>
+                                <p>{item.description}</p>
+                                {/* Add more details as needed */}
+                              </div>
+                            ))
+                          ) : (
+                            <p>No items to display</p>
+                          )}
                         </div>
                       </div>
                     </section>
@@ -414,6 +423,17 @@ export default function Page() {
                       <div className="card is-shadowless">
                         <div className="card-content px-4 py-">
                           <h2 className="is-size-5">Transaction History</h2>
+                          {listings.length > 0 ? (
+                            listings.map((listing, index) => (
+                              <div key={index}>
+                                <p>{listing.name}</p>
+                                <p>{listing.description}</p>
+                                {/* Add more details as needed */}
+                              </div>
+                            ))
+                          ) : (
+                            <p>No listings to display</p>
+                          )}
                         </div>
                       </div>
                     </section>
@@ -430,7 +450,6 @@ export default function Page() {
                 </div>
               )}
 
-              {/* {imagePreviewUrl && <img src={imagePreviewUrl} alt="Preview" style={{ maxWidth: '100%', marginTop: '20px' }} />} */}
             </div>
           </>
         )}
