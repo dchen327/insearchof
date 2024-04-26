@@ -51,7 +51,7 @@ def upload_request(iso_request: RequestInformation):
     Returns a JSON response with the result of the operation.
     '''
     doc_ref = db.collection('items').document()
-    iso_request_data = iso_request.dict()
+    iso_request_data = iso_request.model_dump()
     iso_request_data["timestamp"] = datetime.now(timezone.utc)
     doc_ref.set(iso_request_data)
     return {"message": "Request uploaded successfully", "request_id": doc_ref.id}
@@ -110,7 +110,7 @@ def delete_request(item_id: str, user_data: dict):
             # Attempt to delete the image first, if it exists
             if item_data.get('image_url'):
                 image_filename = item_data['image_url'].split('/')[-1]  # Extracting filename from URL
-                await delete_image(image_filename, user_data['user_id'])
+                delete_image(image_filename, user_data['user_id'])
                             
             # Proceed with the deletion of the database entry
             item_ref.delete()
@@ -160,7 +160,7 @@ def upload_image(user_id: str, file: UploadFile = File(...)):
     """
     try:
         # Read the image data
-        image_data = await file.read()
+        image_data = file.read()
         image = Image.open(io.BytesIO(image_data))
 
         # Convert the image to RGB if not already
@@ -241,7 +241,7 @@ def delete_image(filename: str, user_id: str):
 @router.post("/validate-item-id/{item_id}/{user_id}", response_model=dict)
 def validate_item_id(item_id: str, user_id: str):
     try:
-        item_details_response = await get_item_details(item_id)        
+        item_details_response = get_item_details(item_id)        
         item = item_details_response['itemDetails']
         print(item)
 
