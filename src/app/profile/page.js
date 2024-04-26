@@ -143,7 +143,7 @@ export default function Page() {
       }
       const data = await response.json();
       console.log(data);
-      setListings(data.listingOfItems);
+      setItems(data.listingOfItems);
     } catch (err) {
       console.error(err);
       setError("Failed to fetch list of items");
@@ -165,7 +165,7 @@ export default function Page() {
       }
       const data = await response.json();
       console.log(data);
-      setItems(data.transactionHistory);
+      setListings(data.transactionHistory);
     } catch (err) {
       console.error(err);
       setError("Failed to fetch transaction history");
