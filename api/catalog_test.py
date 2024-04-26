@@ -1,6 +1,7 @@
 import os
 os.environ['TESTING'] = 'True'
 from routers.catalog import get_listings
+from routers.insearchof import upload_request, RequestInformation
 import requests
 import unittest
 from google.auth.credentials import AnonymousCredentials
@@ -52,6 +53,17 @@ class CatalogTests(unittest.TestCase):
                                 'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
         self.assertEqual(listings, {"listings": []})
 
+    def test_type(self):
+        test_request = RequestInformation(
+            title="Test title",
+            description="Test description",
+            price=50,
+            user_id="userid",
+            type="request",
+            urgent=False,
+            categories=["Test category"]
+        )
+        upload_request(test_request)
     
 
 if __name__ == '__main__':

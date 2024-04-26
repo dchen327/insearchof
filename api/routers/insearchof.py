@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from firebase_admin import storage
-from ..firebase_config import db
+from api.firebase_config import db
 from datetime import datetime, timezone
 from uuid import uuid4
 from fastapi.encoders import jsonable_encoder
@@ -41,7 +41,7 @@ class RequestInformation(BaseModel):
 
 
 @router.post("/upload", response_model=dict)
-async def upload_request(iso_request: RequestInformation):
+def upload_request(iso_request: RequestInformation):
     '''
     Uploads the ISO request to the database. 
 
@@ -58,7 +58,7 @@ async def upload_request(iso_request: RequestInformation):
 
 
 @router.put("/update/{item_id}", response_model=dict)
-async def update_request(item_id: str, update_data: RequestInformation):
+def update_request(item_id: str, update_data: RequestInformation):
     """
     Updates an existing ISO request in the database using the item ID.
     Parameters:
@@ -88,7 +88,7 @@ async def update_request(item_id: str, update_data: RequestInformation):
 
 
 @router.delete("/delete/{item_id}", response_model=dict)
-async def delete_request(item_id: str, user_data: dict):
+def delete_request(item_id: str, user_data: dict):
     """
     Deletes an ISO request from the database. This endpoint requires user authentication.
     Security: Only the user who created the ISO request or an admin can delete it.
@@ -154,7 +154,7 @@ def mark_transaction_complete(item_id: str, current_user: dict):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 @router.post("/upload-image/{user_id}", response_model=dict)
-async def upload_image(user_id: str, file: UploadFile = File(...)):
+def upload_image(user_id: str, file: UploadFile = File(...)):
     """
     Uploads an image to Firebase Storage after resizing and compressing it if necessary.
     """
@@ -212,7 +212,7 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
                 
 
 @router.delete("/delete-image/{filename}/{user_id}", response_model=dict)
-async def delete_image(filename: str, user_id: str):
+def delete_image(filename: str, user_id: str):
     """
     Deletes an image from Firebase Storage.
 
@@ -239,7 +239,7 @@ async def delete_image(filename: str, user_id: str):
 
 
 @router.post("/validate-item-id/{item_id}/{user_id}", response_model=dict)
-async def validate_item_id(item_id: str, user_id: str):
+def validate_item_id(item_id: str, user_id: str):
     try:
         item_details_response = await get_item_details(item_id)        
         item = item_details_response['itemDetails']
@@ -261,7 +261,7 @@ async def validate_item_id(item_id: str, user_id: str):
 
 
 @router.get("/item-details/{item_id}", response_model=dict)
-async def get_item_details(item_id: str):
+def get_item_details(item_id: str):
     """
     Retrieves the details of a specific item by its ID.
 
