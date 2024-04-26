@@ -103,6 +103,8 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
     #     with self.assertRaises(HTTPException) as context:
     #         await upload_request(test_request)
     #     self.assertEqual(context.exception.status_code, 422)
+    
+    # TODO: FIX ME, UPDATE WORKS ONLY WHEN OTHERS ARE COMMENTED OUT
         
     async def asyncSetUp(self):
         self.test_item_id = "fixed_test_item_id"
