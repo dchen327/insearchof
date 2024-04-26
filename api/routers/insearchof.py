@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 from fastapi.encoders import jsonable_encoder
 import os
-from PIL import Image
+# from PIL import Image
 import io
 
 
