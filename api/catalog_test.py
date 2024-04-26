@@ -102,6 +102,51 @@ class CatalogTests(unittest.IsolatedAsyncioTestCase):
         listings_50 = get_listings(search='', sort='uploadDateAsc', listing_types=[
                                 'buy', 'rent', 'request'], min_price=50, max_price=50, categories=['None'])
         self.assertEqual(len(listings_50['listings']), 1)
+    
+    async def test_sort(self):
+        ''' Check sorting options '''
+        test_request1 = RequestInformation(
+            title="Test title 1",
+            description="Test description",
+            price=50,
+            user_id="userid",
+            type="request",
+            urgent=False,
+            categories=["Test category"],
+            display_name='test user',
+            email='testemail@gmail.com'
+        )
+
+        test_request2 = RequestInformation(
+            title="Test title 2",
+            description="Test description",
+            price=100,
+            user_id="userid",
+            type="request",
+            urgent=False,
+            categories=["Test category"],
+            display_name='test user',
+            email='testemail@gmail.com'
+        )
+
+        await upload_request(test_request1)
+        await upload_request(test_request2)
+
+        listings_upload_desc = get_listings(search='', sort='uploadDateDesc', listing_types=[
+                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
+        self.assertEqual(len(listings_upload_desc['listings']), 2)
+        self.assertEqual(listings_upload_desc['listings'][0]['title'], 'Test title 2')
+        self.assertEqual(listings_upload_desc['listings'][1]['title'], 'Test title 1')
+
+        listings_price_desc = get_listings(search='', sort='priceDesc', listing_types=[
+                                'buy', 'rent', 'request'], min_price=0, max_price=0, categories=['None'])
+        self.assertEqual(len(listings_price_desc['listings']), 2)
+        self.assertEqual(listings_price_desc['listings'][0]['price'], 100)
+        self.assertEqual(listings_price_desc['listings'][1]['price'], 50)
+
+        
+
+
 
     
 
