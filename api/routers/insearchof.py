@@ -28,6 +28,8 @@ class RequestInformation(BaseModel):
     description: Optional[str] = None
     price: float
     image_url: Optional[str] = None
+    display_name: str
+    email: str
     user_id: str
     type: str  # will be "request"
     trans_comp: bool = False  # will be False

@@ -29,72 +29,80 @@ def clear_db():
 
 
 class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
-    # async def test_upload_request_successful(self):
-    #     test_request = RequestInformation(
-    #         title="Test Title",
-    #         description="Test Description",
-    #         price=25.0,  
-    #         timestamp=datetime.now(timezone.utc),
-    #         image_url="",
-    #         user_id="testuserid",
-    #         type="request",
-    #         trans_comp=False,
-    #         urgent=False,
-    #         categories=["Electronics"]
-    #     )
-    #     response = await upload_request(test_request)
-    #     self.assertEqual(response['message'], "Request uploaded successfully")
+    async def test_upload_request_successful(self):
+        test_request = RequestInformation(
+            title="Test Title",
+            description="Test Description",
+            price=25.0,  
+            timestamp=datetime.now(timezone.utc),
+            image_url="",
+            user_id="testuserid",
+            display_name="testuser",
+            email="testemail@gmail.com",
+            type="request",
+            trans_comp=False,
+            urgent=False,
+            categories=["Electronics"]
+        )
+        response = await upload_request(test_request)
+        self.assertEqual(response['message'], "Request uploaded successfully")
 
-    # async def test_upload_request_negative_price(self):
-    #     test_request = RequestInformation(
-    #         title="Test Title",
-    #         description="Test Description",
-    #         price=-25.0,  
-    #         timestamp=datetime.now(timezone.utc),
-    #         image_url="",
-    #         user_id="testuserid",
-    #         type="request",
-    #         trans_comp=False,
-    #         urgent=False,
-    #         categories=["Electronics"]
-    #     )
-    #     with self.assertRaises(HTTPException) as context:
-    #         await upload_request(test_request)
-    #     self.assertEqual(context.exception.status_code, 422)
+    async def test_upload_request_negative_price(self):
+        test_request = RequestInformation(
+            title="Test Title",
+            description="Test Description",
+            price=-25.0,  
+            timestamp=datetime.now(timezone.utc),
+            image_url="",
+            user_id="testuserid",
+            display_name="testuser",
+            email="testemail@gmail.com",
+            type="request",
+            trans_comp=False,
+            urgent=False,
+            categories=["Electronics"]
+        )
+        with self.assertRaises(HTTPException) as context:
+            await upload_request(test_request)
+        self.assertEqual(context.exception.status_code, 422)
         
-    # async def test_upload_request_empty_title(self):
-    #     test_request = RequestInformation(
-    #         title="",
-    #         description="Test Description",
-    #         price=25.0,  
-    #         timestamp=datetime.now(timezone.utc),
-    #         image_url="",
-    #         user_id="testuserid",
-    #         type="request",
-    #         trans_comp=False,
-    #         urgent=False,
-    #         categories=["Electronics"]
-    #     )
-    #     with self.assertRaises(HTTPException) as context:
-    #         await upload_request(test_request)
-    #     self.assertEqual(context.exception.status_code, 422)
+    async def test_upload_request_empty_title(self):
+        test_request = RequestInformation(
+            title="",
+            description="Test Description",
+            price=25.0,  
+            timestamp=datetime.now(timezone.utc),
+            image_url="",
+            user_id="testuserid",
+            display_name="testuser",
+            email="testemail@gmail.com",
+            type="request",
+            trans_comp=False,
+            urgent=False,
+            categories=["Electronics"]
+        )
+        with self.assertRaises(HTTPException) as context:
+            await upload_request(test_request)
+        self.assertEqual(context.exception.status_code, 422)
         
-    # async def test_upload_request_not_logged_in(self):
-    #     test_request = RequestInformation(
-    #         title="Test Title",
-    #         description="Test Description",
-    #         price=25.0,  
-    #         timestamp=datetime.now(timezone.utc),
-    #         image_url="",
-    #         user_id="",
-    #         type="request",
-    #         trans_comp=False,
-    #         urgent=False,
-    #         categories=["Electronics"]
-    #     )
-    #     with self.assertRaises(HTTPException) as context:
-    #         await upload_request(test_request)
-    #     self.assertEqual(context.exception.status_code, 422)
+    async def test_upload_request_not_logged_in(self):
+        test_request = RequestInformation(
+            title="Test Title",
+            description="Test Description",
+            price=25.0,  
+            timestamp=datetime.now(timezone.utc),
+            image_url="",
+            user_id="",
+            display_name="testuser",
+            email="testemail@gmail.com",
+            type="request",
+            trans_comp=False,
+            urgent=False,
+            categories=["Electronics"]
+        )
+        with self.assertRaises(HTTPException) as context:
+            await upload_request(test_request)
+        self.assertEqual(context.exception.status_code, 422)
         
     async def asyncSetUp(self):
         self.test_item_id = "fixed_test_item_id"
@@ -108,6 +116,8 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
             price=100.0,
             image_url="",
             user_id=self.user_id,
+            display_name="testuser",
+            email="testemail@gmail.com",
             type="request",
             trans_comp=False,
             urgent=False,
@@ -124,6 +134,8 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
             timestamp=datetime.now(timezone.utc),
             image_url="",
             user_id=self.user_id,
+            display_name="testuser",
+            email="testemail@gmail.com",
             type="request",
             trans_comp=False,
             urgent=True,

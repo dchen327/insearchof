@@ -212,6 +212,8 @@ export default function Page() {
         image_url: imageUrl,
         type: "request",
         trans_comp: false,
+        display_name: user.displayName,
+        email: user.email, 
         user_id: user.uid,
         urgent: urgent,
         categories: selectedCategories,
@@ -286,6 +288,8 @@ export default function Page() {
         type: "request",
         trans_comp: false,
         user_id: user.uid,
+        display_name: user.displayName,
+        email: user.email,
         urgent: urgent,
         categories: selectedCategories, // Include selected categories
       };
