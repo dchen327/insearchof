@@ -53,6 +53,7 @@ class CatalogTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(listings, {"listings": []})
 
     async def test_type(self):
+        ''' Ensure the correct type is returned '''
         test_request = RequestInformation(
             title="Test title 2",
             description="Test description",
@@ -60,7 +61,9 @@ class CatalogTests(unittest.IsolatedAsyncioTestCase):
             user_id="userid",
             type="request",
             urgent=False,
-            categories=["Test category"]
+            categories=["Test category"],
+            display_name='test user',
+            email='test_email@gmail.com'
         )
         await upload_request(test_request)
 
@@ -73,8 +76,32 @@ class CatalogTests(unittest.IsolatedAsyncioTestCase):
                                 'buy', 'rent'], min_price=0, max_price=0, categories=['None'])
         self.assertEqual(len(other_listings['listings']), 0)
 
-    
+    async def test_price(self):
+        ''' Check price filters (min/max) '''
+        test_request = RequestInformation(
+            title="Test title 2",
+            description="Test description",
+            price=50,
+            user_id="userid",
+            type="request",
+            urgent=False,
+            categories=["Test category"],
+            display_name='test user',
+            email='testemail@gmail.com'
+        )
+        await upload_request(test_request)
 
+        listings_under_10 = get_listings(search='', sort='uploadDateAsc', listing_types=[
+                                'buy', 'rent', 'request'], min_price=0, max_price=10, categories=['None'])    
+        self.assertEqual(len(listings_under_10['listings']), 0)
+
+        listings_over_100 = get_listings(search='', sort='uploadDateAsc', listing_types=[
+                                'buy', 'rent', 'request'], min_price=100, max_price=0, categories=['None'])
+        self.assertEqual(len(listings_over_100['listings']), 0)
+
+        listings_50 = get_listings(search='', sort='uploadDateAsc', listing_types=[
+                                'buy', 'rent', 'request'], min_price=50, max_price=50, categories=['None'])
+        self.assertEqual(len(listings_50['listings']), 1)
 
     
 
