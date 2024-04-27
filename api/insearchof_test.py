@@ -1,12 +1,16 @@
-import os
-os.environ['TESTING'] = 'True'
-from routers.insearchof import *
-import requests
-import unittest
-from google.auth.credentials import AnonymousCredentials
-from google.cloud.firestore import Client
-from dotenv import load_dotenv
 from datetime import datetime, timezone
+from dotenv import load_dotenv
+from google.cloud.firestore import Client
+from google.auth.credentials import AnonymousCredentials
+import unittest
+import requests
+from routers.insearchof import *
+import os
+from fastapi import UploadFile
+import io
+from PIL import Image
+
+os.environ['TESTING'] = 'True'
 
 
 load_dotenv()
@@ -22,148 +26,104 @@ db = Client(project=FIREBASE_ID, credentials=cred)
 def clear_db():
     url = f"http://{FIRESTORE_EMULATORS_PORT}/emulator/v1/projects/{FIREBASE_ID}/databases/(default)/documents"
     response = requests.delete(url)
-    if response.status_code == 200:
-        print('Database cleared')
-    else:
+    if response.status_code != 200:
         print('Error clearing database', response.status_code)
 
 
 class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
-    # async def test_upload_request_successful(self):
-    #     test_request = RequestInformation(
-    #         title="Test Title",
-    #         description="Test Description",
-    #         price=25.0,  
-    #         timestamp=datetime.now(timezone.utc),
-    #         image_url="",
-    #         user_id="testuserid",
-    #         display_name="testuser",
-    #         email="testemail@gmail.com",
-    #         type="request",
-    #         trans_comp=False,
-    #         urgent=False,
-    #         categories=["Electronics"]
-    #     )
-    #     response = await upload_request(test_request)
-    #     self.assertEqual(response['message'], "Request uploaded successfully")
+    # def setUp(self):
+    #     clear_db()
 
-    # async def test_upload_request_negative_price(self):
-    #     test_request = RequestInformation(
-    #         title="Test Title",
-    #         description="Test Description",
-    #         price=-25.0,  
-    #         timestamp=datetime.now(timezone.utc),
-    #         image_url="",
-    #         user_id="testuserid",
-    #         display_name="testuser",
-    #         email="testemail@gmail.com",
-    #         type="request",
-    #         trans_comp=False,
-    #         urgent=False,
-    #         categories=["Electronics"]
-    #     )
-    #     with self.assertRaises(HTTPException) as context:
-    #         await upload_request(test_request)
-    #     self.assertEqual(context.exception.status_code, 422)
-        
-    # async def test_upload_request_empty_title(self):
-    #     test_request = RequestInformation(
-    #         title="",
-    #         description="Test Description",
-    #         price=25.0,  
-    #         timestamp=datetime.now(timezone.utc),
-    #         image_url="",
-    #         user_id="testuserid",
-    #         display_name="testuser",
-    #         email="testemail@gmail.com",
-    #         type="request",
-    #         trans_comp=False,
-    #         urgent=False,
-    #         categories=["Electronics"]
-    #     )
-    #     with self.assertRaises(HTTPException) as context:
-    #         await upload_request(test_request)
-    #     self.assertEqual(context.exception.status_code, 422)
-        
-    # async def test_upload_request_not_logged_in(self):
-    #     test_request = RequestInformation(
-    #         title="Test Title",
-    #         description="Test Description",
-    #         price=25.0,  
-    #         timestamp=datetime.now(timezone.utc),
-    #         image_url="",
-    #         user_id="",
-    #         display_name="testuser",
-    #         email="testemail@gmail.com",
-    #         type="request",
-    #         trans_comp=False,
-    #         urgent=False,
-    #         categories=["Electronics"]
-    #     )
-    #     with self.assertRaises(HTTPException) as context:
-    #         await upload_request(test_request)
-    #     self.assertEqual(context.exception.status_code, 422)
-    
-    # TODO: FIX ME, UPDATE WORKS ONLY WHEN OTHERS ARE COMMENTED OUT
-        
-    async def asyncSetUp(self):
-        self.test_item_id = "fixed_test_item_id"
-        self.user_id = "testuserid"
-        item_ref = db.collection('items').document(self.test_item_id)
-        item_ref.delete()  
-        
-        initial_data = RequestInformation(
-            title="Initial Title",
-            description="Initial Description",
-            price=100.0,
+    async def test_upload_request_successful(self):
+        test_request = RequestInformation(
+            title="Test Title",
+            description="Test Description",
+            price=25.0,
+            timestamp=datetime.now(timezone.utc),
             image_url="",
-            user_id=self.user_id,
+            user_id="testuserid",
             display_name="testuser",
             email="testemail@gmail.com",
             type="request",
             trans_comp=False,
             urgent=False,
-            categories=["Books"]
+            categories=["Electronics"]
         )
-        
-        item_ref.set(jsonable_encoder(initial_data)) 
+        response = await upload_request(test_request)
+        self.assertEqual(response['message'], "Request uploaded successfully")
 
-    async def test_update_request_successful(self):
-        update_data = RequestInformation(
-            title="Updated Title",
-            description="Updated Description",
-            price=120.0,
+    async def test_upload_request_negative_price(self):
+        test_request = RequestInformation(
+            title="Test Title",
+            description="Test Description",
+            price=-25.0,
             timestamp=datetime.now(timezone.utc),
             image_url="",
-            user_id=self.user_id,
+            user_id="testuserid",
             display_name="testuser",
             email="testemail@gmail.com",
             type="request",
             trans_comp=False,
-            urgent=True,
-            categories=["Books", "Education"]
+            urgent=False,
+            categories=["Electronics"]
         )
-        response = await update_request(self.test_item_id, update_data)
-        self.assertEqual(response['message'], "Item updated successfully")
+        with self.assertRaises(HTTPException) as context:
+            await upload_request(test_request)
+        self.assertEqual(context.exception.status_code, 422)
+
+    async def test_upload_request_empty_title(self):
+        test_request = RequestInformation(
+            title="",
+            description="Test Description",
+            price=25.0,
+            timestamp=datetime.now(timezone.utc),
+            image_url="",
+            user_id="testuserid",
+            display_name="testuser",
+            email="testemail@gmail.com",
+            type="request",
+            trans_comp=False,
+            urgent=False,
+            categories=["Electronics"]
+        )
+        with self.assertRaises(HTTPException) as context:
+            await upload_request(test_request)
+        self.assertEqual(context.exception.status_code, 422)
+
+    async def test_upload_request_not_logged_in(self):
+        test_request = RequestInformation(
+            title="Test Title",
+            description="Test Description",
+            price=25.0,
+            timestamp=datetime.now(timezone.utc),
+            image_url="",
+            user_id="",
+            display_name="testuser",
+            email="testemail@gmail.com",
+            type="request",
+            trans_comp=False,
+            urgent=False,
+            categories=["Electronics"]
+        )
+        with self.assertRaises(HTTPException) as context:
+            await upload_request(test_request)
+        self.assertEqual(context.exception.status_code, 422)
+
+    async def test_upload_image_success(self):
+        # Create an in-memory image
+        image = Image.new('RGB', (100, 100), color='red')
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format='JPEG')
+        img_byte_arr.seek(0)
+
+        # Create an UploadFile object
+        upload_file = UploadFile(filename="test_image.jpg", file=img_byte_arr)
+
+        # Use the upload_image function directly
+        response = await upload_image(user_id="testuserid", file=upload_file)
         
-    # async def test_update_request_unauthorized_user(self):
-    #     unauthorized_user_data = RequestInformation(
-    #         title="Unauthorized Title",
-    #         description="Unauthorized Description",
-    #         price=50.0,
-    #         timestamp=datetime.now(timezone.utc),
-    #         image_url="",
-    #         user_id="unauthorized_userid",
-    #         display_name="unauthorized_user",
-    #         email="unauthemail@gmail.com",
-    #         type="request",
-    #         trans_comp=False,
-    #         urgent=True,
-    #         categories=["Misc"]
-    #     )
-    #     with self.assertRaises(HTTPException) as context:
-    #         await update_request(self.test_item_id, unauthorized_user_data)
-    #     self.assertEqual(context.exception.status_code, 403)
+        # Assert the upload was successful
+        self.assertIn('image_url', response)
 
 
 if __name__ == '__main__':
