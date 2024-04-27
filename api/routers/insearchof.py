@@ -11,7 +11,9 @@ from fastapi.encoders import jsonable_encoder
 import os
 from PIL import Image
 import io
+from dotenv import load_dotenv
 
+load_dotenv()
 
 router = APIRouter(
     prefix='/api/insearchof',
@@ -215,7 +217,7 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
         # Make the blob publicly viewable
         blob.make_public()
 
-        return {"image_url": blob.public_url}
+        return {"message": "Image uploaded successfully", "image_url": blob.public_url}
     except Exception as e:
         print(f"Failed to upload image: {str(e)}")
         return JSONResponse(
