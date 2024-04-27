@@ -91,7 +91,7 @@ async def update_request(item_id: str, update_data: RequestInformation):
             item_data = item.to_dict()
 
             if item_data['user_id'] != update_data.user_id:
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                raise HTTPException(status_code=403,
                                     detail="You do not have permission to update this item.")
 
             # Proceed with the update
@@ -296,5 +296,4 @@ async def get_item_details(item_id: str):
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     except Exception as e:
-        print(f"Error fetching item details: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
