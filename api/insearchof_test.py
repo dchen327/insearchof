@@ -1,12 +1,16 @@
 import os
 os.environ['TESTING'] = 'True'
-from routers.insearchof import *
-import requests
-import unittest
-from google.auth.credentials import AnonymousCredentials
-from google.cloud.firestore import Client
-from dotenv import load_dotenv
+
 from firebase_config import db
+from dotenv import load_dotenv
+from google.cloud.firestore import Client
+from google.auth.credentials import AnonymousCredentials
+import unittest
+import requests
+from routers.insearchof import *
+from PIL import Image
+from fastapi import UploadFile
+import json
 
 
 load_dotenv()
@@ -20,15 +24,6 @@ def clear_db():
     response = requests.delete(url)
     if response.status_code != 200:
         print('Error clearing database', response.status_code)
-
-
-def create_test_image():
-    # Create an image for testing
-    img = Image.new("RGB", (100, 100), color=(73, 109, 137))
-    img_byte_arr = io.BytesIO()
-    img.save(img_byte_arr, format='JPEG')
-    img_byte_arr.seek(0)
-    return img_byte_arr
 
 
 class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
@@ -91,7 +86,7 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(HTTPException) as context:
             await upload_request(test_request)
         self.assertEqual(context.exception.status_code, 422)
-        
+
     async def test_upload_request_not_logged_in(self):
         test_request = RequestInformation(
             title="Test Title",
@@ -149,12 +144,13 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
         # Verify the update
         item_details = await get_item_details(item_id)
         self.assertEqual(item_details['itemDetails']['title'], "Updated Title")
-        self.assertEqual(item_details['itemDetails']['description'], "Updated Description")
+        self.assertEqual(item_details['itemDetails']
+                         ['description'], "Updated Description")
         self.assertEqual(item_details['itemDetails']['price'], 150.0)
         self.assertTrue(item_details['itemDetails']['trans_comp'])
         self.assertTrue(item_details['itemDetails']['urgent'])
-        self.assertListEqual(item_details['itemDetails']['categories'], ["Electronics", "Garden"])
-
+        self.assertListEqual(item_details['itemDetails']['categories'], [
+                             "Electronics", "Garden"])
 
     async def test_update_request_permission_denied(self):
         # Create an initial request by a different user
@@ -189,7 +185,8 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
 
         with self.assertRaises(HTTPException) as context:
             await update_request(item_id, update_data)
-        self.assertEqual(context.exception.detail, "403: You do not have permission to update this item.")
+        self.assertEqual(context.exception.detail,
+                         "403: You do not have permission to update this item.")
 
     async def test_update_request_item_not_found(self):
         # Non-existent item ID
@@ -212,8 +209,7 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(HTTPException) as context:
             await update_request(item_id, update_data)
         self.assertEqual(context.exception.detail, "404: Item not found")
-        
-        
+
     async def test_delete_request_successful(self):
         # Create an initial request by the user
         initial_request = RequestInformation(
@@ -238,13 +234,14 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
 
         # Delete the request
         delete_response = await delete_request(item_id, user_data)
-        self.assertEqual(delete_response['message'], "Item and associated image deleted successfully")
+        self.assertEqual(
+            delete_response['message'], "Item and associated image deleted successfully")
 
         # Verify that the item is no longer in the database
         with self.assertRaises(HTTPException) as context:
             await get_item_details(item_id)
         self.assertEqual(context.exception.detail, "404: Item not found")
-        
+
     async def test_delete_request_permission_denied(self):
         # Create an initial request by a different user
         initial_request = RequestInformation(
@@ -269,8 +266,9 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
 
         with self.assertRaises(HTTPException) as context:
             await delete_request(item_id, user_data)
-        self.assertEqual(context.exception.detail, "403: You do not have permission to delete this item.")
-        
+        self.assertEqual(context.exception.detail,
+                         "403: You do not have permission to delete this item.")
+
     async def test_delete_request_item_not_found(self):
         # Non-existent item ID
         item_id = "nonexistentitemid"
@@ -283,41 +281,32 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(HTTPException) as context:
             await delete_request(item_id, user_data)
         self.assertEqual(context.exception.detail, "404: Item not found")
+        
+        
+    async def test_upload_image_successful(self):
+        # Create a sample image in memory
+        image_size = (500, 500)  # Example size
+        image = Image.new('RGB', image_size, color = 'blue')
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format='JPEG')
+        img_byte_arr.seek(0)  # Important to rewind to the beginning after saving
 
-    # async def test_upload_request_with_image(self):
-    #     # First, upload an image and get the URL
-    #     img_byte_arr = create_test_image()
-    #     user_id = "testuserid"
-    #     file = UploadFile(filename="test.jpg", file=io.BytesIO(img_byte_arr.getvalue()))
-    #     image_response = await upload_image(user_id, file)
+        # Mock the UploadFile object
+        file_name = 'test_image.jpg'
+        upload_file = UploadFile(file=img_byte_arr, filename=file_name)
 
-    #     # Extract the content from the JSONResponse
-    #     image_response_content = image_response.body.decode('utf-8')
-    #     image_response_dict = json.loads(image_response_content)
+        # Set up user ID
+        user_id = 'testuserid'
 
-    #     # Assert based on the dictionary content
-    #     self.assertEqual(image_response_dict['message'], "Image uploaded successfully")
+        # Call the upload_image function
+        response = await upload_image(user_id, upload_file)
+        response_body = json.loads(response.body)
 
-    #     # Now, use the returned image URL in the request information
-    #     test_request = RequestInformation(
-    #         title="Test Title",
-    #         description="Test Description",
-    #         price=25.0,
-    #         image_url=image_response_dict['image_url'],
-    #         user_id="testuserid",
-    #         display_name="testuser",
-    #         email="testemail@gmail.com",
-    #         type="request",
-    #         trans_comp=False,
-    #         urgent=False,
-    #         categories=["Electronics"]
-    #     )
-    #     response = await upload_request(test_request)
-    #     response_content = response.body.decode('utf-8')
-    #     response_dict = json.loads(response_content)
+        # Assertions to check the response body instead of direct response dict
+        self.assertEqual(response_body['message'], "Image uploaded successfully")
+        self.assertIn('image_url', response_body)
+        self.assertTrue(response_body['image_url'].startswith('http://'))
 
-    #     self.assertEqual(response_dict['message'], "Request uploaded successfully")
-    #     self.assertIn("request_id", response_dict)
 
 
 if __name__ == '__main__':
