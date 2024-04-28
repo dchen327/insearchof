@@ -204,15 +204,21 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
             img_byte_arr.seek(0) 
 
         img_byte_arr.seek(0)
+        
+        print('i made it here 1')
 
         # Configure Firebase Storage
         bucket = storage.bucket()
         unique_filename = f"{uuid4()}_{file.filename}"
         file_name = f"images/{user_id}/{unique_filename}"
         blob = bucket.blob(file_name)
+        
+        print('i made it here 2')
 
         # Upload the compressed image
         blob.upload_from_string(img_byte_arr.getvalue(), content_type='image/jpeg')
+        
+        print('i made it here 3')
 
         # Make the blob publicly viewable
         blob.make_public()

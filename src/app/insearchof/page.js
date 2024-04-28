@@ -411,7 +411,7 @@ export default function Page() {
           margin: "20px 0",
         }}
       >
-        <h1>ISO Requester</h1>
+        <h1>ISO Request Uploader</h1>
       </div>
 
       <div
@@ -676,7 +676,7 @@ export default function Page() {
             width: "100%", // Make button full width
           }}
         >
-          Upload Request
+          Upload A New Request
         </button>
         <button
           className="button is-light"
@@ -693,7 +693,7 @@ export default function Page() {
             marginTop: "10px", // Space above the button
           }}
         >
-          Update Request
+          Update A Previous Request
         </button>
         <button
           className="button is-light"
@@ -710,7 +710,7 @@ export default function Page() {
             marginTop: "10px", // Space above the button
           }}
         >
-          Delete Request
+          Delete A Previous Request
         </button>
         <button
           className="button is-light"
@@ -727,7 +727,7 @@ export default function Page() {
             marginTop: "10px", // Space above the button
           }}
         >
-          Mark Transaction Complete
+          Mark A Previous Request Complete
         </button>
       </div>
     </>
