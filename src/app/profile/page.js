@@ -21,16 +21,10 @@ export default function Page() {
   const [locationFilled, setLocationFilled] = useState(false);
   const [listOfItems, setListOfItems] = useState(false);
 
-<<<<<<< HEAD
   const [uploadInfoButton, setShowUploadUserInfoButton] = useState(false);
   const [changeUserButton, setShowChangeUserButton] = useState(false);
   const [showItemModal, setShowItemModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
-=======
-  const [uploadInfoButton, setUploadInfoButtonClicked] = useState(false);
-
-  const [showItemModal, setShowItemModal] = useState(false);
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
 
   const router = useRouter();
 
@@ -86,7 +80,6 @@ export default function Page() {
 
     try {
       // Then, create a document in Firestore with the item data
-<<<<<<< HEAD
       console.log(user.uid);
       const userData = {
         userID: user.uid,
@@ -95,37 +88,19 @@ export default function Page() {
       };
 
       const response = await fetch("api/profile/upload_contact_info", {
-=======
-      const userData = {
-        phoneNumber: phoneNumber,
-        location: location,
-        type: "request",
-      };
-
-      const response = await fetch("api/profile/update_contact_info", {
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-<<<<<<< HEAD
         body: JSON.stringify(userData),
-=======
-        body: JSON.stringify(requestData),
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
       });
 
       const data = await response.json();
       if (response.ok) {
         alert("Request uploaded successfully!");
         // Clear the form
-<<<<<<< HEAD
         setPhoneNumber("");
         setLocation("");
-=======
-        setPhoneNumber();
-        setLocation();
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
       } else {
         alert("Failed to upload request: " + data.message);
       }
@@ -168,11 +143,7 @@ export default function Page() {
       }
       const data = await response.json();
       console.log(data);
-<<<<<<< HEAD
       setItems(data.listingOfItems);
-=======
-      setItems(response.data.listingOfItems);
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
     } catch (err) {
       console.error(err);
       setError("Failed to fetch list of items");
@@ -203,23 +174,6 @@ export default function Page() {
     }
   };
 
-<<<<<<< HEAD
-=======
-  // updates the user's profile data by taking new profile data as input
-  // and then uses updateProfile from firebase to update a user's profile
-  const updateUserProfile = async (newProfileData) => {
-    try {
-      // Update user profile data
-      await auth.currentUser.updateProfile(newProfileData);
-      // Update the user state with the new profile data
-      setUser({ ...user, ...newProfileData });
-    } catch (err) {
-      console.error(err);
-      setError("Failed to update profile");
-    }
-  };
-
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
   return (
     <>
       <div>
@@ -247,7 +201,6 @@ export default function Page() {
                 backgroundColor: "#fff",
               }}
             >
-<<<<<<< HEAD
               {uploadInfoButton && !showItemModal && (
                 <div style={{ textAlign: "center" }}>
                   <p style={{ marginBottom: "30px" }}>
@@ -270,8 +223,6 @@ export default function Page() {
                   </button>
                 </div>
               )}
-=======
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
               {["phoneNumber", "location", "image"].map((field) => (
                 <div
                   key={field}
@@ -341,37 +292,9 @@ export default function Page() {
                     cursor: "pointer",
                   }}
                 >
-<<<<<<< HEAD
                   Upload user info
                 </button>
               )}
-=======
-                  Update user info
-                </button>
-              )}
-              {uploadInfoButton && (
-                <div style={{ textAlign: "center" }}>
-                  <p>Phone Number: {phoneNumber}</p>
-                  <p>Location: {location}</p>
-                  <button
-                    className="button is-primary"
-                    onClick={() => {
-                      locationFilled, uploadInfoButton;
-                    }}
-                    style={{
-                      padding: "10px 20px",
-                      fontSize: "16px",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "2px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Change user info
-                  </button>
-                </div>
-              )}
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
             </div>
           </>
         )}
@@ -406,13 +329,8 @@ export default function Page() {
                 <button
                   className="button is-primary"
                   onClick={() => {
-<<<<<<< HEAD
                     fetchTransactionHistory();
                     setShowTransactionModal(true);
-=======
-                    fetchListOfItems;
-                    setShowItemModal(true);
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
                   }}
                   style={{
                     padding: "10px 20px",
@@ -446,18 +364,13 @@ export default function Page() {
                   Get list of items
                 </button>
               </div>
-<<<<<<< HEAD
                   
-=======
-
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
               {showItemModal && (
                 <div className="modal is-active">
                   <div
                     className="modal-background"
                     onClick={() => setShowItemModal(false)}
                   ></div>
-<<<<<<< HEAD
                   <div
                     className="modal-card"
                     style={{ width: "90%", margin: "auto" }}
@@ -480,13 +393,6 @@ export default function Page() {
                           ) : (
                             <p>No items to display</p>
                           )}
-=======
-                  <div className="modal-card">
-                    <section className="modal-card-body">
-                      <div className="card is-shadowless">
-                        <div className="card-content px-4 py-">
-                          <div className="media mb-2 flex items-center"></div>
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
                         </div>
                       </div>
                     </section>
@@ -503,7 +409,6 @@ export default function Page() {
                 </div>
               )}
 
-<<<<<<< HEAD
               {showTransactionModal && (
                 <div className="modal is-active">
                   <div
@@ -545,9 +450,6 @@ export default function Page() {
                 </div>
               )}
 
-=======
-              {/* {imagePreviewUrl && <img src={imagePreviewUrl} alt="Preview" style={{ maxWidth: '100%', marginTop: '20px' }} />} */}
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
             </div>
           </>
         )}
