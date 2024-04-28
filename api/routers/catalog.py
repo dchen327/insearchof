@@ -6,7 +6,7 @@ from typing import Annotated, Optional, List
 from pydantic import BaseModel, Field
 from firebase_admin import credentials, firestore, auth
 from dotenv import load_dotenv
-from ..firebase_config import db
+from api.firebase_config import db
 from datetime import datetime, timezone
 from google.cloud.firestore_v1 import FieldFilter
 
@@ -38,7 +38,9 @@ class ListingsFilters(BaseModel):
     max_price: float = Field(
         0, description="Maximum price of returned items. Must at least the minimum price, and be a non-negative float with max 2 decimal places.")
     categories: List[str] = Field(
-        ['None'], description="Categories to filter by (e.g. electronics, furniture, clothing)")
+        ['All'], description="Categories to filter by (e.g. electronics, furniture, clothing)")
+    user_name: Optional[str] = Field(None, description='User display name')
+    email: Optional[str] = Field(None, description='User email')
 
 
 class Listing(BaseModel):
@@ -51,7 +53,7 @@ class Listing(BaseModel):
     trans_comp: bool
     type: str
     user_id: str
-    user_name: str
+    display_name: str
     email: str
 
 
@@ -113,7 +115,8 @@ def get_listings(
     max_price: float = Query(
         default=0, description="Maximum price of returned items. Must at least the minimum price, and be a non-negative float with max 2 decimal places."),
     categories: List[str] = Query(default=[
-                                  'None'], description="Categories to filter by (e.g. electronics, furniture, clothing)")
+                                  'All'], description="Categories to filter by (e.g. electronics, furniture, clothing)")
+
 ) -> ListingsResponse:
     ''' Get item listings based on search parameters. '''
     # First check that input is valid, then query the database for items that match the search parameters
@@ -132,35 +135,42 @@ def get_listings(
     # If there are errors in the input, generates a descriptive error message and fails the API call
     # This allows the frontend to display the error to the users
     # query from database items collection, filter and order correctly
+    # print items in db.items collection
+
+    if max_price == 0:
+        max_price = float('inf')
+
     field, direction = sort_options[sort]
 
     # Create FieldFilter objects
-    filters = []
-    if listing_types:
-        type_filter = FieldFilter(
-            field_path='type', op_string='in', value=listing_types)
-        filters.append(type_filter)
+    type_filter = FieldFilter(
+        field_path='type', op_string='in', value=listing_types)
 
-    if min_price > 0:
-        min_price_filter = FieldFilter(
-            field_path='price', op_string='>=', value=min_price)
-        filters.append(min_price_filter)
+    min_price_filter = FieldFilter(
+        field_path='price', op_string='>=', value=min_price)
 
-    if max_price > 0:
-        max_price_filter = FieldFilter(
-            field_path='price', op_string='<=', value=max_price)
-        filters.append(max_price_filter)
+    max_price_filter = FieldFilter(
+        field_path='price', op_string='<=', value=max_price)
+    
+    category_filter = FieldFilter(
+        field_path='categories', op_string='array_contains_any', value=categories)
 
     # Use FieldFilter objects with where method
-    query = db.collection('items')
-    for filter_ in filters:
-        query = query.where(filter=filter_)
+    query = db.collection('items').where(filter=type_filter).where(
+        filter=min_price_filter).where(filter=max_price_filter)
+    
+    if categories != ['All']:
+        query = query.where(filter=category_filter)
 
     docs = query.order_by(field, direction=direction).stream()
 
     items = []
     for doc in docs:
         items.append(doc.to_dict())
+
+    if search:
+        items = [item for item in items if search.lower() in item['title'].lower(
+        ) or search.lower() in item['description'].lower()]
 
     # convert timestamp to string (e.g. 5m, 1h, 1d, 1w, 1mo, 1y)
     now = datetime.now(timezone.utc)
@@ -170,14 +180,8 @@ def get_listings(
         diff = now - timestamp
         item['time_since_listing'] = format_timedelta(diff)
 
-        # from user_id, get user's name and email
-        user_id = item['user_id']
-        user = auth.get_user(user_id)
-        item['user_name'] = user.display_name
-        item['email'] = user.email
-
     # print all
-    print(search, sort, listing_types, min_price, max_price, categories)
+    # print(search, sort, listing_types, min_price, max_price, categories)
     # print(items)
 
     return {"listings": items}
@@ -191,28 +195,3 @@ def purchase_item(purchase_request: PurchaseRequest) -> PurchaseResponse:
     # Use the seller's email to find their profile and any other contact information (e.g. phone number, Discord, Messenger)
 
     return {"seller_email": "email@email.com", "seller_phone": "123-456-7890", "seller_discord": "username#1234", "seller_messenger": "profile"}
-
-
-def test_db_write():
-    # read FIREBASE_SERVICE_ACCOUNT_KEY from .env
-    service_key_dict = json.loads(os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY'))
-    # initialize firebase app
-    firebase_admin.initialize_app(
-        credentials.Certificate(service_key_dict))
-    # write a sample document to the database
-    db = firestore.client()
-    doc_ref = db.collection(u'items').document()
-    doc_ref.set({
-        u'name': u'item1',
-        u'price': 100,
-        u'category': u'electronics'
-    })
-
-
-@ router.get('/test')
-def test():
-    return {"message": "Hello, World!"}
-
-
-if __name__ == '__main__':
-    test_db_write()

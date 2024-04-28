@@ -1,19 +1,16 @@
 "use client";
 import { auth, googleProvider } from "./firebase/config";
-import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
-import { ref, uploadBytes } from "firebase/storage";
+import { signInWithPopup } from "firebase/auth";
 import { useState, useEffect } from "react";
-import { storage } from "./firebase/config";
-import { v4 } from "uuid";
 import { ItemCard } from "./components/itemCard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown, faSearch } from "@fortawesome/free-solid-svg-icons";
 import { useAuthState } from "react-firebase-hooks/auth";
+import Image from "next/image";
 
 export default function Home() {
   const [user, loading, error] = useAuthState(auth);
-  const imagesRef = ref(storage, "images");
-  const [imageUpload, setImageUpload] = useState(null);
+
   const [search, setSearch] = useState("");
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [marketSelected, setMarketSelected] = useState(true);
@@ -22,7 +19,7 @@ export default function Home() {
 
   // filter modal
   const [category, setCategory] = useState("All");
-  const [sortBy, setSortBy] = useState("uploadDateAsc");
+  const [sortBy, setSortBy] = useState("uploadDateDesc");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [showItemModal, setShowItemModal] = useState(false);
@@ -39,9 +36,11 @@ export default function Home() {
 
   useEffect(() => {
     const fetchItems = async () => {
+      setItemsLoading(true);
       const response = await fetch("/api/catalog/listings");
       const data = await response.json();
       setItems(data?.listings || []);
+      setItemsLoading(false);
     };
 
     fetchItems();
@@ -57,55 +56,12 @@ export default function Home() {
     }
   }, [category, maxPrice, minPrice, showFilterModal, sortBy]);
 
-  const uploadFile = () => {
-    if (imageUpload == null) return;
-    const imageRef = ref(storage, `images/${imageUpload.name + v4()}`);
-    uploadBytes(imageRef, imageUpload);
-  };
-
   const signInWithGoogle = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
       console.error(err);
     }
-  };
-
-  const logOut = async () => {
-    try {
-      await signOut(auth);
-      console.log("signed out");
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const testAPI = async () => {
-    const res = await fetch("/api/catalog/test");
-    const data = await res.json();
-    console.log(data);
-  };
-
-  const uploadImage = async (e) => {
-    const file = e.target.files[0];
-    const metadata = {
-      contentType: "image/jpeg",
-    };
-
-    const uploadTask = await imagesRef.put(file, metadata);
-    console.log("uploading...");
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        console.log(snapshot);
-      },
-      (error) => {
-        console.error(error);
-      },
-      () => {
-        console.log("uploaded");
-      }
-    );
   };
 
   const searchItems = async (e) => {
@@ -123,7 +79,7 @@ export default function Home() {
     params.append("max_price", maxPrice || 0);
 
     listingTypes.forEach((type) => params.append("listing_types", type));
-    params.append("categories", category);
+    params.append("categories", [category]);
 
     const response = await fetch(`/api/catalog/listings?${params.toString()}`, {
       method: "GET",
@@ -136,34 +92,6 @@ export default function Home() {
     const listings = data?.listings || [];
     setItems(listings);
     setItemsLoading(false);
-  };
-
-  const generateRandomItem = () => {
-    const categories = [
-      "Electronics",
-      "Books",
-      "Clothing",
-      "Home",
-      "Sports",
-      "Toys",
-    ];
-    const statuses = ["Available", "Sold", "Reserved"];
-
-    const item = {
-      itemID: Math.floor(Math.random() * 1000000), // Random number for itemId
-      sellerUserID: "davidchen@hmc.edu",
-      title: "Microwave",
-      description:
-        "Upgrade your kitchen with the Chef's Choice 900W Digital Microwave Oven, the perfect blend of style, efficiency, and convenience. This sleek stainless steel microwave is designed to meet all your cooking needs with ease and precision.",
-      category: categories[Math.floor(Math.random() * categories.length)], // Random category
-      price: 25, // Random price
-      images: ["/images/microwave.jpg"], // Random image URL
-      status: statuses[Math.floor(Math.random() * statuses.length)], // Random status
-      timestamp: new Date().toISOString(), // Current timestamp
-      timeSinceListing: "3h",
-    };
-
-    return item;
   };
 
   if (loading) {
@@ -202,6 +130,7 @@ export default function Home() {
               </div>
               <div className="control">
                 <button
+                  type="button"
                   className="button"
                   onClick={() => setShowFilterModal(true)}
                 >
@@ -294,10 +223,10 @@ export default function Home() {
                             value={tempSortBy}
                             onChange={(e) => setTempSortBy(e.target.value)}
                           >
-                            <option value="uploadDateAsc">Date (Newest)</option>
                             <option value="uploadDateDesc">
-                              Date (Oldest)
+                              Date (Newest)
                             </option>
+                            <option value="uploadDateAsc">Date (Oldest)</option>
                             <option value="priceAsc">
                               Price (Low to High)
                             </option>
@@ -407,7 +336,7 @@ export default function Home() {
                         <div className="media-content">
                           <p className="title is-4 mb-2">{currentItem.title}</p>
                           <div className="flex flex-row mb-0">
-                            <p className="is-6">{currentItem.user_name}</p>
+                            <p className="is-6">{currentItem.display_name}</p>
                             <p className="is-6 font-thin">•</p>
                             {/* todo: backend calculations  */}
                             <p className="is-6">
@@ -421,7 +350,16 @@ export default function Home() {
                           </p>
                         </div>
                       </div>
-                      <div className="content">{currentItem.description}</div>
+                      <div className="content">
+                        <p>{currentItem.description}</p>
+                        {currentItem.image_url && (
+                          <img
+                            className="px-10"
+                            src={currentItem.image_url}
+                            alt="Image"
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </section>
