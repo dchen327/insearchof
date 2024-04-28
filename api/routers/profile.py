@@ -46,9 +46,9 @@ class UserProfile(BaseModel):
     # phone_number: Optional[constr(regex=r'^\(\d{3}\)\s\d{3}-\d{4}$')]  = Field(None, description="The user's phone number") # type: ignore
 
     class UploadContactInformation(BaseModel):
-        userID: str
+        user_uid: str
         location: str
-        phoneNumber: str
+        phone_number: str
 
     class UploadContactInfoResponse(BaseModel):
         """
@@ -91,10 +91,24 @@ class UserProfile(BaseModel):
         phone number, to the user database, making it visible to buyers.
         """
         doc_ref = db.collection('users').document()
-        # query = db.collection('users').where('user_id', '==', requester_id)
         user_profile_data = user_profile.dict()
         doc_ref.set(user_profile_data)
         return {"message": "Uploads users contact info successfully"}
+
+        # user_query = db.collection('users').where('user_id', '==', requester_id)
+    
+        # # If user doesn't exist, show blanks
+        # if not user_query.exists:
+        #     return {"message": "User not found", "phone_number": "", "location": ""}
+        
+        # # Update user's contact information
+        # user_data = user_query.to_dict()
+        # user_data['phone_number'] = user_profile.phone_number
+        # user_data['location'] = user_profile.location
+        # user_query.set(user_data)
+        
+        # return {"message": "Uploaded user's contact info successfully"}
+
 
     @router.get("/get_list_of_items")
     def get_list_of_items(requester_id: str = Query(description="The requester's uid")) -> GetListOfItemsResponse:
