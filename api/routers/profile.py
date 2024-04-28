@@ -52,11 +52,7 @@ class UserProfile(BaseModel):
     class UploadContactInformation(BaseModel):
         user_uid: str
         location: str
-<<<<<<< HEAD
         phone_number: str
-=======
-        phoneNumber: str
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
 
     class UploadContactInfoResponse(BaseModel):
         """
@@ -103,7 +99,6 @@ class UserProfile(BaseModel):
         doc_ref.set(user_profile_data)
         return {"message": "Uploads users contact info successfully"}
 
-<<<<<<< HEAD
         # user_query = db.collection('users').where('user_id', '==', requester_id)
     
         # # If user doesn't exist, show blanks
@@ -119,8 +114,6 @@ class UserProfile(BaseModel):
         # return {"message": "Uploaded user's contact info successfully"}
 
 
-=======
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
     @router.get("/get_list_of_items")
     def get_list_of_items(requester_id: str = Query(description="The requester's uid")) -> GetListOfItemsResponse:
         """
@@ -129,24 +122,13 @@ class UserProfile(BaseModel):
         This allows potential buyers to view items listed by the user.
 
         """
-<<<<<<< HEAD
-
-=======
-        print('hi')
-        print(requester_id)
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
         query = db.collection('items').where('user_id', '==', requester_id)
         items = []
         for doc in query.stream():
             items.append(doc.to_dict())
 
-<<<<<<< HEAD
         return {"listingOfItems": items}
 
-=======
-        print(items)
-        return {"listingOfItems": []}
->>>>>>> 113ee4eb2eeac41b0e6866367de36b574e58e64e
 
     @router.get("/get_transaction_history")
     def get_transaction_history(requester_id: str = Query(description="The requester's uid")) -> GetTransactionHistoryResponse:
