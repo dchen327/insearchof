@@ -118,6 +118,7 @@ class UserProfile(BaseModel):
         This allows potential buyers to view items listed by the user.
 
         """
+
         query = db.collection('items').where('user_id', '==', requester_id)
         items = []
         for doc in query.stream():
