@@ -142,31 +142,3 @@ class UserProfile(BaseModel):
             listings.append(doc.to_dict())
 
         return {"listingOfTransactionHistory": listings}
-    
-
-    # @router.delete("/delete/{item_id}", response_model=dict)
-    # def delete_request(item_id: str, user_data: dict):
-    
-    #     try:
-    #         item_ref = db.collection('items').document(item_id)
-    #         item = item_ref.get()
-    #         if item.exists:
-    #             item_data = item.to_dict()
-    #             # Check if the item's user_id matches the logged-in user's uid
-    #             if item_data['user_id'] != user_data['user_id']:
-    #                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-    #                                     detail="You do not have permission to delete this item.")
-                
-    #             # Attempt to delete the image first, if it exists
-    #             if item_data.get('image_url'):
-    #                 image_filename = item_data['image_url'].split('/')[-1]  # Extracting filename from URL
-    #                 # await delete_image(image_filename, user_data['user_id'])
-                                
-    #             # Proceed with the deletion of the database entry
-    #             item_ref.delete()
-    #             return {"message": "Item and associated image deleted successfully"}
-    #         else:
-    #             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
-    #     except Exception as e:
-    #         raise HTTPException(
-    #             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
