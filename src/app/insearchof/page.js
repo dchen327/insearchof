@@ -13,15 +13,12 @@ export default function Page() {
   const [price, setPrice] = useState("");
   const [image, setImage] = useState(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
-  // const [showTitleTooltip, setShowTitleTooltip] = useState(false);
-  // const [showDescriptionTooltip, setShowDescriptionTooltip] = useState(false);
-  // const [showPriceTooltip, setShowPriceTooltip] = useState(false);
-  // const [showImageTooltip, setShowImageTooltip] = useState(false);
   const [urgent, setUrgent] = useState(false);
-  // const [showUrgentTooltip, setShowUrgentTooltip] = useState(false);
+  const [items, setItems] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [activeTab, setActiveTab] = useState('upload');
   const [tooltipVisible, setTooltipVisible] = useState({ title: false, description: false, price: false, image: false, urgent: false });
+  const [selectedItemId, setSelectedItemId] = useState('');
 
 
   useEffect(() => {
@@ -67,6 +64,54 @@ export default function Page() {
     setSelectedCategories([]);
   }
 
+
+  const handleDropdownClick = async () => {
+    if (user) {
+      try {
+        const response = await fetch(`/api/insearchof/user-items/${user.uid}`);
+        const data = await response.json();
+        if (response.ok) {
+          setItems(data);
+        } else {
+          console.error('Failed to fetch items:', data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch items:', error);
+      }
+    }
+  };
+
+  const handleItemSelection = async (e) => {
+    const itemId = e.target.value;
+    setSelectedItemId(itemId);
+
+    try {
+      const response = await fetch(`/api/insearchof/item-details/${itemId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        // Fill in the form with the details fetched
+        setTitle(data.itemDetails.title);
+        setDescription(data.itemDetails.description);
+        setPrice(data.itemDetails.price.toString());
+        setImagePreviewUrl(data.itemDetails.image_url);
+        setUrgent(data.itemDetails.urgent);
+        setSelectedCategories(data.itemDetails.categories);
+      } else {
+        console.error("Item details fetch error:", data.message);
+        resetForm();
+      }
+    } catch (error) {
+      console.error("Failed to fetch item details:", error);
+      resetForm();
+    }
+  };
+
   const handleTabChange = (tabName) => {
     setActiveTab(tabName);
   };
@@ -84,45 +129,6 @@ export default function Page() {
       reader.readAsDataURL(file);
     } else {
       setImagePreviewUrl("");
-    }
-  };
-
-  const handleItemIDChange = async (e) => {
-    const newItemId = e.target.value;
-    setItem_id(newItemId);
-
-    if (newItemId.length === 20) {
-      // length of item id
-      try {
-        const response = await fetch(
-          `/api/insearchof/validate-item-id/${newItemId}/${user.uid}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        const data = await response.json();
-        if (response.ok && data.isValid) {
-          // fill in form
-          setTitle(data.itemDetails.title);
-          setDescription(data.itemDetails.description);
-          setPrice(data.itemDetails.price.toString());
-          setImagePreviewUrl(data.itemDetails.image_url);
-          setUrgent(data.itemDetails.urgent);
-          setSelectedCategories(data.itemDetails.categories);
-        } else {
-          console.error("Item ID validation error:", data.message);
-          resetForm();
-        }
-      } catch (error) {
-        console.error("Failed to validate Item ID:", error);
-        resetForm();
-      }
-    } else {
-      resetForm();
     }
   };
 
@@ -249,11 +255,6 @@ export default function Page() {
   };
 
   const updateRequest = async () => {
-    if (!item_id) {
-      alert("No item ID provided for the update.");
-      return;
-    }
-
     const finalPrice = validateFormAndUser(title, price, user);
     if (finalPrice === null) {
       return;
@@ -262,7 +263,7 @@ export default function Page() {
     try {
       // Fetch current item details including the image_url from the database
       const itemDetailsResponse = await fetch(
-        `/api/insearchof/item-details/${item_id}`
+        `/api/insearchof/item-details/${selectedItemId}`
       );
       if (!itemDetailsResponse.ok) {
         throw new Error("Failed to fetch item details.");
@@ -302,7 +303,7 @@ export default function Page() {
       };
 
       // Send the update request to the backend
-      const response = await fetch(`/api/insearchof/update/${item_id}`, {
+      const response = await fetch(`/api/insearchof/update/${selectedItemId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestData),
@@ -400,13 +401,12 @@ export default function Page() {
       borderRadius: "4px",
       boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
       zIndex: "10",
-      marginTop: "5px",
+      marginTop: "0px",
       width: "200px"
     }}>
       {text}
     </div>
   ) : null;
-
 
   const toggleCategory = (category) => {
     if (selectedCategories.includes(category)) {
@@ -415,7 +415,6 @@ export default function Page() {
       setSelectedCategories([...selectedCategories, category]);
     }
   };
-
 
   function CategoriesDisplay({ selectedCategories, toggleCategory }) {
     const categories = ["Food", "Electronics", "Furniture", "Clothing"];
@@ -439,23 +438,36 @@ export default function Page() {
 
   return (
     <>
-      <div
-        style={{
-          textAlign: "center",
-          margin: "20px 0",
-        }}
-      >
-        <h1>ISO Request Uploader</h1>
+      <div style={{ textAlign: "center", margin: "20px 0" }}>
+        <h1>ISO Request</h1>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
-        <button onClick={() => handleTabChange('upload')} style={{ padding: '10px 20px', marginRight: '5px', backgroundColor: activeTab === 'upload' ? '#007BFF' : '#ccc', color: 'white', border: 'none', borderRadius: '4px' }}>Upload New Request</button>
-        <button onClick={() => handleTabChange('update')} style={{ padding: '10px 20px', marginRight: '5px', backgroundColor: activeTab === 'update' ? '#28a745' : '#ccc', color: 'white', border: 'none', borderRadius: '4px' }}>Update Existing Request</button>
-        <button onClick={() => handleTabChange('delete')} style={{ padding: '10px 20px', marginRight: '5px', backgroundColor: activeTab === 'delete' ? '#dc3545' : '#ccc', color: 'white', border: 'none', borderRadius: '4px' }}>Delete Existing Request</button>
-        <button onClick={() => handleTabChange('complete')} style={{ padding: '10px 20px', backgroundColor: activeTab === 'complete' ? '#6c757d' : '#ccc', color: 'white', border: 'none', borderRadius: '4px' }}>Mark Request Complete</button>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-around', width: '100%', maxWidth: '500px', marginBottom: '5px' }}>
+          <button onClick={() => handleTabChange('upload')} style={{ padding: '10px 20px', width: '48%', backgroundColor: activeTab === 'upload' ? '#007BFF' : '#ccc', color: 'white', border: 'none', borderRadius: '4px' }}>Upload New Request</button>
+          <button onClick={() => handleTabChange('update')} style={{ padding: '10px 20px', width: '48%', backgroundColor: activeTab === 'update' ? '#28a745' : '#ccc', color: 'white', border: 'none', borderRadius: '4px' }}>Update Existing Request</button>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-around', width: '100%', maxWidth: '500px' }}>
+          <button onClick={() => handleTabChange('delete')} style={{ padding: '10px 20px', width: '48%', backgroundColor: activeTab === 'delete' ? '#dc3545' : '#ccc', color: 'white', border: 'none', borderRadius: '4px' }}>Delete Existing Request</button>
+          <button onClick={() => handleTabChange('complete')} style={{ padding: '10px 20px', width: '48%', backgroundColor: activeTab === 'complete' ? '#6c757d' : '#ccc', color: 'white', border: 'none', borderRadius: '4px' }}>Mark Request Complete</button>
+        </div>
       </div>
+
+
+
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '500px', margin: '0 auto', padding: '20px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)', borderRadius: '8px', backgroundColor: '#fff' }}>
+        {activeTab !== 'upload' && (
+          <div>
+            <select value={selectedItemId} onClick={handleDropdownClick} onChange={handleItemSelection} style={{ padding: '11px', fontSize: '16px', width: '100%', marginBottom: '-10px', border: '1px solid #ccc', borderRadius: '4px' }}>
+              <option value="">Select an item</option>
+              {items.map(item => (
+                <option key={item.item_id} value={item.item_id}>{item.title}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {activeTab === 'upload' && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
@@ -492,21 +504,12 @@ export default function Page() {
             {imagePreviewUrl && (
               <img src={imagePreviewUrl} alt="Preview" style={{ maxWidth: '100%', marginTop: '20px' }} />
             )}
-            <button onClick={uploadRequest} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#007BFF', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%', marginTop: '10px' }}>Upload A New Request</button>
+            <button onClick={uploadRequest} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#007BFF', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%', marginTop: '10px' }}>Upload Request</button>
           </div>
         )}
         {activeTab === 'update' && (
           <div>
             {/* Form and functionalities for updating an existing request */}
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-              <input
-                type="text"
-                value={item_id}
-                onChange={handleItemIDChange}
-                placeholder="Item ID (Temporary)"
-                style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }}
-              />
-            </div>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
               <input
                 type="text"
@@ -571,38 +574,18 @@ export default function Page() {
               <img src={imagePreviewUrl} alt="Preview" style={{ maxWidth: '100%', marginTop: '20px' }} />
             )}
             <button onClick={updateRequest} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%', marginTop: '10px' }}>
-              Update A Previous Request
+              Update Request
             </button>
           </div>
         )}
         {activeTab === 'delete' && (
           <div>
-            {/* Form and functionalities for deleting a request */}
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-              <input
-                type="text"
-                value={item_id}
-                onChange={handleItemIDChange}
-                placeholder="Item ID (Temporary)"
-                style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }}
-              />
-            </div>
-            <button onClick={deleteRequest} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%' }}>Delete A Previous Request</button>
+            <button onClick={deleteRequest} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%' }}>Delete Request</button>
           </div>
         )}
         {activeTab === 'complete' && (
           <div>
-            {/* Form and functionalities for marking a request as complete */}
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-              <input
-                type="text"
-                value={item_id}
-                onChange={handleItemIDChange}
-                placeholder="Item ID (Temporary)"
-                style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }}
-              />
-            </div>
-            <button onClick={markTransactionComplete} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%' }}>Mark A Previous Request Complete</button>
+            <button onClick={markTransactionComplete} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%' }}>Mark Request</button>
           </div>
         )}
       </div>
