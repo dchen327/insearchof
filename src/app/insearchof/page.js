@@ -13,13 +13,16 @@ export default function Page() {
   const [price, setPrice] = useState("");
   const [image, setImage] = useState(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
-  const [showTitleTooltip, setShowTitleTooltip] = useState(false);
-  const [showDescriptionTooltip, setShowDescriptionTooltip] = useState(false);
-  const [showPriceTooltip, setShowPriceTooltip] = useState(false);
-  const [showImageTooltip, setShowImageTooltip] = useState(false);
+  // const [showTitleTooltip, setShowTitleTooltip] = useState(false);
+  // const [showDescriptionTooltip, setShowDescriptionTooltip] = useState(false);
+  // const [showPriceTooltip, setShowPriceTooltip] = useState(false);
+  // const [showImageTooltip, setShowImageTooltip] = useState(false);
   const [urgent, setUrgent] = useState(false);
-  const [showUrgentTooltip, setShowUrgentTooltip] = useState(false);
+  // const [showUrgentTooltip, setShowUrgentTooltip] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [activeTab, setActiveTab] = useState('upload');
+  const [tooltipVisible, setTooltipVisible] = useState({ title: false, description: false, price: false, image: false, urgent: false });
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -63,6 +66,10 @@ export default function Page() {
     setUrgent(false);
     setSelectedCategories([]);
   }
+
+  const handleTabChange = (tabName) => {
+    setActiveTab(tabName);
+  };
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -213,7 +220,7 @@ export default function Page() {
         type: "request",
         trans_comp: false,
         display_name: user.displayName,
-        email: user.email, 
+        email: user.email,
         user_id: user.uid,
         urgent: urgent,
         categories: selectedCategories,
@@ -380,7 +387,26 @@ export default function Page() {
     setUrgent(!urgent);
   };
 
-  const categories = ["Food", "Electronics", "Furniture", "Clothing"];
+  const toggleTooltip = (field) => {
+    setTooltipVisible(prev => ({ ...prev, [field]: !prev[field] }));
+  };
+
+  const Tooltip = ({ show, text }) => show ? (
+    <div style={{
+      position: "absolute",
+      backgroundColor: "#f0f0f0",
+      border: "1px solid #ccc",
+      padding: "10px",
+      borderRadius: "4px",
+      boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+      zIndex: "10",
+      marginTop: "5px",
+      width: "200px"
+    }}>
+      {text}
+    </div>
+  ) : null;
+
 
   const toggleCategory = (category) => {
     if (selectedCategories.includes(category)) {
@@ -390,18 +416,26 @@ export default function Page() {
     }
   };
 
-  const tooltipStyle = {
-    position: "absolute",
-    top: "100%",
-    left: "0",
-    width: "75%", // Tooltip covers 75% of the input field
-    backgroundColor: "#f0f0f0",
-    padding: "10px",
-    borderRadius: "4px",
-    boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-    zIndex: "100",
-    marginTop: "5px",
-  };
+
+  function CategoriesDisplay({ selectedCategories, toggleCategory }) {
+    const categories = ["Food", "Electronics", "Furniture", "Clothing"];
+    return (
+      <div>
+        <div style={{ marginBottom: "10px", fontSize: "16px" }}>
+          Categories
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+            {categories.map((category, index) => (
+              <label key={index} style={{ marginRight: '10px', fontSize: '16px', display: 'flex', alignItems: 'center' }}>
+                <input type="checkbox" checked={selectedCategories.includes(category)} onChange={() => toggleCategory(category)} />
+                <span style={{ marginLeft: '5px' }}>{category}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <>
@@ -414,322 +448,165 @@ export default function Page() {
         <h1>ISO Request Uploader</h1>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "20px",
-          maxWidth: "500px",
-          margin: "0px auto",
-          padding: "20px",
-          boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-          borderRadius: "8px",
-          backgroundColor: "#fff",
-        }}
-      >
-        {["item id", "title", "description", "price", "image", "urgent"].map(
-          (field) => (
-            <div
-              key={field}
-              style={{
-                position: "relative",
-                display: "flex",
-                alignItems: "center",
-                gap: "5px",
-              }}
-            >
-              {field === "item id" && (
-                <input
-                  type="text"
-                  value={item_id}
-                  onChange={handleItemIDChange}
-                  placeholder="Item ID (Temporary)"
-                  style={{
-                    padding: "10px",
-                    fontSize: "16px",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                    flexGrow: 1,
-                  }}
-                />
-              )}
+      <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
+        <button onClick={() => handleTabChange('upload')} style={{ padding: '10px 20px', marginRight: '5px', backgroundColor: activeTab === 'upload' ? '#007BFF' : '#ccc', color: 'white', border: 'none', borderRadius: '4px' }}>Upload New Request</button>
+        <button onClick={() => handleTabChange('update')} style={{ padding: '10px 20px', marginRight: '5px', backgroundColor: activeTab === 'update' ? '#28a745' : '#ccc', color: 'white', border: 'none', borderRadius: '4px' }}>Update Existing Request</button>
+        <button onClick={() => handleTabChange('delete')} style={{ padding: '10px 20px', marginRight: '5px', backgroundColor: activeTab === 'delete' ? '#dc3545' : '#ccc', color: 'white', border: 'none', borderRadius: '4px' }}>Delete Existing Request</button>
+        <button onClick={() => handleTabChange('complete')} style={{ padding: '10px 20px', backgroundColor: activeTab === 'complete' ? '#6c757d' : '#ccc', color: 'white', border: 'none', borderRadius: '4px' }}>Mark Request Complete</button>
+      </div>
 
-              {field === "title" && (
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Title (Required)"
-                  style={{
-                    padding: "10px",
-                    fontSize: "16px",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                    flexGrow: 1,
-                  }}
-                />
-              )}
-              {field === "description" && (
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Description (Optional)"
-                  style={{
-                    height: "100px",
-                    padding: "10px",
-                    fontSize: "16px",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                    flexGrow: 1,
-                    resize: "vertical", // Allow resizing only vertically
-                  }}
-                />
-              )}
-              {field === "price" && (
-                <>
-                  <label style={{ marginRight: "5px", fontSize: "16px" }}>
-                    $
-                  </label>
-                  <input
-                    type="text"
-                    value={price}
-                    onChange={handlePriceChange}
-                    placeholder="Price (Optional)"
-                    style={{
-                      padding: "10px",
-                      fontSize: "16px",
-                      border: "1px solid #ccc",
-                      borderRadius: "4px",
-                      flexGrow: 1,
-                    }}
-                  />
-                </>
-              )}
-              {field === "image" && (
-                <div style={{ position: "relative" }}>
-                  <label
-                    style={{
-                      flexGrow: 1,
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "flex-start",
-                    }}
-                  >
-                    <span style={{ marginBottom: "10px", fontSize: "16px" }}>
-                      Image (optional)
-                    </span>
-                    <input
-                      type="file"
-                      onChange={handleImageChange}
-                      accept="image/*"
-                      style={{
-                        padding: "10px",
-                        fontSize: "16px",
-                        border: "1px solid #ccc",
-                        borderRadius: "4px",
-                        width: "100%", // Ensure the input takes the full width of its parent container
-                      }}
-                    />
-                  </label>
-                  {/* Urgent button below the image file input */}
-                </div>
-              )}
-              {field === "urgent" && (
-                <div>
-                  <button
-                    onClick={toggleUrgent}
-                    style={{
-                      padding: "10px",
-                      fontSize: "16px",
-                      border: "1px solid #ccc",
-                      borderRadius: "4px",
-                      backgroundColor: urgent ? "#FF0000" : "#FFFFFF",
-                      color: urgent ? "#FFFFFF" : "#000000",
-                    }}
-                  >
-                    Urgent
-                  </button>
-                </div>
-              )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '500px', margin: '0 auto', padding: '20px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)', borderRadius: '8px', backgroundColor: '#fff' }}>
+        {activeTab === 'upload' && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title (Required)" style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }} />
+              <button onClick={() => toggleTooltip('title')} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
+            </div>
+            <Tooltip show={tooltipVisible.title} text="Enter the title of the request." />
 
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description (Optional)" style={{ height: '100px', padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }} />
+              <button onClick={() => toggleTooltip('description')} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
+            </div>
+            <Tooltip show={tooltipVisible.description} text="Provide a description for your request." />
+
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+              <input type="text" value={price} onChange={handlePriceChange} placeholder="Price (Optional)" style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }} />
+              <button onClick={() => toggleTooltip('price')} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
+            </div>
+            <Tooltip show={tooltipVisible.price} text="Specify the price you are willing to pay. Leave empty for no specific price." />
+
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+              <input type="file" onChange={handleImageChange} accept="image/*" style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }} />
+              <button onClick={() => toggleTooltip('image')} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
+            </div>
+            <Tooltip show={tooltipVisible.image} text="Upload an image related to your request." />
+
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+              <button onClick={toggleUrgent} style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: urgent ? '#FF0000' : '#FFFFFF', color: urgent ? '#FFFFFF' : '#000000', flexGrow: 1, marginRight: '5px' }}>Urgent</button>
+              <button onClick={() => toggleTooltip('urgent')} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
+            </div>
+            <Tooltip show={tooltipVisible.urgent} text="Mark this request as urgent if it needs immediate attention." />
+
+            <CategoriesDisplay selectedCategories={selectedCategories} toggleCategory={toggleCategory} />
+            {imagePreviewUrl && (
+              <img src={imagePreviewUrl} alt="Preview" style={{ maxWidth: '100%', marginTop: '20px' }} />
+            )}
+            <button onClick={uploadRequest} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#007BFF', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%', marginTop: '10px' }}>Upload A New Request</button>
+          </div>
+        )}
+        {activeTab === 'update' && (
+          <div>
+            {/* Form and functionalities for updating an existing request */}
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+              <input
+                type="text"
+                value={item_id}
+                onChange={handleItemIDChange}
+                placeholder="Item ID (Temporary)"
+                style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Title (Required)"
+                style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }}
+              />
+              <button onClick={() => toggleTooltip('title')} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
+            </div>
+            <Tooltip show={tooltipVisible.title} text="Enter the title of the request." />
+
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Description (Optional)"
+                style={{ height: '100px', padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }}
+              />
+              <button onClick={() => toggleTooltip('description')} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
+            </div>
+            <Tooltip show={tooltipVisible.description} text="Provide a description for your request." />
+
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+              <input
+                type="text"
+                value={price}
+                onChange={handlePriceChange}
+                placeholder="Price (Optional)"
+                style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }}
+              />
+              <button onClick={() => toggleTooltip('price')} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
+            </div>
+            <Tooltip show={tooltipVisible.price} text="Specify the price you are willing to pay. Leave empty for no specific price." />
+
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+              <label style={{ flexGrow: 1, marginRight: '5px' }}>
+                <input
+                  type="file"
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', width: '100%' }}
+                />
+              </label>
+              <button onClick={() => toggleTooltip('image')} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
+            </div>
+            <Tooltip show={tooltipVisible.image} text="Upload an image related to your request." />
+
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
               <button
-                onClick={() => {
-                  // Close any open tooltip and open the clicked one
-                  setShowTitleTooltip(
-                    field === "title" ? !showTitleTooltip : false
-                  );
-                  setShowDescriptionTooltip(
-                    field === "description" ? !showDescriptionTooltip : false
-                  );
-                  setShowPriceTooltip(
-                    field === "price" ? !showPriceTooltip : false
-                  );
-                  setShowImageTooltip(
-                    field === "image" ? !showImageTooltip : false
-                  );
-                  setShowUrgentTooltip(
-                    field === "urgent" ? !showUrgentTooltip : false
-                  );
-                }}
-                style={{ position: "relative", zIndex: "20" }}
+                onClick={toggleUrgent}
+                style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: urgent ? '#FF0000' : '#FFFFFF', color: urgent ? '#FFFFFF' : '#000000', flexGrow: 1, marginRight: '5px' }}
               >
-                ?
+                Urgent
               </button>
-              {showTitleTooltip && field === "title" && (
-                <div style={tooltipStyle}>
-                  The title of item or service requested
-                </div>
-              )}
-              {showDescriptionTooltip && field === "description" && (
-                <div style={tooltipStyle}>
-                  The description of item or service requested
-                </div>
-              )}
-              {showPriceTooltip && field === "price" && (
-                <div style={tooltipStyle}>
-                  The price you are willing to pay for such item or service.
-                  Leaving it empty also means 0 dollars
-                </div>
-              )}
-              {showImageTooltip && field === "image" && (
-                <div style={tooltipStyle}>
-                  The image of item or service you are requesting
-                </div>
-              )}
-              {showUrgentTooltip && field === "urgent" && (
-                <div style={tooltipStyle}>
-                  For items or services needed urgently, preferably within 24
-                  hours
-                </div>
-              )}
+              <button onClick={() => toggleTooltip('urgent')} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
             </div>
-          )
+            <Tooltip show={tooltipVisible.urgent} text="Mark this request as urgent if it needs immediate attention." />
+
+            <CategoriesDisplay selectedCategories={selectedCategories} toggleCategory={toggleCategory} />
+            {imagePreviewUrl && (
+              <img src={imagePreviewUrl} alt="Preview" style={{ maxWidth: '100%', marginTop: '20px' }} />
+            )}
+            <button onClick={updateRequest} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%', marginTop: '10px' }}>
+              Update A Previous Request
+            </button>
+          </div>
         )}
-
-        <div style={{ position: "relative" }}>
-          <label
-            style={{
-              flexGrow: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-            }}
-          >
-            <span style={{ marginBottom: "10px", fontSize: "16px" }}>
-              Categories
-            </span>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
-              {categories.map((category, index) => (
-                <label
-                  key={index}
-                  style={{
-                    marginRight: "10px",
-                    fontSize: "16px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedCategories.includes(category)}
-                    onChange={() => toggleCategory(category)}
-                  />
-                  <span style={{ marginLeft: "5px" }}>{category}</span>
-                </label>
-              ))}
+        {activeTab === 'delete' && (
+          <div>
+            {/* Form and functionalities for deleting a request */}
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+              <input
+                type="text"
+                value={item_id}
+                onChange={handleItemIDChange}
+                placeholder="Item ID (Temporary)"
+                style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }}
+              />
             </div>
-          </label>
-        </div>
-
-        {imagePreviewUrl && (
-          <img
-            src={imagePreviewUrl}
-            alt="Preview"
-            style={{ maxWidth: "100%", marginTop: "20px" }}
-          />
+            <button onClick={deleteRequest} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%' }}>Delete A Previous Request</button>
+          </div>
+        )}
+        {activeTab === 'complete' && (
+          <div>
+            {/* Form and functionalities for marking a request as complete */}
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+              <input
+                type="text"
+                value={item_id}
+                onChange={handleItemIDChange}
+                placeholder="Item ID (Temporary)"
+                style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }}
+              />
+            </div>
+            <button onClick={markTransactionComplete} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%' }}>Mark A Previous Request Complete</button>
+          </div>
         )}
       </div>
 
-      <div
-        style={{
-          maxWidth: "500px",
-          margin: "20px auto",
-          display: "flex",
-          flexDirection: "column", // Stack the buttons vertically
-          alignItems: "center",
-          gap: "10px", // Space between buttons
-          paddingBottom: "100px", // Add extra space below the buttons for scrolling
-          // If the navbar is taller, increase this value accordingly
-        }}
-      >
-        <button
-          className="button is-light"
-          onClick={uploadRequest}
-          style={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            backgroundColor: "#007BFF",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            width: "100%", // Make button full width
-          }}
-        >
-          Upload A New Request
-        </button>
-        <button
-          className="button is-light"
-          onClick={updateRequest}
-          style={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            backgroundColor: "#28a745",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            width: "100%", // Make button full width
-            marginTop: "10px", // Space above the button
-          }}
-        >
-          Update A Previous Request
-        </button>
-        <button
-          className="button is-light"
-          onClick={deleteRequest}
-          style={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            backgroundColor: "#dc3545",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            width: "100%", // Make button full width
-            marginTop: "10px", // Space above the button
-          }}
-        >
-          Delete A Previous Request
-        </button>
-        <button
-          className="button is-light"
-          onClick={markTransactionComplete}
-          style={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            backgroundColor: "#6c757d", // Grey color
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            width: "100%", // Make button full width
-            marginTop: "10px", // Space above the button
-          }}
-        >
-          Mark A Previous Request Complete
-        </button>
-      </div>
     </>
   );
 }
