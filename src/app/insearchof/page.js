@@ -380,7 +380,7 @@ export default function Page() {
       const data = await response.json();
       console.log(data);
       if (response.ok) {
-        alert(`Transaction Complete is now ${data["trans_comp_value"]}`);
+        alert(`You marked this request as ${data["trans_comp_value"] ? "complete" : "incomplete"}`);
       } else {
         alert("Failed to mark transaction as complete: " + data.message);
       }
