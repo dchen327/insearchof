@@ -18,7 +18,7 @@ export default function Page() {
   const [activeTab, setActiveTab] = useState('upload');
   const [tooltipVisible, setTooltipVisible] = useState({ title: false, description: false, price: false, image: false, urgent: false });
   const [selectedItemId, setSelectedItemId] = useState('');
-
+  const [transactionStatus, setTransactionStatus] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -106,6 +106,7 @@ export default function Page() {
         setImagePreviewUrl(data.itemDetails.image_url);
         setUrgent(data.itemDetails.urgent);
         setSelectedCategories(data.itemDetails.categories);
+        setTransactionStatus(data.itemDetails.trans_comp); // Store the transaction completion status
       } else {
         console.error("Item details fetch error:", data.message);
         resetForm();
@@ -378,18 +379,15 @@ export default function Page() {
         body: JSON.stringify({ user_id: user.uid }),
       });
       const data = await response.json();
-      console.log(data);
       if (response.ok) {
-        alert(`You marked this request as ${data["trans_comp_value"] ? "complete" : "incomplete"}`);
+        setTransactionStatus(data.trans_comp_value); // Update the transaction status in state
+        alert(`You marked this request as ${data.trans_comp_value ? "complete" : "incomplete"}`);
       } else {
         alert("Failed to mark transaction as complete: " + data.message);
       }
     } catch (error) {
-      // network failure?
       console.error("Failed to mark transaction as complete:", error);
-      alert(
-        "An error occurred while marking transaction as complete. Please try again."
-      );
+      alert("An error occurred while marking transaction as complete. Please try again.");
     }
   };
 
@@ -425,7 +423,7 @@ export default function Page() {
     }
   };
 
-  function CategoriesDisplay({ selectedCategories, toggleCategory }) {
+  function CategoriesDisplay({ selectedCategories, toggleCategory, disabled }) {
     const categories = ["Food", "Electronics", "Furniture", "Clothing"];
     return (
       <div>
@@ -434,7 +432,12 @@ export default function Page() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
             {categories.map((category, index) => (
               <label key={index} style={{ marginRight: '10px', fontSize: '16px', display: 'flex', alignItems: 'center' }}>
-                <input type="checkbox" checked={selectedCategories.includes(category)} onChange={() => toggleCategory(category)} />
+                <input
+                  type="checkbox"
+                  checked={selectedCategories.includes(category)}
+                  onChange={() => toggleCategory(category)}
+                  disabled={disabled}  // Use the disabled prop here
+                />
                 <span style={{ marginLeft: '5px' }}>{category}</span>
               </label>
             ))}
@@ -462,9 +465,6 @@ export default function Page() {
             <button onClick={() => handleTabChange('complete')} style={{ padding: '10px 20px', width: '48%', backgroundColor: activeTab === 'complete' ? '#6c757d' : '#ccc', color: 'white', border: 'none', borderRadius: '4px' }}>Mark Request Complete</button>
           </div>
         </div>
-
-
-
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '500px', margin: '0 auto', padding: '20px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)', borderRadius: '8px', backgroundColor: '#fff' }}>
           {activeTab !== 'upload' && (
@@ -519,7 +519,6 @@ export default function Page() {
           )}
           {activeTab === 'update' && (
             <div>
-              {/* Form and functionalities for updating an existing request */}
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
                 <input
                   type="text"
@@ -527,8 +526,9 @@ export default function Page() {
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Title (Required)"
                   style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }}
+                  disabled={!selectedItemId} // Disable if no item is selected
                 />
-                <button onClick={() => toggleTooltip('title')} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
+                <button onClick={() => toggleTooltip('title')} disabled={!selectedItemId} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
               </div>
               <Tooltip show={tooltipVisible.title} text="Enter the title of the request." />
 
@@ -538,8 +538,9 @@ export default function Page() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Description (Optional)"
                   style={{ height: '100px', padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }}
+                  disabled={!selectedItemId} // Disable if no item is selected
                 />
-                <button onClick={() => toggleTooltip('description')} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
+                <button onClick={() => toggleTooltip('description')} disabled={!selectedItemId} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
               </div>
               <Tooltip show={tooltipVisible.description} text="Provide a description for your request." />
 
@@ -550,8 +551,9 @@ export default function Page() {
                   onChange={handlePriceChange}
                   placeholder="Price (Optional)"
                   style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', flexGrow: 1, marginRight: '5px' }}
+                  disabled={!selectedItemId} // Disable if no item is selected
                 />
-                <button onClick={() => toggleTooltip('price')} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
+                <button onClick={() => toggleTooltip('price')} disabled={!selectedItemId} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
               </div>
               <Tooltip show={tooltipVisible.price} text="Specify the price you are willing to pay. Leave empty for no specific price." />
 
@@ -562,9 +564,10 @@ export default function Page() {
                     onChange={handleImageChange}
                     accept="image/*"
                     style={{ padding: '8px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', width: '100%' }}
+                    disabled={!selectedItemId} // Disable if no item is selected
                   />
                 </label>
-                <button onClick={() => toggleTooltip('image')} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
+                <button onClick={() => toggleTooltip('image')} disabled={!selectedItemId} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
               </div>
               <Tooltip show={tooltipVisible.image} text="Upload an image related to your request." />
 
@@ -572,29 +575,38 @@ export default function Page() {
                 <button
                   onClick={toggleUrgent}
                   style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: urgent ? '#FF0000' : '#FFFFFF', color: urgent ? '#FFFFFF' : '#000000', flexGrow: 1, marginRight: '5px' }}
+                  disabled={!selectedItemId} // Disable if no item is selected
                 >
                   Urgent
                 </button>
-                <button onClick={() => toggleTooltip('urgent')} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
+                <button onClick={() => toggleTooltip('urgent')} disabled={!selectedItemId} style={{ padding: '0 5px', fontSize: '16px' }}>?</button>
               </div>
               <Tooltip show={tooltipVisible.urgent} text="Mark this request as urgent if it needs immediate attention." />
 
-              <CategoriesDisplay selectedCategories={selectedCategories} toggleCategory={toggleCategory} />
+              <CategoriesDisplay
+                selectedCategories={selectedCategories}
+                toggleCategory={toggleCategory}
+                disabled={!selectedItemId}  // Pass disabled based on whether an item is selected
+              />
               {imagePreviewUrl && (
                 <img src={imagePreviewUrl} alt="Preview" style={{ maxWidth: '100%', marginTop: '20px' }} />
               )}
-              <button onClick={updateRequest} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%', marginTop: '10px' }}>
+              <button onClick={updateRequest} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%', marginTop: '10px' }} disabled={!selectedItemId}>
                 Update Request
               </button>
             </div>
-          )}
-          {activeTab === 'delete' && (
+          )}          {activeTab === 'delete' && (
             <div>
               <button onClick={deleteRequest} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%' }}>Delete Request</button>
             </div>
           )}
           {activeTab === 'complete' && (
             <div>
+              {selectedItemId && transactionStatus !== null && (
+                <div style={{ fontSize: '16px', marginBottom: '5px' }}>
+                  The item "{title}" is currently marked as {transactionStatus ? 'complete' : 'incomplete'}.
+                </div>
+              )}
               <button onClick={markTransactionComplete} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%' }}>Mark Request</button>
             </div>
           )}

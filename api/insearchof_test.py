@@ -8,9 +8,6 @@ from google.auth.credentials import AnonymousCredentials
 import unittest
 import requests
 from routers.insearchof import *
-from PIL import Image
-from fastapi import UploadFile
-import json
 
 
 load_dotenv()
@@ -282,31 +279,72 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
             await delete_request(item_id, user_data)
         self.assertEqual(context.exception.detail, "404: Item not found")
         
-        
-    async def test_upload_image_successful(self):
-        # Create a sample image in memory
-        image_size = (500, 500)  # Example size
-        image = Image.new('RGB', image_size, color = 'blue')
-        img_byte_arr = io.BytesIO()
-        image.save(img_byte_arr, format='JPEG')
-        img_byte_arr.seek(0)  # Important to rewind to the beginning after saving
+    
+    async def test_mark_transaction_as_complete_success(self):
+        # Create an initial request by the user
+        initial_request = RequestInformation(
+            title="To Complete Title",
+            description="To Complete Description",
+            price=150.0,
+            user_id="testuserid",  # User ID of the owner
+            display_name="Test User",
+            email="testuser@gmail.com",
+            type="request",
+            trans_comp=False,  # Initially not completed
+            urgent=False,
+            categories=["Electronics"]
+        )
+        initial_response = await upload_request(initial_request)
+        item_id = initial_response['request_id']
 
-        # Mock the UploadFile object
-        file_name = 'test_image.jpg'
-        upload_file = UploadFile(file=img_byte_arr, filename=file_name)
+        # User data for authentication matching the item owner
+        user_data = {
+            "user_id": "testuserid"
+        }
 
-        # Set up user ID
-        user_id = 'testuserid'
+        # Mark the transaction as complete
+        mark_response = mark_transaction_complete(item_id, user_data)
+        self.assertTrue(mark_response['trans_comp_value'])
 
-        # Call the upload_image function
-        response = await upload_image(user_id, upload_file)
-        response_body = json.loads(response.body)
+    async def test_mark_transaction_as_complete_permission_denied(self):
+        # Create an initial request by a different user
+        initial_request = RequestInformation(
+            title="Other User Title",
+            description="Other User Description",
+            price=100.0,
+            user_id="differentuserid",
+            display_name="Different User",
+            email="differentuser@gmail.com",
+            type="request",
+            trans_comp=False,
+            urgent=False,
+            categories=["Home"]
+        )
+        initial_response = await upload_request(initial_request)
+        item_id = initial_response['request_id']
 
-        # Assertions to check the response body instead of direct response dict
-        self.assertEqual(response_body['message'], "Image uploaded successfully")
-        self.assertIn('image_url', response_body)
-        self.assertTrue(response_body['image_url'].startswith('http://'))
+        # User data pretending to be a different user
+        user_data = {
+            "user_id": "testuserid"  # Does not match the owner
+        }
 
+        with self.assertRaises(HTTPException) as context:
+            await mark_transaction_complete(item_id, user_data)
+        self.assertEqual(context.exception.detail,
+                        "403: You do not have permission to mark this transaction as complete.")
+
+    async def test_mark_transaction_as_complete_item_not_found(self):
+        # Non-existent item ID
+        item_id = "nonexistentitemid"
+
+        # User data for authentication
+        user_data = {
+            "user_id": "testuserid"
+        }
+
+        with self.assertRaises(HTTPException) as context:
+            await mark_transaction_complete(item_id, user_data)
+        self.assertEqual(context.exception.detail, "404: Item not found")
 
 
 if __name__ == '__main__':

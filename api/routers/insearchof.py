@@ -266,26 +266,6 @@ async def delete_image(filename: str, user_id: str):
         )
 
 
-# @router.post("/validate-item-id/{item_id}/{user_id}", response_model=dict)
-# async def validate_item_id(item_id: str, user_id: str):
-#     try:
-#         item_details_response = await get_item_details(item_id)
-#         item = item_details_response['itemDetails']
-
-#         is_valid = item['user_id'] == user_id
-
-#         if is_valid:
-#             return {
-#                 "isValid": True,
-#                 "itemDetails": item
-#             }
-#         else:
-#             return {"isValid": False}
-
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-
 @router.get("/item-details/{item_id}", response_model=dict)
 async def get_item_details(item_id: str):
     """
