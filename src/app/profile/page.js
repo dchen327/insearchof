@@ -366,49 +366,51 @@ export default function Page() {
               </div>
                   
               {showItemModal && (
-                <div className="modal is-active">
-                  <div
-                    className="modal-background"
-                    onClick={() => setShowItemModal(false)}
-                  ></div>
-                  <div
-                    className="modal-card"
-                    style={{ width: "90%", margin: "auto" }}
-                  >
-                    <section
-                      className="modal-card-body"
-                      style={{ maxHeight: "60vh", overflowY: "auto" }}
+                  <div className="modal is-active">
+                    <div
+                      className="modal-background"
+                      onClick={() => setShowItemModal(false)}
+                    ></div>
+                    <div
+                      className="modal-card"
+                      style={{ width: "90%", margin: "auto" }}
                     >
-                      <div className="card is-shadowless">
-                        <div className="card-content px-4 py-">
-                          <h2 className="is-size-5">List of Items</h2>
-                          {items.length > 0 ? (
-                            items.map((item, index) => (
-                              <div key={index}>
-                                <p>{item.title}</p>
-                                <p>{item.description}</p>
-                                {/* Add more details as needed */}
-                              </div>
-                            ))
-                          ) : (
-                            <p>No items to display</p>
-                          )}
-                        </div>
-                      </div>
-                    </section>
-                    <footer className="modal-card-foot">
-                      <button className="button is-success">Delete item</button>
-                      <button
-                        className="button"
-                        onClick={() => setShowItemModal(false)}
+                      <section
+                        className="modal-card-body"
+                        style={{ maxHeight: "60vh", overflowY: "auto" }}
                       >
-                        Close
-                      </button>
-                    </footer>
+                        <div className="card is-shadowless">
+                          <div className="card-content px-4 py-">
+                            <h2 className="is-size-5">List of Items</h2>
+                                {items.length > 0 ? (
+                                  items.map((item, index) => (
+                                    <div className="item" key={index} 
+                                      style={{ width: '200px', height: '150px', border: '1px solid #ccc', margin: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                      <div className="item-content" style={{ textAlign: 'center' }}>
+                                        <h2 className="item-title">{item.title}</h2>
+                                        <p className="item-description">{item.description}</p>
+                                      </div>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p>No items to display</p>
+                                )}
+                          </div>
+                        </div>
+                      </section>
+                      <footer className="modal-card-foot">
+                        {/* <button className="button is-success">Update item</button> */}
+                        <button
+                          className="button"
+                          onClick={() => setShowItemModal(false)}
+                        >
+                          Close
+                        </button>
+                      </footer>
+                    </div>
                   </div>
-                </div>
-              )}
-
+                )}
+                
               {showTransactionModal && (
                 <div className="modal is-active">
                   <div
@@ -426,7 +428,7 @@ export default function Page() {
                           {listings.length > 0 ? (
                             listings.map((listing, index) => (
                               <div key={index}>
-                                <p>{listing.name}</p>
+                                <p>{listing.title}</p>
                                 <p>{listing.description}</p>
                                 {/* Add more details as needed */}
                               </div>
@@ -438,7 +440,7 @@ export default function Page() {
                       </div>
                     </section>
                     <footer className="modal-card-foot">
-                      <button className="button is-success">Delete item</button>
+                      {/* <button className="button is-success">Update item</button> */}
                       <button
                         className="button"
                         onClick={() => setShowTransactionModal(false)}
