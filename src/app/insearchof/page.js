@@ -75,12 +75,19 @@ export default function Page() {
         const response = await fetch(`/api/insearchof/user-items/${user.uid}`);
         const data = await response.json();
         if (response.ok) {
-          setItems(data);
+          if (data.length === 0) {
+            // Notify the user that no items are available
+            alert('You have no items uploaded. Please upload an item first.');
+          } else {
+            setItems(data);
+          }
         } else {
           console.error('Failed to fetch items:', data);
+          alert('Failed to fetch items. Please try again.');
         }
       } catch (error) {
         console.error('Failed to fetch items:', error);
+        alert('An error occurred while fetching items. Please check your network connection and try again.');
       }
     }
   };
@@ -470,7 +477,7 @@ export default function Page() {
           {activeTab !== 'upload' && (
             <div>
               <select value={selectedItemId} onClick={handleDropdownClick} onChange={handleItemSelection} style={{ padding: '11px', fontSize: '16px', width: '100%', marginBottom: '-10px', border: '1px solid #ccc', borderRadius: '4px' }}>
-                <option value="">Select an item</option>
+                <option value="">Select an item first</option>
                 {items.map(item => (
                   <option key={item.item_id} value={item.item_id}>{item.title}</option>
                 ))}
