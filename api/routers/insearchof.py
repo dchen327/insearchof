@@ -42,16 +42,17 @@ class RequestInformation(BaseModel):
         if value < 0:
             raise ValueError("Price must be non-negative")
         return value
-    
-    
+
+
 def validateRequestInformation(request: RequestInformation):
     if request.price < 0:
-        raise HTTPException(status_code=422, detail="Price must be non-negative")
+        raise HTTPException(
+            status_code=422, detail="Price must be non-negative")
     if request.title == "":
         raise HTTPException(status_code=422, detail="Title cannot be empty")
     if request.user_id == "":
         raise HTTPException(status_code=422, detail="User ID cannot be empty")
-    
+
     return True
 
 
@@ -67,7 +68,7 @@ async def upload_request(iso_request: RequestInformation):
     '''
     if not validateRequestInformation(iso_request):
         raise HTTPException(status_code=422, detail="Invalid request data")
-    
+
     doc_ref = db.collection('items').document()
     iso_request_data = iso_request.model_dump()
     iso_request_data["timestamp"] = datetime.now(timezone.utc)
@@ -124,17 +125,19 @@ async def delete_request(item_id: str, user_data: dict):
             if item_data['user_id'] != user_data['user_id']:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                     detail="You do not have permission to delete this item.")
-            
+
             # Attempt to delete the image first, if it exists
             if item_data.get('image_url'):
-                image_filename = item_data['image_url'].split('/')[-1]  # Extracting filename from URL
+                image_filename = item_data['image_url'].split(
+                    '/')[-1]  # Extracting filename from URL
                 await delete_image(image_filename, user_data['user_id'])
-                            
+
             # Proceed with the deletion of the database entry
             item_ref.delete()
             return {"message": "Item and associated image deleted successfully"}
         else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -159,7 +162,8 @@ def mark_transaction_complete(item_id: str, current_user: dict):
 
             # Check if the current user is authorized to mark the transaction as complete
             if item_data['user_id'] != current_user['user_id']:
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have permission to mark this transaction as complete.")
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                    detail="You do not have permission to mark this transaction as complete.")
 
             trans_comp_value = not item_data.get('trans_comp', False)
             item_ref.update({'trans_comp': trans_comp_value})
@@ -167,10 +171,13 @@ def mark_transaction_complete(item_id: str, current_user: dict):
             return {"trans_comp_value": trans_comp_value}
 
         else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-    
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
 @router.post("/upload-image/{user_id}", response_model=dict)
 async def upload_image(user_id: str, file: UploadFile = File(...)):
     """
@@ -190,7 +197,8 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
         max_size = 1080
         if image.height > max_size or image.width > max_size:
             scale_ratio = min(max_size / image.height, max_size / image.width)
-            new_size = (int(image.width * scale_ratio), int(image.height * scale_ratio))
+            new_size = (int(image.width * scale_ratio),
+                        int(image.height * scale_ratio))
             image = image.resize(new_size, Image.Resampling.LANCZOS)
 
         # Compress the image to ensure the size is under 1MB with decent quality
@@ -201,10 +209,10 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
             if img_byte_arr.tell() <= 1_000_000 or quality <= 10:  # Stop if size is under 1MB or quality too low
                 break
             quality -= 10
-            img_byte_arr.seek(0) 
+            img_byte_arr.seek(0)
 
         img_byte_arr.seek(0)
-        
+
         print('i made it here 1')
 
         # Configure Firebase Storage
@@ -212,12 +220,13 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
         unique_filename = f"{uuid4()}_{file.filename}"
         file_name = f"images/{user_id}/{unique_filename}"
         blob = bucket.blob(file_name)
-        
+
         print('i made it here 2')
 
         # Upload the compressed image
-        blob.upload_from_string(img_byte_arr.getvalue(), content_type='image/jpeg')
-        
+        blob.upload_from_string(img_byte_arr.getvalue(),
+                                content_type='image/jpeg')
+
         print('i made it here 3')
 
         # Make the blob publicly viewable
@@ -230,7 +239,7 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
             status_code=500,
             content={"message": "Failed to upload image", "error": str(e)}
         )
-                
+
 
 @router.delete("/delete-image/{filename}/{user_id}", response_model=dict)
 async def delete_image(filename: str, user_id: str):
@@ -257,26 +266,6 @@ async def delete_image(filename: str, user_id: str):
         )
 
 
-@router.post("/validate-item-id/{item_id}/{user_id}", response_model=dict)
-async def validate_item_id(item_id: str, user_id: str):
-    try:
-        item_details_response = await get_item_details(item_id)        
-        item = item_details_response['itemDetails']
-
-        is_valid = item['user_id'] == user_id
-        
-        if is_valid:
-            return {
-                "isValid": True,
-                "itemDetails": item
-            }
-        else:
-            return {"isValid": False}
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @router.get("/item-details/{item_id}", response_model=dict)
 async def get_item_details(item_id: str):
     """
@@ -300,6 +289,19 @@ async def get_item_details(item_id: str):
                 "itemDetails": item_data
             }
         else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.get("/user-items/{user_id}", response_model=List[dict])
+async def get_user_items(user_id: str):
+    try:
+        query = db.collection('items').where('user_id', '==', user_id).stream()
+        items = [{"title": doc.to_dict().get("title", ""), "item_id": doc.id}
+                 for doc in query]
+        return items
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
