@@ -34,3 +34,12 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+## Running Tests
+
+To emulate our database for tests, we use the Firebase-emulator. Install firebase using `npm install firebase`. 
+You must then initialize the current working directory as a Firebase project using `firebase init`. 
+You will be given several Firebase features. Please select `Firestore` and `storage`. You only need to do this once!
+Then type `firebase emualtors:start`. You can check the Firestore emulator here: `http://127.0.0.1:4001/firestore`
+and the Storage emulator here: `http://127.0.0.1:4001/storage`. To run the tests, change your current directory to
+InSearchOf and type `python .\api\{test_file}.py`, where `test_file` can be `catalog_test`, `insearchof_test`, `sellList_test`, or `profiles_test`. 
