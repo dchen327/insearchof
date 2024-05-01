@@ -40,6 +40,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 To emulate our database for tests, we use the Firebase-emulator. Install firebase using `npm install firebase`. 
 You must then initialize the current working directory as a Firebase project using `firebase init`. 
 You will be given several Firebase features. Please select `Firestore` and `storage`. You only need to do this once!
-Then type `firebase emualtors:start`. You can check the Firestore emulator here: `http://127.0.0.1:4001/firestore`
+Then type `firebase emulators:start`. You can check the Firestore emulator here: `http://127.0.0.1:4001/firestore`
 and the Storage emulator here: `http://127.0.0.1:4001/storage`. To run the tests, change your current directory to
 InSearchOf and type `python .\api\{test_file}.py`, where `test_file` can be `catalog_test`, `insearchof_test`, `sellList_test`, or `profiles_test`. 
