@@ -90,10 +90,17 @@ class UserProfile(BaseModel):
         Uploads a users contact information, including their name, email, profile picture, optional
         phone number, to the user database, making it visible to buyers.
         """
-        doc_ref = db.collection('users').document()
+        user_uid = user_profile.uid
+        user_ref = db.collection('users').where('id', '==', user_uid)
+
+        if len(user_ref) == 0:
+         raise HTTPException(status_code=404, detail="User not found")
+    
         user_profile_data = user_profile.dict()
-        doc_ref.set(user_profile_data)
+        user_ref.set(user_profile_data)
         return {"message": "Uploads users contact info successfully"}
+    
+        # query users collection .where id = user.uid
 
         # user_query = db.collection('users').where('user_id', '==', requester_id)
     
