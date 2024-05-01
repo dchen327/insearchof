@@ -1,13 +1,13 @@
 import os
 os.environ['TESTING'] = 'True'
 
-from firebase_config import db
-from dotenv import load_dotenv
-from google.cloud.firestore import Client
-from google.auth.credentials import AnonymousCredentials
-import unittest
-import requests
 from routers.insearchof import *
+import requests
+import unittest
+from google.auth.credentials import AnonymousCredentials
+from google.cloud.firestore import Client
+from dotenv import load_dotenv
+from firebase_config import db
 
 
 load_dotenv()
@@ -25,10 +25,16 @@ def clear_db():
 
 class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
+        """
+        Set up method called before each test. Clears the database to ensure isolation of test cases.
+        """
         clear_db()
-        pass
 
     async def test_upload_request_successful(self):
+        """
+        Test to ensure a valid request can be successfully uploaded.
+        Verifies that the database correctly reflects the new ISO request entry after upload.
+        """
         test_request = RequestInformation(
             title="Test Title",
             description="Test Description",
@@ -47,6 +53,10 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response['message'], "Request uploaded successfully")
 
     async def test_upload_request_negative_price(self):
+        """
+        Test to ensure that an upload request with a negative price is rejected.
+        This test validates the backend's ability to handle invalid input correctly.
+        """
         test_request = RequestInformation(
             title="Test Title",
             description="Test Description",
@@ -66,6 +76,10 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context.exception.status_code, 422)
 
     async def test_upload_request_empty_title(self):
+        """
+        Test to ensure that an upload request with an empty title is rejected.
+        Validates that the title is a necessary field for request validation.
+        """
         test_request = RequestInformation(
             title="",
             description="Test Description",
@@ -85,6 +99,10 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context.exception.status_code, 422)
 
     async def test_upload_request_not_logged_in(self):
+        """
+        Test to ensure that an upload request without a user ID is rejected.
+        This simulates the scenario where a non-logged-in user attempts to upload a request.
+        """
         test_request = RequestInformation(
             title="Test Title",
             description="Test Description",
@@ -104,6 +122,13 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context.exception.status_code, 422)
 
     async def test_update_request_successful(self):
+        """
+        Test the successful update of an existing request.
+        This test involves:
+        1. Creating an initial entry in the database.
+        2. Updating this entry with new data.
+        3. Verifying that the changes are accurately reflected in the database.
+        """
         # First, create an initial entry in the database
         initial_request = RequestInformation(
             title="Initial Title",
@@ -150,6 +175,10 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
                              "Electronics", "Garden"])
 
     async def test_update_request_permission_denied(self):
+        """
+        Test to ensure that an attempt to update a request by a user who does not own the request is denied.
+        This simulates the scenario where a user tries to update another user's request.
+        """
         # Create an initial request by a different user
         initial_request = RequestInformation(
             title="Initial Title",
@@ -186,6 +215,10 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
                          "403: You do not have permission to update this item.")
 
     async def test_update_request_item_not_found(self):
+        """
+        Test the behavior when attempting to update a non-existent request.
+        This test ensures that the system properly handles cases where the specified item ID does not correspond to any existing record.
+        """
         # Non-existent item ID
         item_id = "nonexistentitemid"
 
@@ -208,6 +241,12 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context.exception.detail, "404: Item not found")
 
     async def test_delete_request_successful(self):
+        """
+        Test the successful deletion of an ISO request.
+        This test checks that:
+        1. A request can be created and then deleted successfully.
+        2. The database no longer contains the deleted request.
+        """
         # Create an initial request by the user
         initial_request = RequestInformation(
             title="Initial Title",
@@ -231,8 +270,7 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
 
         # Delete the request
         delete_response = await delete_request(item_id, user_data)
-        self.assertEqual(
-            delete_response['message'], "Item and associated image deleted successfully")
+        self.assertEqual(delete_response['message'], "Item and associated image deleted successfully")
 
         # Verify that the item is no longer in the database
         with self.assertRaises(HTTPException) as context:
@@ -240,6 +278,10 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context.exception.detail, "404: Item not found")
 
     async def test_delete_request_permission_denied(self):
+        """
+        Test to ensure that a request cannot be deleted by a user other than the owner.
+        This test verifies proper authentication and authorization enforcement.
+        """
         # Create an initial request by a different user
         initial_request = RequestInformation(
             title="Initial Title",
@@ -263,10 +305,13 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
 
         with self.assertRaises(HTTPException) as context:
             await delete_request(item_id, user_data)
-        self.assertEqual(context.exception.detail,
-                         "403: You do not have permission to delete this item.")
+        self.assertEqual(context.exception.detail, "403: You do not have permission to delete this item.")
 
     async def test_delete_request_item_not_found(self):
+        """
+        Test the behavior when attempting to delete a non-existent request.
+        This test ensures that the system properly handles attempts to delete items that do not exist in the database.
+        """
         # Non-existent item ID
         item_id = "nonexistentitemid"
 
@@ -278,9 +323,14 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(HTTPException) as context:
             await delete_request(item_id, user_data)
         self.assertEqual(context.exception.detail, "404: Item not found")
-        
-    
+
     async def test_mark_transaction_as_complete_success(self):
+        """
+        Test marking a transaction as complete successfully.
+        Verifies that:
+        1. The transaction status is updated in the database.
+        2. Only the rightful owner can mark the transaction as complete.
+        """
         # Create an initial request by the user
         initial_request = RequestInformation(
             title="To Complete Title",
@@ -307,6 +357,10 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(mark_response['trans_comp_value'])
 
     async def test_mark_transaction_as_complete_permission_denied(self):
+        """
+        Test to ensure that a transaction cannot be marked as complete by someone other than the transaction owner.
+        This test checks for proper authentication and authorization to safeguard the integrity of transaction status updates.
+        """
         # Create an initial request by a different user
         initial_request = RequestInformation(
             title="Other User Title",
@@ -330,10 +384,13 @@ class InSearchOfTests(unittest.IsolatedAsyncioTestCase):
 
         with self.assertRaises(HTTPException) as context:
             await mark_transaction_complete(item_id, user_data)
-        self.assertEqual(context.exception.detail,
-                        "403: You do not have permission to mark this transaction as complete.")
+        self.assertEqual(context.exception.detail, "403: You do not have permission to mark this transaction as complete.")
 
     async def test_mark_transaction_as_complete_item_not_found(self):
+        """
+        Test the response when attempting to mark a transaction as complete for a non-existent item.
+        Ensures that the system properly responds with an error when the item ID does not exist.
+        """
         # Non-existent item ID
         item_id = "nonexistentitemid"
 
