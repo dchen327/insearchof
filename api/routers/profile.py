@@ -83,6 +83,14 @@ class UserProfile(BaseModel):
 
         listingOfTransactionHistory: List[dict] = Field(
             ..., description="User's transaction history.")
+    
+    class GetUserInfoResponse(BaseModel):
+        """
+        Response model for getting a user's information from the database.
+        """
+        phoneNumber: str
+        location: str
+        userID: str
 
     @router.post("/upload_contact_info")
     def upload_contact_info(user_profile: UploadContactInformation):
@@ -142,3 +150,15 @@ class UserProfile(BaseModel):
             listings.append(doc.to_dict())
 
         return {"listingOfTransactionHistory": listings}
+    
+    @router.get('/get_user_info')
+    def get_user_info(requester_id: str = Query(description="The requester's uid")) -> GetUserInfoResponse:
+        """
+        Retrieves a user's information from the database.
+        """
+        user_query = db.collection('users').where('userID', '==', requester_id).get()
+        if len(user_query) == 0:
+            return {'phoneNumber': '', 'location': '', 'userID': ''}
+        user_data = user_query[0].to_dict()
+        print(user_data)
+        return user_data
