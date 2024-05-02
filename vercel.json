@@ -1,7 +1,7 @@
 {
     "functions": {
         "api/**": {
-            "excludeFiles": "{node_modules}/**"
+            "excludeFiles": "{*.cache,node_modules}/**"
         }
     }
 }
