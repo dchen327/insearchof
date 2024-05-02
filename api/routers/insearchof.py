@@ -314,3 +314,4 @@ async def get_user_items(user_id: str):
         return items
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

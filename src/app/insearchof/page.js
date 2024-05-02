@@ -720,11 +720,12 @@ export default function Page() {
                 text="Specify the price you are willing to pay. Leave empty for no specific price."
               />
 
+              <label style={{ marginBottom: "5px" }}>Image (Optional)</label>
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  marginBottom: "10px",
+                  width: "100%",
                 }}
               >
                 <input
@@ -738,6 +739,7 @@ export default function Page() {
                     borderRadius: "4px",
                     flexGrow: 1,
                     marginRight: "5px",
+                    marginBottom: "10px"
                   }}
                 />
                 <button
@@ -924,6 +926,7 @@ export default function Page() {
                 text="Specify the price you are willing to pay. Leave empty for no specific price."
               />
 
+              <label style={{ marginBottom: "5px" }}>Image (Optional)</label>
               <div
                 style={{
                   display: "flex",
