@@ -22,6 +22,7 @@ router = APIRouter(
 
 
 class NotificationService:
+    # Placeholder class for future notification handling logic
     pass
 
 
@@ -45,6 +46,10 @@ class RequestInformation(BaseModel):
 
 
 def validateRequestInformation(request: RequestInformation):
+    """
+    Validates the RequestInformation object to ensure all required fields meet the expected format.
+    Raises HTTPException with specific details if any validations fail.
+    """
     if request.price < 0:
         raise HTTPException(
             status_code=422, detail="Price must be non-negative")
@@ -298,6 +303,10 @@ async def get_item_details(item_id: str):
 
 @router.get("/user-items/{user_id}", response_model=List[dict])
 async def get_user_items(user_id: str):
+    """
+    Retrieves all items associated with a specific user from Firestore. It filters items by the user ID
+    and returns a list of item titles and their IDs.
+    """
     try:
         query = db.collection('items').where('user_id', '==', user_id).stream()
         items = [{"title": doc.to_dict().get("title", ""), "item_id": doc.id}

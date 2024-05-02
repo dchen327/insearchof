@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Image from 'next/image';
 
 export default function Page() {
+  // State management for various component functionalities
   const [user, setUser] = useState(null);
   const router = useRouter();
   const [title, setTitle] = useState("");
@@ -27,6 +28,7 @@ export default function Page() {
   const [selectedItemId, setSelectedItemId] = useState("");
   const [transactionStatus, setTransactionStatus] = useState(null);
 
+  // Monitor authentication state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -39,30 +41,30 @@ export default function Page() {
     return () => unsubscribe();
   }, [router]);
 
+  // Reset form fields whenever the active tab changes
   useEffect(() => {
-    resetForm(); // Resets all form related states
+    resetForm(); // Resets all form-related states
   }, [activeTab]);
 
+  // Validate form inputs before submission
   function validateFormAndUser(title, price, user) {
     if (!title) {
       alert("Title is required.");
       return null;
     }
-
     const finalPrice = price === "" ? 0 : parseFloat(price);
     if (isNaN(finalPrice) || finalPrice < 0) {
       alert("Price must be a valid number and cannot be negative.");
       return null;
     }
-
     if (!user) {
       alert("You need to be logged in to submit a request.");
       return null;
     }
-
     return finalPrice;
   }
 
+  // Clear all form fields
   function resetForm() {
     setTitle("");
     setDescription("");
@@ -74,6 +76,7 @@ export default function Page() {
     setSelectedItemId("");
   }
 
+  // Fetch list of user's uploaded items for selection
   const handleDropdownClick = async () => {
     if (user) {
       try {
@@ -81,7 +84,6 @@ export default function Page() {
         const data = await response.json();
         if (response.ok) {
           if (data.length === 0) {
-            // Notify the user that no items are available
             alert("You have no items uploaded. Please upload an item first.");
           } else {
             setItems(data);
@@ -99,6 +101,7 @@ export default function Page() {
     }
   };
 
+  // Handle item selection from dropdown, fetching its details to autofill form for updates
   const handleItemSelection = async (e) => {
     const itemId = e.target.value;
     setSelectedItemId(itemId);
@@ -131,10 +134,12 @@ export default function Page() {
     }
   };
 
+  // Manage tab switching logic for UI
   const handleTabChange = (tabName) => {
     setActiveTab(tabName);
   };
 
+  // Handle image file input and generate preview
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     setImage(file);
@@ -151,6 +156,7 @@ export default function Page() {
     }
   };
 
+  // Validate and format price input to prevent invalid characters
   const handlePriceChange = (e) => {
     const value = e.target.value;
 
@@ -167,6 +173,7 @@ export default function Page() {
     setPrice(formattedValue);
   };
 
+  // Handle image upload to server
   const uploadImage = async (imageFile) => {
     if (!imageFile) {
       // no image provided
@@ -192,6 +199,7 @@ export default function Page() {
     return imageData.image_url; // Return the uploaded image URL
   };
 
+  // Handle image deletion from server
   const deleteImage = async (filename, user_id) => {
     try {
       const response = await fetch(
@@ -215,6 +223,7 @@ export default function Page() {
     }
   };
 
+  // Submit new request upload
   const uploadRequest = async () => {
     const finalPrice = validateFormAndUser(title, price, user);
     if (finalPrice === null) {
@@ -273,6 +282,7 @@ export default function Page() {
     }
   };
 
+  // Update existing request details
   const updateRequest = async () => {
     if (!selectedItemId) {
       alert("You must choose an item to update.");
@@ -346,6 +356,7 @@ export default function Page() {
     }
   };
 
+  // Delete an existing request
   const deleteRequest = async () => {
     if (!selectedItemId) {
       alert("You must choose an item to delete.");
@@ -378,6 +389,7 @@ export default function Page() {
     }
   };
 
+  // Mark a transaction as complete
   const markTransactionComplete = async () => {
     if (!selectedItemId) {
       alert("You must choose an item to mark as complete.");
@@ -410,14 +422,17 @@ export default function Page() {
     }
   };
 
+  // Toggle urgent status
   const toggleUrgent = () => {
     setUrgent(!urgent);
   };
 
+  // Display tooltips for form fields
   const toggleTooltip = (field) => {
     setTooltipVisible((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
+  // Tooltip component for displaying hints
   const Tooltip = ({ show, text }) =>
     show ? (
       <div
@@ -437,6 +452,7 @@ export default function Page() {
       </div>
     ) : null;
 
+  // Manage category selection for requests
   const toggleCategory = (category) => {
     if (selectedCategories.includes(category)) {
       setSelectedCategories(selectedCategories.filter((c) => c !== category));
@@ -445,6 +461,7 @@ export default function Page() {
     }
   };
 
+  // Component for displaying category checkboxes
   function CategoriesDisplay({ selectedCategories, toggleCategory, disabled }) {
     const categories = ["Food", "Electronics", "Furniture", "Clothing"];
     return (
