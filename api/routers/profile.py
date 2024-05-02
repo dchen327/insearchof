@@ -46,9 +46,9 @@ class UserProfile(BaseModel):
     # phone_number: Optional[constr(regex=r'^\(\d{3}\)\s\d{3}-\d{4}$')]  = Field(None, description="The user's phone number") # type: ignore
 
     class UploadContactInformation(BaseModel):
-        user_uid: str
+        userID: str
         location: str
-        phone_number: str
+        phoneNumber: str
 
     class UploadContactInfoResponse(BaseModel):
         """
@@ -84,7 +84,7 @@ class UserProfile(BaseModel):
         listingOfTransactionHistory: List[dict] = Field(
             ..., description="User's transaction history.")
 
-    @router.post("/upload_contact_info", response_model=dict)
+    @router.post("/upload_contact_info")
     def upload_contact_info(user_profile: UploadContactInformation):
         """
         Uploads a users contact information, including their name, email, profile picture, optional
