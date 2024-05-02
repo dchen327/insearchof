@@ -1030,7 +1030,7 @@ export default function Page() {
             <div>
               {selectedItemId && transactionStatus !== null && (
                 <div style={{ fontSize: "16px", marginBottom: "5px" }}>
-                  The item "{title}" is currently marked as{" "}
+                  {`The item "${title}" is currently marked as `}
                   {transactionStatus ? "complete" : "incomplete"}.
                 </div>
               )}
