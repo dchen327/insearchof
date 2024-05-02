@@ -1,5 +1,19 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+## Project Contributors
+
+The project development was split between our project's features. Each person designed their own features, wrote code for it, documented it, tested it, and deployed it. They are:
+
+The marketplace page, where uploaded items and requests are displayed to the buyer or request fulfiller. This was developed by David.
+
+The sell and rent page, where items can be uploaded onto the marketplace. The website will ask for details (such as title, price, etc.) so it can be properly presented in the marketplace. This was developed by Henry.
+
+The ISO requester page is similar to the sell and rent page. Here, those who need an item can upload their request. They can also update (edit) their already existing request, mark their request as complete (i.e. their request has been fulfilled), and they can delete the request. This was developed by Brian.
+
+The profiles page contains the user's profile information, such as their contact information, previous transactions, and their items/requests currently on the marketplace. This was developed by Arushi.
+
+David also set up the development environment. 
+
 ## Getting Started
 
 First, run the development server:

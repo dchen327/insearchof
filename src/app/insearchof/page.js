@@ -3,6 +3,7 @@ import { auth, storage } from "../firebase/config";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import Image from 'next/image';
 
 export default function Page() {
   const [user, setUser] = useState(null);
@@ -395,8 +396,7 @@ export default function Page() {
       if (response.ok) {
         setTransactionStatus(data.trans_comp_value); // Update the transaction status in state
         alert(
-          `You marked this request as ${
-            data.trans_comp_value ? "complete" : "incomplete"
+          `You marked this request as ${data.trans_comp_value ? "complete" : "incomplete"
           }`
         );
       } else {
@@ -774,10 +774,12 @@ export default function Page() {
                 toggleCategory={toggleCategory}
               />
               {imagePreviewUrl && (
-                <img
+                <Image
                   src={imagePreviewUrl}
                   alt="Preview"
-                  style={{ maxWidth: "100%", marginTop: "20px" }}
+                  width={500} // specify width
+                  height={300} // specify height
+                  layout="responsive" // this will maintain the aspect ratio
                 />
               )}
               <button
@@ -982,10 +984,12 @@ export default function Page() {
                 disabled={!selectedItemId} // Pass disabled based on whether an item is selected
               />
               {imagePreviewUrl && (
-                <img
+                <Image
                   src={imagePreviewUrl}
                   alt="Preview"
-                  style={{ maxWidth: "100%", marginTop: "20px" }}
+                  width={500} // specify width
+                  height={300} // specify height
+                  layout="responsive" // this will maintain the aspect ratio
                 />
               )}
               <button
