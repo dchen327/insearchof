@@ -121,9 +121,6 @@ export default function Page() {
       const data = await response.json();
       if (response.ok) {
         alert("Request uploaded successfully!");
-        // Clear the form
-        setPhoneNumber("");
-        setLocation("");
       } else {
         alert("Failed to upload request: " + data.message);
       }
@@ -302,7 +299,7 @@ export default function Page() {
                   ></button>
                 </div>
               ))}
-              {!locationFilled && !uploadInfoButton && (
+              {!uploadInfoButton && (
                 <button
                   className="button is-primary"
                   onClick={uploadContactInformation}
@@ -315,7 +312,7 @@ export default function Page() {
                     cursor: "pointer",
                   }}
                 >
-                  Upload user info
+                  Update user info
                 </button>
               )}
             </div>

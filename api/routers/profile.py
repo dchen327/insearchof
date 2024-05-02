@@ -98,10 +98,19 @@ class UserProfile(BaseModel):
         Uploads a users contact information, including their name, email, profile picture, optional
         phone number, to the user database, making it visible to buyers.
         """
-        doc_ref = db.collection('users').document()
-        user_profile_data = user_profile.dict()
-        doc_ref.set(user_profile_data)
-        return {"message": "Uploads users contact info successfully"}
+        user_id = user_profile.userID
+        user_data = user_profile.model_dump()
+
+        # Check if user already exists
+        user_query = db.collection('users').where('userID', '==', user_id).get()
+
+        if len(user_query) == 0:
+            # If user does not exist, create a new document
+            db.collection('users').add(user_data)
+        else:
+            # If user exists, update the existing document
+            user_doc_ref = db.collection('users').document(user_query[0].id)
+            user_doc_ref.update(user_data)
 
         # user_query = db.collection('users').where('user_id', '==', requester_id)
     
@@ -115,7 +124,7 @@ class UserProfile(BaseModel):
         # user_data['location'] = user_profile.location
         # user_query.set(user_data)
         
-        # return {"message": "Uploaded user's contact info successfully"}
+        return {"message": "Uploaded user's contact info successfully"}
 
 
     @router.get("/get_list_of_items")
