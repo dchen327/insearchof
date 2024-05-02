@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from api.firebase_config import db
 from datetime import datetime, timezone
 from google.cloud.firestore_v1 import FieldFilter
+from fastapi import HTTPException
 
 load_dotenv()
 
@@ -136,9 +137,20 @@ def get_listings(
     # This allows the frontend to display the error to the users
     # query from database items collection, filter and order correctly
     # print items in db.items collection
-
     if max_price == 0:
         max_price = float('inf')
+
+    if min_price < 0:
+        raise HTTPException(status_code=400, detail="Minimum price must be a non-negative value.")
+    if max_price < 0:
+        raise HTTPException(status_code=400, detail="Maximum price must be a non-negative value.")
+    if max_price < min_price:
+        raise HTTPException(status_code=400, detail="Maximum price must be greater than or equal to minimum price.")
+    if sort not in sort_options:
+        raise HTTPException(status_code=400, detail="Invalid sort option.")
+    if any(listing_type not in ['buy', 'rent', 'request'] for listing_type in listing_types):
+        raise HTTPException(status_code=400, detail="Invalid listing type.")
+
 
     field, direction = sort_options[sort]
 

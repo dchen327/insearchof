@@ -29,7 +29,39 @@ def clear_db():
 class CatalogTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         clear_db()
-        pass
+
+    def test_white_box(self):
+        response = requests.get('http://localhost:8000/api/catalog/listings')
+        self.assertEqual(response.status_code, 200)
+
+        # negative price
+        response = requests.get('http://localhost:8000/api/catalog/listings?min_price=-10')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['detail'], "Minimum price must be a non-negative value.")
+
+        # min price > max price
+        response = requests.get('http://localhost:8000/api/catalog/listings?min_price=10&max_price=5')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['detail'], "Maximum price must be greater than or equal to minimum price.")
+
+        # invalid sort
+        response = requests.get('http://localhost:8000/api/catalog/listings?sort=invalid')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['detail'], "Invalid sort option.")
+
+        # valid sort
+        response = requests.get('http://localhost:8000/api/catalog/listings?sort=uploadDateAsc')
+        self.assertEqual(response.status_code, 200)
+
+        # invalid type
+        response = requests.get('http://localhost:8000/api/catalog/listings?listing_types=invalid')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['detail'], "Invalid listing type.")
+
+        # valid type
+        response = requests.get('http://localhost:8000/api/catalog/listings?listing_types=buy')
+        self.assertEqual(response.status_code, 200)
+
 
     def test_query_empty_db(self):
         listings = get_listings(search='', sort='uploadDateAsc', listing_types=[
