@@ -19,7 +19,11 @@ export const ItemCard = ({ item }) => {
               <div className="flex flex-row mb-0">
                 <p className="is-6">{item.display_name}</p>
                 <p className="is-6 font-thin">•</p>
-                <p className="is-6">{item.time_since_listing}</p>
+                <p className="is-6">
+                  {item.availability_dates
+                    ? item.availability_dates
+                    : item.time_since_listing}
+                </p>
               </div>
             </div>
             <div className="bg-gray-100 rounded flex flex-row">

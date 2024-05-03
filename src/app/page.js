@@ -340,7 +340,9 @@ export default function Home() {
                             <p className="is-6 font-thin">•</p>
                             {/* todo: backend calculations  */}
                             <p className="is-6">
-                              {currentItem.time_since_listing}
+                              {currentItem.availability_dates
+                                ? currentItem.availability_dates
+                                : currentItem.time_since_listing}
                             </p>
                           </div>
                         </div>

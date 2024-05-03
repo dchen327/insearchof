@@ -2,7 +2,7 @@ import os
 import firebase_admin
 import json
 from fastapi import APIRouter, Query, Depends
-from typing import Annotated, Optional, List
+from typing import Annotated, Optional, List, Union
 from pydantic import BaseModel, Field
 from firebase_admin import credentials, firestore, auth
 from dotenv import load_dotenv
@@ -56,6 +56,7 @@ class Listing(BaseModel):
     user_id: str
     display_name: str
     email: str
+    availability_dates: Union[str, None] = None
 
 
 class ListingsResponse(BaseModel):
@@ -194,11 +195,6 @@ def get_listings(
     
     # remove items with trans_comp = True
     items = [item for item in items if not item['trans_comp']]
-
-    # print all
-    # print(search, sort, listing_types, min_price, max_price, categories)
-    # print(items)
-
     return {"listings": items}
 
 
