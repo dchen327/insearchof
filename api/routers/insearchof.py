@@ -245,7 +245,6 @@ async def upload_image(user_id: str, file: UploadFile = File(...)):
             content={"message": "Failed to upload image", "error": str(e)}
         )
 
-
 @router.delete("/delete-image/{filename}/{user_id}", response_model=dict)
 async def delete_image(filename: str, user_id: str):
     """
@@ -314,3 +313,4 @@ async def get_user_items(user_id: str):
         return items
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
