@@ -17,7 +17,7 @@ export const ItemCard = ({ item }) => {
             <div className="media-content">
               <p className="title is-4 mb-2">{item.title}</p>
               <div className="flex flex-row mb-0">
-                <p className="is-6">{item.user_name}</p>
+                <p className="is-6">{item.display_name}</p>
                 <p className="is-6 font-thin">•</p>
                 <p className="is-6">{item.time_since_listing}</p>
               </div>
