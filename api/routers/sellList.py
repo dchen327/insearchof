@@ -1,21 +1,29 @@
-###### ALL FIREBASE CODE TO BE UNCOMMENTED IN THE NEXT REVISION ######
-
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from typing import Optional
+# sellList.py
+import os
+import firebase_admin
+from firebase_admin import firestore, storage
+import json
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from typing import Optional, List
 from pydantic import BaseModel, Field, validator
-# from firebase_admin import firestore
+from datetime import datetime, timezone
+from dotenv import load_dotenv
+from uuid import uuid4
+import io
+from PIL import Image
 
+load_dotenv()
 
 router = APIRouter(
     prefix='/api/sell-list',
     tags=['sell-list'],
 )
 
-# # Initialize Firebase Admin SDK here
-# db = firestore.client()
+db = firestore.client()
 
-
-class SellList(BaseModel):
+class ListingInformation(BaseModel):
     """
     The SellList class allows users to list items or services for sale or rent 
     on the application. It provides the functionality to input details about the item 
@@ -26,91 +34,128 @@ class SellList(BaseModel):
         description (str, optional): A detailed description of the item or service.
         category (str): The category under which the item or service falls.
         price (float): The asking price for the item or service. Must be non-negative.
-        image (str, optional): An image represented by its unique id. Image not explicitly passed through backend.
-        availability_dates (str, optional): A tuple containing start and end dates for the availability of a rentable item.
-
-    Methods:
-        list_item(item): Uploads the item or service details to the database, making it available in the marketplace.
-        update_listing(listing_id, item): Updates the status of an existing listing.
-        upload_image(UploadFile)
+        image (str, optional): An image represented by its unique id.
+        availability_dates (str, optional): Start and end dates for the availability of a rentable item.
     """
-    title: str = Field(
-        None, description="The title of the item or service being listed.")
-    description: Optional[str] = Field(
-        None, description="A detailed description of the item or service.")
-    category: str = Field(
-        None, description="The category of the item or service.")
-    price: float = Field(
-        0.00, description="The price of the item or service. Must be non-negative.")
-    image: Optional[str] = Field(None, description="An image based on ID")
-    availability_dates: Optional[str] = Field(
-        None, description="Start and end dates for rentable item availability.")
+    title: str
+    description: Optional[str] = None
+    price: float
+    image_url: Optional[str] = None
+    display_name: str
+    email: str
+    category: str
+    availability_dates: Optional[str] = None
+    type: str  # "sale" or "rent"
+    user_id: str
+    trans_comp: bool = False  # Transaction complete status
 
     @validator('price')
-    def non_neg_price(cls, v):
-        if v < 0:
-            raise ValueError('Price must be non-negative')
-        return v
+    def validate_price(cls, value):
+        if value < 0:
+            raise ValueError("Price must be non-negative")
+        return value
 
-
-@router.post("/list-item")
-def list_item(item: SellList):
-    """ 
-    Allows users to list a new item for sale or rent. It receives the listing
-    details as input, validates them, and then uploads the information to the Firebase database.
-    Regarding the validation mechanism, we will check to make sure that the price is not negative.
+@router.post("/upload", response_model=dict)
+async def upload_listing(listing: ListingInformation):
     """
-    # We can call a timestamp here, either using Timestamp from Firebase, or by creating
-    # a datetime element (which we would also need to import). We would then add the listing
-    # to our database (collection)
-
-    # In the future, we could add a file of constants for status codes to make it more readable.
-    if item.price < 0:
-        raise HTTPException(
-            status_code=400, detail="Negative prices are not allowed")
-
-    # Including Firebase serverTimestamp for sorting by recent in the catalog/profile.
-    # --- This code will be uncommented when we finalize our Firebase collections ---
-    # item_dict = item.dict()
-    # item_dict["created_at"] = firestore.SERVER_TIMESTAMP
-    # db.collection('listings').add(item_dict)
-    # return {"message": "Listing added successfully", "item": item.dict()}
-    return {"message": "Listing added successfully", "item": item}
-
-
-@router.patch("/update-listing/{listing_id}")
-def update_listing(listing_id: str, item: SellList):
-    """ Updates an existing listing with new information based on listing_id. """
-    # Connect to Firestore and update the db with listing_id in the respective collection
-    # Ensure to validate the listing_id exists and the user performing the update is the owner of the listing
-    # We can use this to also allow for the re-listing of items. Here, we would create
-    # an updated_at field that gets the current timestamp and update the listing using its id.
-
-    # --- This code will be uncommented when we finalize our Firebase collections ---
-    # listing_ref = db.collection('listings').document(listing_id)
-    # if not listing_ref.get().exists:
-    #     raise HTTPException(status_code=404, detail="Listing not found.")
-    # listing_ref.update(item.dict())
-    return {"message": "Listing updated successfully", "listing_id": listing_id, "item": item}
-
-
-@router.post("/upload-image")
-async def upload_image(file: UploadFile = File()):
-    """ Allows user to upload an image for their item listing. """
-    # Stores the reference UUID in the Firestore listing of the image
-    return {"message": "Image uploaded successfully"}
-
-
-@router.delete("/delete-listing/{listing_id}")
-def delete_listing(listing_id: str):
+    Uploads a new listing to the database.
     """
-    Deletes a listing based on the provided listing ID.
-    @Param: listing_id (str): The unique identifier for the listing to be deleted.
-    @Return: A message indicating the outcome of the delete operation.
-    """
-    # Delete from firebase db; uncomment when fully implemented
-    # doc_ref = db.collection('listings').document(listing_id)
-    # doc_ref.delete()
+    doc_ref = db.collection('items').document()
+    listing_data = listing.dict()
+    listing_data["timestamp"] = datetime.now(timezone.utc)
+    doc_ref.set(listing_data)
+    return {"message": "Listing uploaded successfully", "listing_id": doc_ref.id}
 
-    # For robustness, we will handle cases where the listing does not exist or the user does not have permission to delete it.
-    return {"message": "Listing deleted successfully"}
+@router.put("/update/{listing_id}", response_model=dict)
+async def update_listing(listing_id: str, update_data: ListingInformation):
+    """
+    Updates an existing listing in the database.
+    """
+    item_ref = db.collection('items').document(listing_id)
+    item = item_ref.get()
+    if item.exists:
+        item_data = item.to_dict()
+        if item_data['user_id'] != update_data.user_id:
+            raise HTTPException(status_code=403, detail="Unauthorized to update this listing.")
+        item_data.update(update_data.dict(exclude_unset=True))
+        item_ref.set(item_data)
+        return {"message": "Listing updated successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="Listing not found")
+
+@router.delete("/delete/{listing_id}", response_model=dict)
+async def delete_listing(listing_id: str, user_id: str):
+    """
+    Deletes a listing from the database.
+    """
+    item_ref = db.collection('items').document(listing_id)
+    item = item_ref.get()
+    if item.exists:
+        item_data = item.to_dict()
+        if item_data['user_id'] != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized to delete this listing.")
+        item_ref.delete()
+        return {"message": "Listing deleted successfully"}
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listing not found")
+
+@router.post("/upload-image/{user_id}", response_model=dict)
+async def upload_image(user_id: str, file: UploadFile = File(...)):
+    """
+    Handles image uploads for listings.
+    """
+    image_data = await file.read()
+    image = Image.open(io.BytesIO(image_data))
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+    max_size = 1080
+    if image.height > max_size or image.width > max_size:
+        scale_ratio = min(max_size / image.height, max_size / image.width)
+        new_size = (int(image.width * scale_ratio), int(image.height * scale_ratio))
+        image = image.resize(new_size, Image.Resampling.LANCZOS)
+    img_byte_arr = io.BytesIO()
+    quality = 90
+    while img_byte_arr.tell() > 1_000_000 or quality > 10:
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format='JPEG', quality=quality)
+        quality -= 10
+    img_byte_arr.seek(0)
+    bucket = storage.bucket()
+    unique_filename = f"{uuid4()}_{file.filename}"
+    blob = bucket.blob(f"images/{user_id}/{unique_filename}")
+    blob.upload_from_string(img_byte_arr.getvalue(), content_type='image/jpeg')
+    blob.make_public()
+    return {"message": "Image uploaded successfully", "image_url": blob.public_url}
+
+@router.delete("/delete-image/{filename}/{user_id}", response_model=dict)
+async def delete_image(filename: str, user_id: str):
+    """
+    Deletes an image from Firebase Storage.
+    """
+    bucket = storage.bucket()
+    blob = bucket.blob(f"images/{user_id}/{filename}")
+    blob.delete()
+    return {"message": "Image deleted successfully"}
+
+@router.get("/listing-details/{listing_id}", response_model=dict)
+async def get_listing_details(listing_id: str):
+    """
+    Retrieves the details of a specific listing by its ID.
+    """
+    listing_ref = db.collection('items').document(listing_id)
+    listing_doc = listing_ref.get()
+    if listing_doc.exists:
+        listing_data = listing_doc.to_dict()
+        return {"message": "Listing details fetched successfully", "listingDetails": listing_data}
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listing not found")
+
+@router.get("/user-listings/{user_id}", response_model=List[dict])
+async def get_user_listings(user_id: str):
+    """
+    Retrieves all listings associated with a specific user.
+    """
+    query = db.collection('items').where('user_id', '==', user_id).stream()
+    listings = [{"title": doc.to_dict().get("title", ""), "listing_id": doc.id} for doc in query]
+    return listings
+
