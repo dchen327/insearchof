@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from firebase_admin import auth
-from ..firebase_config import db
+from api.firebase_config import db
 import os
 import json
 from dotenv import load_dotenv
@@ -169,5 +169,5 @@ class UserProfile(BaseModel):
         if len(user_query) == 0:
             return {'phoneNumber': '', 'location': '', 'userID': ''}
         user_data = user_query[0].to_dict()
-        print(user_data)
+        
         return user_data

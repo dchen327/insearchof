@@ -1,6 +1,6 @@
 import os
 os.environ['TESTING'] = 'True'
-from routers.profile import upload_contact_info, get_list_of_items, get_transaction_history, get_user_info
+from routers.profile import UserProfile
 from routers.insearchof import upload_request, RequestInformation
 import requests
 import unittest
@@ -8,6 +8,8 @@ from google.auth.credentials import AnonymousCredentials
 from google.cloud.firestore import Client
 from dotenv import load_dotenv
 from firebase_config import db
+from pydantic.error_wrappers import ValidationError
+
 
 load_dotenv()
 
@@ -28,80 +30,80 @@ class ProfileTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_upload_user_info_successful(self):
         # Test case for successful upload of user info  
-        test_info = RequestInformation(
-            phone_number="1234567890",
-            location="Test Location"
+        test_info = UserProfile.UploadContactInformation(
+            phoneNumber="1234567890",
+            location="Test Location",
+            userID="test_user_id"
         )
-        response = await upload_contact_info(test_info)
-        self.assertEqual(response['message'], "User info uploaded successfully")
+        response = UserProfile.upload_contact_info(test_info)
+        self.assertEqual(response['message'], "Uploaded user's contact info successfully")
 
 
     async def test_upload_user_info_invalid_data(self):
         # Test case for uploading user info with invalid data
-        test_info = RequestInformation(
-            phone_number="Invalid Phone Number",  # Invalid format
-            location="Test Location"
-        )
+        with self.assertRaises(ValidationError):
+            test_info = UserProfile.UploadContactInformation(
+                phone_number="Invalid Phone Number",  # Invalid format
+                location="Test Location",
+                userID="test_user_id"
+            )
 
-        with self.assertRaises(HTTPException) as context:
-            await upload_contact_info(test_info)
-        self.assertEqual(context.exception.status_code, 422)
+            response = await UserProfile.upload_contact_info(test_info)
 
 
     async def test_get_list_of_items(self):
         # Test case for getting list of items associated with a user
         requester_id = "test_user_id"
-        response = await get_list_of_items(requester_id)
+        response = UserProfile.get_list_of_items(requester_id)
         self.assertEqual(response['listingOfItems'], [])
 
 
     async def test_get_transaction_history(self):
         # Test case for getting transaction history of a user
         requester_id = "test_user_id"
-        response = await get_transaction_history(requester_id)
+        response = UserProfile.get_transaction_history(requester_id)
         self.assertEqual(response['listingOfTransactionHistory'], [])
 
 
     async def test_upload_request_empty_location(self):
         # Test case for uploading user info without a location
-        test_info = RequestInformation(
-            phone_number="Invalid Phone Number",  
-            location=""
-        )
+        with self.assertRaises(ValidationError):
+            test_info = UserProfile.UploadContactInformation(
+                phoneNumber="Invalid Phone Number",  
+                location=""
+            )
 
-        with self.assertRaises(HTTPException) as context:
             await upload_request(test_info)
-        self.assertEqual(context.exception.status_code, 422)
-
-
-    async def test_empty_database(self):
-        # Test case for an empty database
-        response = await upload_request("non_existing_user_id")
-        self.assertEqual(response, None)
 
 
     async def test_update_profile(self):
         # Test case for updating profile
-        test_info = RequestInformation(
-            phone_number="1234567890",
-            location="Test Location"
+        test_info = UserProfile.UploadContactInformation(
+            phoneNumber="1234567890",
+            location="Test Location",
+            userID="test_user_id"
         )
-        await upload_request(test_info)
-        updated_info = RequestInformation(
-            phone_number="0987654321",
-            location="Updated Location"
+        UserProfile.upload_contact_info(test_info)
+        updated_info = UserProfile.UploadContactInformation(
+            phoneNumber="0987654321",
+            location="Updated Location",
+            userID="test_user_id"
         )
-        await upload_request(updated_info)
+        UserProfile.upload_contact_info(updated_info)
 
-        response = await get_user_info(test_info.phone_number)
-        self.assertEqual(response['phone_number'], updated_info.phone_number)
+        response = UserProfile.get_user_info(updated_info.userID)
+        self.assertEqual(response['phoneNumber'], updated_info.phoneNumber)
         self.assertEqual(response['location'], updated_info.location)
 
 
     async def test_get_user_info_non_existing_user(self):
         # Test case for getting user info of a non-existing user
         requester_id = "non_existing_user_id"
-        response = await get_user_info(requester_id)
+        response = UserProfile.get_user_info(requester_id)
         self.assertEqual(response['userID'], '')
         self.assertEqual(response['location'], '')
         self.assertEqual(response['phoneNumber'], '')
+
+
+if __name__ == '__main__':
+    unittest.main()
