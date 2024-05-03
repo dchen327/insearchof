@@ -33,9 +33,32 @@ export default function Page() {
   // the user state is updates and fetches the list of items and transaction
   // history based on the specific user
   useEffect(() => {
+    const fetchUserInfo = async (user_id) => {
+      try {
+        setLoading(true);
+        const response = await fetch(
+          `/api/profile/get_user_info?requester_id=${user_id}`
+        );
+        if (!response.ok) {
+          console.log(response);
+          throw new Error("Failed to fetch user info");
+        }
+        const data = await response.json();
+        console.log(data);
+        setPhoneNumber(data.phoneNumber);
+        setLocation(data.location);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to fetch user info");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
+        fetchUserInfo(currentUser.uid);
         // fetchListOfItems(currentUser.email);
         // fetchTransactionHistory(currentUser.email);
       } else {
@@ -98,9 +121,6 @@ export default function Page() {
       const data = await response.json();
       if (response.ok) {
         alert("Request uploaded successfully!");
-        // Clear the form
-        setPhoneNumber("");
-        setLocation("");
       } else {
         alert("Failed to upload request: " + data.message);
       }
@@ -279,7 +299,7 @@ export default function Page() {
                   ></button>
                 </div>
               ))}
-              {!locationFilled && !uploadInfoButton && (
+              {!uploadInfoButton && (
                 <button
                   className="button is-primary"
                   onClick={uploadContactInformation}
@@ -292,7 +312,7 @@ export default function Page() {
                     cursor: "pointer",
                   }}
                 >
-                  Upload user info
+                  Update user info
                 </button>
               )}
             </div>
@@ -364,53 +384,69 @@ export default function Page() {
                   Get list of items
                 </button>
               </div>
-                  
+
               {showItemModal && (
-                  <div className="modal is-active">
-                    <div
-                      className="modal-background"
-                      onClick={() => setShowItemModal(false)}
-                    ></div>
-                    <div
-                      className="modal-card"
-                      style={{ width: "90%", margin: "auto" }}
+                <div className="modal is-active">
+                  <div
+                    className="modal-background"
+                    onClick={() => setShowItemModal(false)}
+                  ></div>
+                  <div
+                    className="modal-card"
+                    style={{ width: "90%", margin: "auto" }}
+                  >
+                    <section
+                      className="modal-card-body"
+                      style={{ maxHeight: "60vh", overflowY: "auto" }}
                     >
-                      <section
-                        className="modal-card-body"
-                        style={{ maxHeight: "60vh", overflowY: "auto" }}
-                      >
-                        <div className="card is-shadowless">
-                          <div className="card-content px-4 py-">
-                            <h2 className="is-size-5">List of Items</h2>
-                                {items.length > 0 ? (
-                                  items.map((item, index) => (
-                                    <div className="item" key={index} 
-                                      style={{ width: '200px', height: '150px', border: '1px solid #ccc', margin: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                      <div className="item-content" style={{ textAlign: 'center' }}>
-                                        <h2 className="item-title">{item.title}</h2>
-                                        <p className="item-description">{item.description}</p>
-                                      </div>
-                                    </div>
-                                  ))
-                                ) : (
-                                  <p>No items to display</p>
-                                )}
-                          </div>
+                      <div className="card is-shadowless">
+                        <div className="card-content px-4 py-">
+                          <h2 className="is-size-5">List of Items</h2>
+                          {items.length > 0 ? (
+                            items.map((item, index) => (
+                              <div
+                                className="item"
+                                key={index}
+                                style={{
+                                  width: "100px",
+                                  height: "50px",
+                                  border: "1px solid #ccc",
+                                  margin: "10px",
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <div
+                                  className="item-content"
+                                  style={{ textAlign: "center" }}
+                                >
+                                  <h2 className="item-title">{item.title}</h2>
+                                  <p className="item-description">
+                                    {item.description}
+                                  </p>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <p>No items to display</p>
+                          )}
                         </div>
-                      </section>
-                      <footer className="modal-card-foot">
-                        {/* <button className="button is-success">Update item</button> */}
-                        <button
-                          className="button"
-                          onClick={() => setShowItemModal(false)}
-                        >
-                          Close
-                        </button>
-                      </footer>
-                    </div>
+                      </div>
+                    </section>
+                    <footer className="modal-card-foot">
+                      {/* <button className="button is-success">Update item</button> */}
+                      <button
+                        className="button"
+                        onClick={() => setShowItemModal(false)}
+                      >
+                        Close
+                      </button>
+                    </footer>
                   </div>
-                )}
-                
+                </div>
+              )}
+
               {showTransactionModal && (
                 <div className="modal is-active">
                   <div
@@ -427,10 +463,28 @@ export default function Page() {
                           <h2 className="is-size-5">Transaction History</h2>
                           {listings.length > 0 ? (
                             listings.map((listing, index) => (
-                              <div key={index}>
-                                <p>{listing.title}</p>
-                                <p>{listing.description}</p>
-                                {/* Add more details as needed */}
+                              <div
+                                className="listing"
+                                key={index}
+                                style={{
+                                  width: "100px",
+                                  height: "50px",
+                                  border: "1px solid #ccc",
+                                  margin: "10px",
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <div
+                                  className="listing-content"
+                                  style={{ textAlign: "center" }}
+                                >
+                                  <h2 className="listing-title">{listing.title}</h2>
+                                  <p className="listing-description">
+                                    {listing.description}
+                                  </p>
+                                </div>
                               </div>
                             ))
                           ) : (
@@ -451,7 +505,6 @@ export default function Page() {
                   </div>
                 </div>
               )}
-
             </div>
           </>
         )}

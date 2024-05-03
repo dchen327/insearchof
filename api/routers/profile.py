@@ -46,9 +46,9 @@ class UserProfile(BaseModel):
     # phone_number: Optional[constr(regex=r'^\(\d{3}\)\s\d{3}-\d{4}$')]  = Field(None, description="The user's phone number") # type: ignore
 
     class UploadContactInformation(BaseModel):
-        user_uid: str
+        userID: str
         location: str
-        phone_number: str
+        phoneNumber: str
 
     class UploadContactInfoResponse(BaseModel):
         """
@@ -83,24 +83,34 @@ class UserProfile(BaseModel):
 
         listingOfTransactionHistory: List[dict] = Field(
             ..., description="User's transaction history.")
+    
+    class GetUserInfoResponse(BaseModel):
+        """
+        Response model for getting a user's information from the database.
+        """
+        phoneNumber: str
+        location: str
+        userID: str
 
-    @router.post("/upload_contact_info", response_model=dict)
+    @router.post("/upload_contact_info")
     def upload_contact_info(user_profile: UploadContactInformation):
         """
         Uploads a users contact information, including their name, email, profile picture, optional
         phone number, to the user database, making it visible to buyers.
         """
-        user_uid = user_profile.uid
-        user_ref = db.collection('users').where('id', '==', user_uid)
+        user_id = user_profile.userID
+        user_data = user_profile.model_dump()
 
-        if len(user_ref) == 0:
-         raise HTTPException(status_code=404, detail="User not found")
-    
-        user_profile_data = user_profile.dict()
-        user_ref.set(user_profile_data)
-        return {"message": "Uploads users contact info successfully"}
-    
-        # query users collection .where id = user.uid
+        # Check if user already exists
+        user_query = db.collection('users').where('userID', '==', user_id).get()
+
+        if len(user_query) == 0:
+            # If user does not exist, create a new document
+            db.collection('users').add(user_data)
+        else:
+            # If user exists, update the existing document
+            user_doc_ref = db.collection('users').document(user_query[0].id)
+            user_doc_ref.update(user_data)
 
         # user_query = db.collection('users').where('user_id', '==', requester_id)
     
@@ -114,7 +124,7 @@ class UserProfile(BaseModel):
         # user_data['location'] = user_profile.location
         # user_query.set(user_data)
         
-        # return {"message": "Uploaded user's contact info successfully"}
+        return {"message": "Uploaded user's contact info successfully"}
 
 
     @router.get("/get_list_of_items")
@@ -149,3 +159,15 @@ class UserProfile(BaseModel):
             listings.append(doc.to_dict())
 
         return {"listingOfTransactionHistory": listings}
+    
+    @router.get('/get_user_info')
+    def get_user_info(requester_id: str = Query(description="The requester's uid")) -> GetUserInfoResponse:
+        """
+        Retrieves a user's information from the database.
+        """
+        user_query = db.collection('users').where('userID', '==', requester_id).get()
+        if len(user_query) == 0:
+            return {'phoneNumber': '', 'location': '', 'userID': ''}
+        user_data = user_query[0].to_dict()
+        print(user_data)
+        return user_data
