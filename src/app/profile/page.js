@@ -408,8 +408,8 @@ export default function Page() {
                                 className="item"
                                 key={index}
                                 style={{
-                                  width: "200px",
-                                  height: "150px",
+                                  width: "100px",
+                                  height: "50px",
                                   border: "1px solid #ccc",
                                   margin: "10px",
                                   display: "flex",
@@ -463,10 +463,28 @@ export default function Page() {
                           <h2 className="is-size-5">Transaction History</h2>
                           {listings.length > 0 ? (
                             listings.map((listing, index) => (
-                              <div key={index}>
-                                <p>{listing.title}</p>
-                                <p>{listing.description}</p>
-                                {/* Add more details as needed */}
+                              <div
+                                className="listing"
+                                key={index}
+                                style={{
+                                  width: "100px",
+                                  height: "50px",
+                                  border: "1px solid #ccc",
+                                  margin: "10px",
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <div
+                                  className="listing-content"
+                                  style={{ textAlign: "center" }}
+                                >
+                                  <h2 className="listing-title">{listing.title}</h2>
+                                  <p className="listing-description">
+                                    {listing.description}
+                                  </p>
+                                </div>
                               </div>
                             ))
                           ) : (
