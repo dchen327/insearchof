@@ -191,6 +191,9 @@ def get_listings(
         timestamp = item['timestamp']
         diff = now - timestamp
         item['time_since_listing'] = format_timedelta(diff)
+    
+    # remove items with trans_comp = True
+    items = [item for item in items if not item['trans_comp']]
 
     # print all
     # print(search, sort, listing_types, min_price, max_price, categories)

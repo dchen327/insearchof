@@ -364,7 +364,12 @@ export default function Home() {
                   </div>
                 </section>
                 <footer className="modal-card-foot">
-                  <button className="button is-success">Contact Seller</button>
+                  <a
+                    href={`mailto:${currentItem.email}`}
+                    className="button is-success"
+                  >
+                    Email seller
+                  </a>
                   <button
                     className="button"
                     onClick={() => setShowItemModal(false)}
