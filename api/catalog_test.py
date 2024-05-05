@@ -30,7 +30,7 @@ class CatalogTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         clear_db()
 
-    def test_white_box(self):
+    def test_black_box(self):
         response = requests.get('http://localhost:8000/api/catalog/listings')
         self.assertEqual(response.status_code, 200)
 
