@@ -303,11 +303,11 @@ async def get_item_details(item_id: str):
 @router.get("/user-items/{user_id}", response_model=List[dict])
 async def get_user_items(user_id: str):
     """
-    Retrieves all items associated with a specific user from Firestore. It filters items by the user ID
-    and returns a list of item titles and their IDs.
+    Retrieves all items associated with a specific user from Firestore that are of type 'request'. 
+    It filters items by the user ID and the item type, returning a list of item titles and their IDs.
     """
     try:
-        query = db.collection('items').where('user_id', '==', user_id).stream()
+        query = db.collection('items').where('user_id', '==', user_id).where('type', '==', 'request').stream()
         items = [{"title": doc.to_dict().get("title", ""), "item_id": doc.id}
                  for doc in query]
         return items
