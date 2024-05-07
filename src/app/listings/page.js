@@ -1,5 +1,3 @@
-1 PAGE.JS
-
 // listings/page.js
 "use client";
 import { auth, storage } from "../firebase/config";
