@@ -172,6 +172,7 @@ export default function Page() {
     }
   };
 
+
   const fetchTransactionHistory = async (email) => {
     try {
       setLoading(true);
@@ -185,7 +186,7 @@ export default function Page() {
       }
       const data = await response.json();
       console.log(data);
-      setListings(data.transactionHistory);
+      setListings(data.listingOfTransactionHistory);
     } catch (err) {
       console.error(err);
       setError("Failed to fetch transaction history");
@@ -193,6 +194,7 @@ export default function Page() {
       setLoading(false);
     }
   };
+  
 
   return (
     <>
