@@ -1,3 +1,5 @@
+1 PAGE.JS
+
 // listings/page.js
 "use client";
 import { auth, storage } from "../firebase/config";
@@ -38,6 +40,7 @@ export default function ListingsPage() {
     return () => unsubscribe();
   }, [router]);
 
+  // Handle image file input and generate preview
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     setImage(file);
@@ -94,52 +97,84 @@ export default function ListingsPage() {
     setEndDate("");
   };
 
+  // Handle image upload to server
+  const uploadImage = async (imageFile) => {
+    if (!imageFile) {
+      return ""; // No image provided
+    }
+  
+    const formData = new FormData();
+    formData.append("file", imageFile);
+  
+    try {
+      const response = await fetch(
+        `/api/sell-list/upload-image/${user.uid}`,
+        {
+          method: "POST",
+          body: formData,
+        });
+  
+      console.log("checkpoint 1");
+  
+      if (!response.ok) {
+        const errorText = await response.text(); // Get more error info
+        console.error("HTTP error", response.status, errorText);
+        throw new Error("Image upload failed: " + errorText);
+      }
+  
+      const imageData = await response.json();
+      console.log("checkpoint 2");
+  
+      return imageData.image_url;
+    } catch (error) {
+      console.error("Failed to upload image:", error);
+      alert("An error occurred while uploading the image. Please try again.");
+      throw error;
+    }
+  };
+  
   const uploadListing = async () => {
     const finalPrice = validateFormAndUser(title, price, user);
     if (finalPrice === null) {
       return;
     }
-
-    let imageUrl = "";
+  
     try {
-      imageUrl = await uploadImage(image);
-    } catch (error) {
-      console.error("Failed to fetch:", error);
-      if (error.response) {
-        error.response.json().then((json) => {
-          console.log("Error details:", json);
-        });
+      let imageUrl = "";
+      try {
+        imageUrl = await uploadImage(image);
+      } catch (error) {
+        console.error("Failed to fetch:", error);
+        if (error.response) {
+          error.response.json().then((json) => {
+            console.log("Error details:", json);
+          });
+        }
+        alert("An error occurred. Please check the console for more details.");
+        return;
       }
-      alert("An error occurred. Please check the console for more details.");
-      return;
-    }
 
-    const listingData = {
-      title,
-      description,
-      price: parseFloat(finalPrice),
-      image_url: imageUrl,
-      display_name: user.displayName,
-      email: user.email,
-      category,
-      // availability_dates: isRenting ? availabilityDates : null,
-      availability_dates: `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`,
-      type: isRenting ? 'rent' : 'sale',
-      user_id: user.uid, 
-      email: user.email,
-      display_name: user.displayName,
-      trans_comp: false,
-    };
-
-    try {
+      // const imageUrl = await uploadImage(image); // Upload image and get URL
+      const listingData = {
+        title,
+        description,
+        price: parseFloat(finalPrice),
+        image_url: imageUrl,
+        category,
+        availability_dates: isRenting ? `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}` : null,
+        type: isRenting ? 'rent' : 'sale',
+        user_id: user.uid,
+        display_name: user.displayName,
+        email: user.email,
+        trans_comp: false,
+      };
+  
       const response = await fetch('/api/sell-list/upload', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(listingData)
       });
-
+  
       const data = await response.json();
       if (response.ok) {
         alert('Listing added successfully!');
@@ -152,15 +187,15 @@ export default function ListingsPage() {
       alert('An error occurred. Please try again.');
     }
   };
-
+  
+  // Retrieves information on all posts to allow users to update and delete
   const fetchListings = async () => {
-    console.log("we fetch listings (not shown for some reason)")
-    console.log(user.displayName)
     try {
       const response = await fetch(`/api/sell-list/user-listings/${user.uid}`);
       const data = await response.json();
       if (response.ok) {
         setListings(data);
+        alert("All items are now refreshed!");  // Show alert after successful fetch
       } else {
         console.error("Failed to fetch listings:", data);
         alert("Failed to fetch listings. Please try again.");
@@ -355,13 +390,13 @@ export default function ListingsPage() {
               style={{
                 padding: "10px 20px",
                 width: "48%",
-                backgroundColor: "#6c757d",
+                backgroundColor: "#ccc",
                 color: "white",
                 border: "none",
                 borderRadius: "4px",
               }}
             >
-              Fetch My Listings
+              Refresh My Listings
             </button>
           </div>
         </div>
@@ -522,25 +557,30 @@ export default function ListingsPage() {
           </div>
 
           {imagePreviewUrl && (
+                <Image
+                  src={imagePreviewUrl}
+                  alt="Preview"
+                  width={500}
+                  height={300}
+                  layout="responsive"
+                />
+              )}
+          {activeTab === "upload" && (
             <div>
-              <img src={imagePreviewUrl} alt="Preview" style={{ maxWidth: '100%', marginTop: '20px' }} />
+              <button onClick={uploadListing} style={{
+                padding: '10px 20px',
+                fontSize: '16px',
+                backgroundColor: '#007BFF',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                width: '100%',
+              }}>
+                List Item
+              </button>
             </div>
           )}
-
-          <div>
-            <button onClick={uploadListing} style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              backgroundColor: '#007BFF',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              width: '100%',
-            }}>
-              List Item
-            </button>
-          </div>
 
           {activeTab === "update" && (
             <button onClick={updateListing} style={{
@@ -573,3 +613,4 @@ export default function ListingsPage() {
     </>
   );
 }
+

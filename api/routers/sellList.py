@@ -99,34 +99,60 @@ async def delete_listing(listing_id: str, user_id: str):
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listing not found")
 
+# Utility function to sanitize strings (e.g., filenames, user IDs)
+def sanitize(input_string):
+    """
+    Sanitizes input string by removing newline characters and other disallowed characters.
+    This enables our images to post successfully on Firebase.
+    """
+    # Remove any newline characters or other unwanted characters
+    sanitized_string = input_string.replace('\n', '').replace('\r', '')
+    return sanitized_string
+
 @router.post("/upload-image/{user_id}", response_model=dict)
 async def upload_image(user_id: str, file: UploadFile = File(...)):
     """
-    Handles image uploads for listings.
+    Handles image uploads for listings, with added error handling.
     """
-    image_data = await file.read()
-    image = Image.open(io.BytesIO(image_data))
-    if image.mode != 'RGB':
-        image = image.convert('RGB')
-    max_size = 1080
-    if image.height > max_size or image.width > max_size:
-        scale_ratio = min(max_size / image.height, max_size / image.width)
-        new_size = (int(image.width * scale_ratio), int(image.height * scale_ratio))
-        image = image.resize(new_size, Image.Resampling.LANCZOS)
-    img_byte_arr = io.BytesIO()
-    quality = 90
-    while img_byte_arr.tell() > 1_000_000 or quality > 10:
+    try:
+        image_data = await file.read()
+        image = Image.open(io.BytesIO(image_data))
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        max_size = 1080
+        if image.height > max_size or image.width > max_size:
+            scale_ratio = min(max_size / image.height, max_size / image.width)
+            new_size = (int(image.width * scale_ratio), int(image.height * scale_ratio))
+            image = image.resize(new_size, Image.Resampling.LANCZOS)
         img_byte_arr = io.BytesIO()
-        image.save(img_byte_arr, format='JPEG', quality=quality)
-        quality -= 10
-    img_byte_arr.seek(0)
-    bucket = storage.bucket()
-    unique_filename = f"{uuid4()}_{file.filename}"
-    blob = bucket.blob(f"images/{user_id}/{unique_filename}")
-    blob.upload_from_string(img_byte_arr.getvalue(), content_type='image/jpeg')
-    blob.make_public()
-    return {"message": "Image uploaded successfully", "image_url": blob.public_url}
+        quality = 90
+        while True:
+            image.save(img_byte_arr, format='JPEG', quality=quality)
+            if img_byte_arr.tell() <= 1_000_000 or quality <= 10:
+                break
+            quality -= 10
+            img_byte_arr.seek(0)
 
+        img_byte_arr.seek(0)
+
+        # Sanitize the user_id and filename
+        sanitized_user_id = sanitize(user_id)
+        sanitized_filename = sanitize(file.filename)
+
+        # Configure Firebase Storage
+        bucket = storage.bucket()
+        unique_filename = f"{uuid4()}_{sanitized_filename}"
+        file_name = f"images/{sanitized_user_id}/{unique_filename}"
+        blob = bucket.blob(file_name)
+        blob.upload_from_string(img_byte_arr.getvalue(), content_type='image/jpeg')
+        blob.make_public()
+
+        return {"message": "Image uploaded successfully", "image_url": blob.public_url}
+    
+    except Exception as e:
+        print(f"Failed to upload image: {str(e)}")  # This will log the error
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+    
 @router.delete("/delete-image/{filename}/{user_id}", response_model=dict)
 async def delete_image(filename: str, user_id: str):
     """
@@ -158,4 +184,3 @@ async def get_user_listings(user_id: str):
     query = db.collection('items').where('user_id', '==', user_id).stream()
     listings = [{"title": doc.to_dict().get("title", ""), "listing_id": doc.id} for doc in query]
     return listings
-
