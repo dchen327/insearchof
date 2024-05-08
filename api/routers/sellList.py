@@ -46,7 +46,7 @@ class ListingInformation(BaseModel):
     email: str
     category: str
     availability_dates: Optional[str] = None
-    type: str  # "sale" or "rent"
+    type: str  # "sale" or "buy"
     user_id: str
     trans_comp: bool = False  # Transaction complete status
 

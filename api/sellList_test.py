@@ -42,7 +42,7 @@ class SellListTests(unittest.IsolatedAsyncioTestCase):
             email="testemail@gmail.com",
             category="Electronics",
             availability_dates="",
-            type="sale",
+            type="buy",
             user_id="testuserid",
             timestamp=datetime.now(timezone.utc)
         )
@@ -64,7 +64,7 @@ class SellListTests(unittest.IsolatedAsyncioTestCase):
             email="testemail@gmail.com",
             category="All",
             availability_dates="",
-            type="sale",
+            type="buy",
             user_id="testuserid",
             timestamp=datetime.now(timezone.utc)
         )
@@ -101,7 +101,7 @@ class SellListTests(unittest.IsolatedAsyncioTestCase):
             title="Updated Vintage Camera",
             price=150.0,
             category="Electronics",
-            type="sale",
+            type="buy",
             user_id="user123",
             display_name="John Doe",
             email="johndoe@example.com"
@@ -122,7 +122,7 @@ class SellListTests(unittest.IsolatedAsyncioTestCase):
             display_name="originaluser",
             email="originaluser@example.com",
             category="Electronics",
-            type="sale",
+            type="buy",
             user_id="originaluserid",
         )
         response = await upload_listing(original_listing)
@@ -153,7 +153,7 @@ class SellListTests(unittest.IsolatedAsyncioTestCase):
             email="nonexistentuser@example.com",
             category="Electronics",
             availability_dates="",
-            type="sale",
+            type="buy",
             user_id="nonexistentuserid",
         )
         with self.assertRaises(HTTPException) as context:
@@ -212,7 +212,7 @@ class SellListTests(unittest.IsolatedAsyncioTestCase):
             email="authorizeduser@example.com",
             category="Miscellaneous",
             availability_dates="",
-            type="sale",
+            type="buy",
             user_id="authorizeduserid"
         )
         response = await upload_listing(original_listing)
@@ -227,7 +227,7 @@ class SellListTests(unittest.IsolatedAsyncioTestCase):
             email="unauthorizeduser@example.com",
             category="Miscellaneous",
             availability_dates="",
-            type="sale",
+            type="buy",
             user_id="unauthorizeduserid"
         )
         with self.assertRaises(HTTPException) as context:
@@ -247,7 +247,7 @@ class SellListTests(unittest.IsolatedAsyncioTestCase):
     #         email="testemail@gmail.com",
     #         category="All",
     #         availability_dates="",
-    #         type="sale",
+    #         type="buy",
     #         user_id="testuserid",
     #         timestamp=datetime.now(timezone.utc)
     #     )

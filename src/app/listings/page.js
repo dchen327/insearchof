@@ -171,7 +171,7 @@ export default function ListingsPage() {
         image_url: imageUrl,
         category,
         availability_dates: isRenting ? `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}` : null,
-        type: isRenting ? 'rent' : 'sale',
+        type: isRenting ? 'buy' : 'rent',
         user_id: user.uid,
         display_name: user.displayName,
         email: user.email,
@@ -287,7 +287,7 @@ export default function ListingsPage() {
       image_url: imageUrl, 
       category,
       availability_dates: isRenting ? `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}` : null,
-      type: isRenting ? 'rent' : 'sale', 
+      type: isRenting ? 'rent' : 'buy', 
       user_id: user.uid, 
       display_name: user.displayName, 
       email: user.email, 
@@ -648,4 +648,5 @@ export default function ListingsPage() {
     </>
   );
 }
+
 
