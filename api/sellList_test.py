@@ -110,6 +110,130 @@ class SellListTests(unittest.IsolatedAsyncioTestCase):
             await update_listing("nonexistentid", update_data)
         self.assertEqual(context.exception.status_code, 404)
 
+    async def test_unauthorized_update(self):
+        """
+        Test updating a listing with an unauthorized user ID.
+        """
+        original_listing = ListingInformation(
+            title="Original Title",
+            description="Original description",
+            price=200.0,
+            image_url="",
+            display_name="originaluser",
+            email="originaluser@example.com",
+            category="Electronics",
+            type="sale",
+            user_id="originaluserid",
+        )
+        response = await upload_listing(original_listing)
+        listing_id = response['listing_id']
+        update_data = original_listing.copy(update={"user_id": "unauthorizeduserid"})
+        with self.assertRaises(HTTPException) as context:
+            await update_listing(listing_id, update_data)
+        self.assertEqual(context.exception.status_code, 403)
+
+    async def test_delete_non_existent_listing(self):
+        """
+        Test deletion of a non-existent listing.
+        """
+        with self.assertRaises(HTTPException) as context:
+            await delete_listing("nonexistentid", "someuserid")
+        self.assertEqual(context.exception.status_code, 404)
+
+    async def test_update_non_existent_listing(self):
+        """
+        Test updating a non-existent listing.
+        """
+        update_data = ListingInformation(
+            title="Non-Existent Update",
+            description="Update attempt on a non-existent listing.",
+            price=50.0,
+            image_url="",
+            display_name="nonexistentuser",
+            email="nonexistentuser@example.com",
+            category="Electronics",
+            availability_dates="",
+            type="sale",
+            user_id="nonexistentuserid",
+        )
+        with self.assertRaises(HTTPException) as context:
+            await update_listing("nonexistentid", update_data)
+        self.assertEqual(context.exception.status_code, 404)
+
+    async def test_partial_update_listing(self):
+        """
+        Test updating a listing with partial data.
+        """
+        original_listing = ListingInformation(
+            title="Partial Update Test",
+            description="Original description for partial update test.",
+            price=300.0,
+            image_url="",
+            display_name="partialupdateuser",
+            email="partialupdateuser@example.com",
+            category="Gadgets",
+            availability_dates="6/1/2024 to 6/10/2024",
+            type="rent",
+            user_id="partialupdateuserid",
+        )
+        response = await upload_listing(original_listing)
+        listing_id = response['listing_id']
+
+        update_data = ListingInformation(
+            title="Updated Partial Title",
+            user_id="partialupdateuserid",
+            price=250.0,
+            category="Gadgets",
+            type="rent",
+            display_name="partialupdateuser",
+            email="partialupdateuser@example.com"
+        )
+        response = await update_listing(listing_id, update_data)
+        self.assertEqual(response['message'], "Listing updated successfully")
+
+    async def test_fetch_listing_details_non_existent(self):
+        """
+        Test fetching details of a non-existent listing.
+        """
+        with self.assertRaises(HTTPException) as context:
+            await get_listing_details("nonexistentid")
+        self.assertEqual(context.exception.status_code, 404)
+
+    async def test_update_listing_unauthorized_user(self):
+        """
+        Test updating a listing with a different, unauthorized user ID.
+        """
+        original_listing = ListingInformation(
+            title="Unauthorized Update",
+            description="Test unauthorized update attempt.",
+            price=100.0,
+            image_url="",
+            display_name="authorizeduser",
+            email="authorizeduser@example.com",
+            category="Miscellaneous",
+            availability_dates="",
+            type="sale",
+            user_id="authorizeduserid"
+        )
+        response = await upload_listing(original_listing)
+        listing_id = response['listing_id']
+
+        update_data = ListingInformation(
+            title="Unauthorized Update Attempt",
+            description="Trying to update with a different user ID.",
+            price=120.0,
+            image_url="",
+            display_name="unauthorizeduser",
+            email="unauthorizeduser@example.com",
+            category="Miscellaneous",
+            availability_dates="",
+            type="sale",
+            user_id="unauthorizeduserid"
+        )
+        with self.assertRaises(HTTPException) as context:
+            await update_listing(listing_id, update_data)
+        self.assertEqual(context.exception.status_code, 403)
+
     # async def test_upload_request_negative_price(self):
     #     """
     #     Test with negative price (invalid).
