@@ -61,7 +61,6 @@ export default function ListingsPage() {
   };
 
   const handleSwitchToUploadTab = () => {
-    console.log("Switching to upload tab");
     setActiveTab('upload');
     resetForm();
   };
@@ -329,7 +328,7 @@ export default function ListingsPage() {
     }
 
     try {
-      const response = await fetch(`/api/sell-list/delete/${selectedListingId}`, {
+      const response = await fetch(`/api/sell-list/delete/${selectedListingId}?user_id=${user.uid}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
