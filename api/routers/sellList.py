@@ -77,6 +77,8 @@ async def update_listing(listing_id: str, update_data: ListingInformation):
     """
     item_ref = db.collection('items').document(listing_id)
     item = item_ref.get()
+    print(f"Fetching listing with ID: {listing_id}")  # Debug log
+
     if item.exists:
         item_data = item.to_dict()
         if item_data['user_id'] != update_data.user_id:
@@ -85,6 +87,7 @@ async def update_listing(listing_id: str, update_data: ListingInformation):
         item_ref.set(item_data)
         return {"message": "Listing updated successfully"}
     else:
+        print("Listing not found in the database")  # Debug log
         raise HTTPException(status_code=404, detail="Listing not found")
 
 @router.delete("/delete/{listing_id}", response_model=dict)

@@ -38,6 +38,12 @@ export default function ListingsPage() {
     return () => unsubscribe();
   }, [router]);
 
+  useEffect(() => {
+    if (selectedListingId) {
+      fetchListingDetails(selectedListingId);
+    }
+  }, [selectedListingId]);  // Add this useEffect to fetch details whenever selectedListingId changes
+
   // Handle image file input and generate preview
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -52,6 +58,12 @@ export default function ListingsPage() {
     } else {
       setImagePreviewUrl('');
     }
+  };
+
+  const handleSwitchToUploadTab = () => {
+    console.log("Switching to upload tab");
+    setActiveTab('upload');
+    resetForm();
   };
 
   const handlePriceChange = (e) => {
@@ -186,6 +198,30 @@ export default function ListingsPage() {
     }
   };
   
+  // Retrieves information on a singular, specified post
+  const fetchListingDetails = async (listingId) => {
+    try {
+      const response = await fetch(`/api/sell-list/listing-details/${listingId}?user_id=${user.uid}`);
+      const data = await response.json();
+      if (response.ok) {
+        const details = data.listingDetails; // Access the nested listingDetails object
+        setTitle(details.title || "");
+        setDescription(details.description || "");
+        setPrice(details.price.toString() || ""); // Convert price to string to ensure compatibility with input
+        setCategory(details.category || "All");
+        setIsRenting(details.type === "rent"); // Assuming type indicates if it's renting
+        setStartDate(details.availability_dates ? new Date(details.availability_dates.split(" to ")[0]) : new Date());
+        setEndDate(details.availability_dates ? new Date(details.availability_dates.split(" to ")[1]) : new Date());
+        setImagePreviewUrl(details.image_url || "");
+      } else {
+        throw new Error(`Failed to fetch details: ${response.status} - ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Error fetching listing details:", error);
+      alert("Failed to load listing details.");
+    }
+  };
+
   // Retrieves information on all posts to allow users to update and delete
   const fetchListings = async () => {
     try {
@@ -246,24 +282,26 @@ export default function ListingsPage() {
     }
 
     const requestData = {
-      title: title,
-      description: description,
+      title,
+      description,
       price: parseFloat(finalPrice),
-      image_url: imageUrl,
-      category: category,
-      // availability_dates: isRenting ? availabilityDates : null,
-      availability_dates: `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`,
-      type: isRenting ? 'rent' : 'sale',
-      display_name: user.displayName,
-      user_id: user.uid,
+      image_url: imageUrl, 
+      category,
+      availability_dates: isRenting ? `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}` : null,
+      type: isRenting ? 'rent' : 'sale', 
+      user_id: user.uid, 
+      display_name: user.displayName, 
+      email: user.email, 
+      trans_comp: false 
     };
 
     try {
-      const response = await fetch(`/api/sell-list/update/${selectedListingId}`, {
+      const response = await fetch(`/api/sell-list/update/${selectedListingId}?user_id=${user.uid}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
+        
         body: JSON.stringify(requestData),
       });
 
@@ -336,7 +374,7 @@ export default function ListingsPage() {
             }}
           >
             <button
-              onClick={() => setActiveTab("upload")}
+              onClick={handleSwitchToUploadTab}
               style={{
                 padding: "10px 20px",
                 width: "48%",
