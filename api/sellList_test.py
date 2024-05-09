@@ -23,6 +23,18 @@ def clear_db():
         print('Error clearing database', response.status_code)
 
 class SellListTests(unittest.IsolatedAsyncioTestCase):
+    """
+    The SellListTests class contains integration tests designed to validate the functionality
+    of the Selling/Listing system within our application. The tests ensure that the endpoints 
+    responsible for handling the creation, updating, deletion, and querying of listings perform 
+    correctly, as defined in sellList.py. 
+
+    The focus of these tests is to verify that the system handles:
+    - The creation of new listings with complete and partial data.
+    - The updating of existing listings both validly and invalidly (e.g., with unauthorized access or nonexistent IDs).
+    - The deletion of listings, ensuring that only valid, existing listings can be deleted and proper errors are returned otherwise.
+    - Error handling to ensure the system robustly manages incorrect inputs and system failures.
+    """
     async def setUp(self):
         """
         Setup method to initialize the database or clear it before each test.
@@ -49,6 +61,32 @@ class SellListTests(unittest.IsolatedAsyncioTestCase):
         response = await upload_listing(listing)
         self.assertEqual(response['message'], "Listing uploaded successfully")
         self.assertIsNotNone(response['listing_id'])
+
+    async def test_upload_listing(self):
+        # valid listing upload
+        listing_data = {
+            "title": "Gaming Console",
+            "description": "Brand new gaming console for sale.",
+            "price": 299.99,
+            "display_name": "Henry Gamer",
+            "email": "henry@gamer.com",
+            "category": "Electronics",
+            "type": "sale",
+            "user_id": "user123"
+        }
+        response = requests.post('http://localhost:8000/api/sell-list/upload', json=listing_data)
+        self.assertEqual(response.status_code, 200)  # Updated to expect 200 instead of 201
+        self.assertEqual(response.json()['message'], "Listing uploaded successfully")
+
+        # missing required fields
+        incomplete_listing_data = {
+            "title": "Gaming Console",
+            "price": 299.99,
+            "user_id": "user123"
+        }
+        response = requests.post('http://localhost:8000/api/sell-list/upload', json=incomplete_listing_data)
+        self.assertEqual(response.status_code, 422) # missing fields = unprocessable entity
+        self.assertIn("detail", response.json())
 
     async def test_valid_listing_creation_with_opt_info(self):
         """
@@ -132,6 +170,12 @@ class SellListTests(unittest.IsolatedAsyncioTestCase):
             await update_listing(listing_id, update_data)
         self.assertEqual(context.exception.status_code, 403)
 
+    async def test_delete_nonexistent_listing_route(self):
+        response = requests.delete('http://localhost:8000/api/sell-list/delete/nonexistentid?user_id=testuserid')
+        self.assertEqual(response.status_code, 404)
+        self.assertIn("detail", response.json())
+        self.assertEqual(response.json()['detail'], "Listing not found")
+        
     async def test_delete_non_existent_listing(self):
         """
         Test deletion of a non-existent listing.
@@ -234,26 +278,16 @@ class SellListTests(unittest.IsolatedAsyncioTestCase):
             await update_listing(listing_id, update_data)
         self.assertEqual(context.exception.status_code, 403)
 
-    # async def test_upload_request_negative_price(self):
-    #     """
-    #     Test with negative price (invalid).
-    #     """
-    #     test_request = ListingInformation(
-    #         title="Hungarian Candy",
-    #         description="Study Abroad food!",
-    #         price=-120.0,
-    #         image_url="",
-    #         display_name="testuser",
-    #         email="testemail@gmail.com",
-    #         category="All",
-    #         availability_dates="",
-    #         type="buy",
-    #         user_id="testuserid",
-    #         timestamp=datetime.now(timezone.utc)
-    #     )
-    #     with self.assertRaises(ValueError) as context:
-    #         await upload_listing(test_request)
-    #     self.assertEqual("Price must be non-negative", str(context.exception))
+    """By using input validation from Pydantic and not using known
+    HTTP status codes within some elements of the listings page, 
+    I am unable to test for specific conditions such as negative prices.
+    If a negative input is found for the price, for instance, I will receive
+    an error in my test (which passes, as an error was expected). Upon
+    researching how to explicitly write this test to get it to work (and
+    not fail the emulator test), it seems that this cannot be done — the test
+    will fail and there will always be an error message from the Validator, as
+    expected.
+    """
 
 if __name__ == '__main__':
     unittest.main()

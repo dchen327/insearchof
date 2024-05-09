@@ -314,7 +314,7 @@ export default function Home() {
                     setShowItemModal(true);
                   }}
                 >
-                  <ItemCard key={idx} item={item} />
+                  <ItemCard key={idx} item={{...item, title: (item.type === 'request' ? 'ISO: ' : 'OSI: ') + item.title}} />
                 </div>
                 {idx !== items.length - 1 && <hr className="py-[1px]" />}
               </>

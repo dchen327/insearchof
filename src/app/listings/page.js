@@ -21,7 +21,6 @@ export default function ListingsPage() {
   const [activeTab, setActiveTab] = useState("upload");
   const [listings, setListings] = useState([]);
   const [selectedListingId, setSelectedListingId] = useState("");
-  // const [availabilityDates, setAvailabilityDates] = useState("");
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
 
@@ -42,9 +41,9 @@ export default function ListingsPage() {
     if (selectedListingId) {
       fetchListingDetails(selectedListingId);
     }
-  }, [selectedListingId]);  // Add this useEffect to fetch details whenever selectedListingId changes
+  }, [selectedListingId]);  // fetch details whenever selectedListingId changes
 
-  // Handle image file input and generate preview
+  // Handles image file input and generate preview
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     setImage(file);
@@ -60,11 +59,14 @@ export default function ListingsPage() {
     }
   };
 
+  // When user goes to the Upload tab, nothing will be auto-populated.
+  // This is useful if they auto-populated info from UPDATE/DELETE.
   const handleSwitchToUploadTab = () => {
     setActiveTab('upload');
     resetForm();
   };
 
+  // Retrieves the price and ensures its correctness using regex
   const handlePriceChange = (e) => {
     const value = e.target.value;
     const validValue = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
@@ -101,7 +103,6 @@ export default function ListingsPage() {
     setImagePreviewUrl("");
     setIsRenting(false);
     setCategory("All");
-    // setAvailabilityDates("");
     setStartDate("");
     setEndDate("");
   };
@@ -122,9 +123,7 @@ export default function ListingsPage() {
           method: "POST",
           body: formData,
         });
-  
-      console.log("checkpoint 1");
-  
+    
       if (!response.ok) {
         const errorText = await response.text(); // Get more error info
         console.error("HTTP error", response.status, errorText);
@@ -132,7 +131,6 @@ export default function ListingsPage() {
       }
   
       const imageData = await response.json();
-      console.log("checkpoint 2");
   
       return imageData.image_url;
     } catch (error) {
@@ -142,6 +140,7 @@ export default function ListingsPage() {
     }
   };
   
+  //  Uploads a "buy" or "rent" listing with all fields
   const uploadListing = async () => {
     const finalPrice = validateFormAndUser(title, price, user);
     if (finalPrice === null) {
@@ -163,7 +162,6 @@ export default function ListingsPage() {
         return;
       }
 
-      // const imageUrl = await uploadImage(image); // Upload image and get URL
       const listingData = {
         title,
         description,
@@ -239,6 +237,7 @@ export default function ListingsPage() {
     }
   };
 
+  // Updates listings with updated values for fields.
   const updateListing = async () => {
     if (!selectedListingId) {
       alert("You must choose a listing to update.");
@@ -317,6 +316,7 @@ export default function ListingsPage() {
     }
   };
 
+  // Deletes listing from database
   const deleteListing = async () => {
     if (!selectedListingId) {
       alert("You must choose a listing to delete.");
@@ -350,11 +350,14 @@ export default function ListingsPage() {
 
   return (
     <>
+      {/* Main container with extra padding at the bottom */}
       <div style={{ paddingBottom: "100px" }}>
+        {/* Title header centered at the top of the page */}
         <div style={{ textAlign: "center", margin: "20px 0" }}>
           <h1>Sell or Rent Your Item</h1>
         </div>
-
+  
+        {/* Navigation buttons for switching between different tabs */}
         <div
           style={{
             display: "flex",
@@ -363,6 +366,7 @@ export default function ListingsPage() {
             marginBottom: "10px",
           }}
         >
+          {/* Tab selection buttons for "Upload" and "Update" */}
           <div
             style={{
               display: "flex",
@@ -372,6 +376,7 @@ export default function ListingsPage() {
               marginBottom: "5px",
             }}
           >
+            {/* Upload button switches to the "upload" tab */}
             <button
               onClick={handleSwitchToUploadTab}
               style={{
@@ -385,6 +390,8 @@ export default function ListingsPage() {
             >
               Upload New Listing
             </button>
+  
+            {/* Update button switches to the "update" tab */}
             <button
               onClick={() => setActiveTab("update")}
               style={{
@@ -399,6 +406,8 @@ export default function ListingsPage() {
               Update Existing Listing
             </button>
           </div>
+  
+          {/* Tab selection buttons for "Delete" and "Refresh" */}
           <div
             style={{
               display: "flex",
@@ -407,6 +416,7 @@ export default function ListingsPage() {
               maxWidth: "500px",
             }}
           >
+            {/* Delete button switches to the "delete" tab */}
             <button
               onClick={() => setActiveTab("delete")}
               style={{
@@ -420,6 +430,8 @@ export default function ListingsPage() {
             >
               Delete Existing Listing
             </button>
+  
+            {/* Refresh button triggers the fetch of all listings */}
             <button
               onClick={fetchListings}
               style={{
@@ -435,7 +447,8 @@ export default function ListingsPage() {
             </button>
           </div>
         </div>
-
+  
+        {/* Content container for listing form fields */}
         <div
           style={{
             display: "flex",
@@ -449,6 +462,7 @@ export default function ListingsPage() {
             backgroundColor: "#fff",
           }}
         >
+          {/* Dropdown selection for listings if not in the "upload" tab */}
           {activeTab !== "upload" && (
             <div>
               <select
@@ -463,7 +477,9 @@ export default function ListingsPage() {
                   borderRadius: "4px",
                 }}
               >
+                {/* Default option to prompt user selection */}
                 <option value="">Select a listing first</option>
+                {/* Populate the dropdown with existing listings */}
                 {listings.map((listing) => (
                   <option key={listing.listing_id} value={listing.listing_id}>
                     {listing.title}
@@ -472,6 +488,8 @@ export default function ListingsPage() {
               </select>
             </div>
           )}
+  
+          {/* Input field for the listing title */}
           <div>
             <input
               type="text"
@@ -487,7 +505,8 @@ export default function ListingsPage() {
               }}
             />
           </div>
-
+  
+          {/* Textarea for the listing description */}
           <div>
             <textarea
               value={description}
@@ -504,7 +523,8 @@ export default function ListingsPage() {
               }}
             />
           </div>
-
+  
+          {/* Input field for the listing price */}
           <div>
             <input
               type="text"
@@ -520,7 +540,8 @@ export default function ListingsPage() {
               }}
             />
           </div>
-
+  
+          {/* Dropdown selection for the listing category */}
           <div>
             <select
               value={category}
@@ -533,6 +554,7 @@ export default function ListingsPage() {
                 width: '100%',
               }}
             >
+              {/* Options for various item categories */}
               <option value="All">All</option>
               <option value="Food">Food</option>
               <option value="Electronics">Electronics</option>
@@ -540,10 +562,13 @@ export default function ListingsPage() {
               <option value="Clothing">Clothing</option>
             </select>
           </div>
-
+  
+          {/* Availability date picker if the item is for rent */}
           {isRenting && (
             <div>
-              <label style={{ marginBottom: '10px', fontSize: '16px', display: 'block' }}>Availability Dates (For Rent Only)</label>
+              <label style={{ marginBottom: '10px', fontSize: '16px', display: 'block' }}>
+                Availability Dates (For Rent Only)
+              </label>
               <DatePicker
                 selected={startDate}
                 onChange={(dates) => {
@@ -565,7 +590,8 @@ export default function ListingsPage() {
               />
             </div>
           )}
-
+  
+          {/* Checkbox to toggle rental status */}
           <div>
             <label>
               <input
@@ -575,7 +601,8 @@ export default function ListingsPage() {
               /> Is this item for rent?
             </label>
           </div>
-
+  
+          {/* Input field to upload an image file */}
           <div>
             <input
               type="file"
@@ -590,56 +617,71 @@ export default function ListingsPage() {
               }}
             />
           </div>
-
+  
+          {/* Display image preview if available */}
           {imagePreviewUrl && (
-                <Image
-                  src={imagePreviewUrl}
-                  alt="Preview"
-                  width={500}
-                  height={300}
-                  layout="responsive"
-                />
-              )}
+            <Image
+              src={imagePreviewUrl}
+              alt="Preview"
+              width={500}
+              height={300}
+              layout="responsive"
+            />
+          )}
+  
+          {/* Button to handle listing creation or update depending on active tab */}
           {activeTab === "upload" && (
             <div>
-              <button onClick={uploadListing} style={{
-                padding: '10px 20px',
-                fontSize: '16px',
-                backgroundColor: '#007BFF',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                width: '100%',
-              }}>
+              <button
+                onClick={uploadListing}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '16px',
+                  backgroundColor: '#007BFF',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  width: '100%',
+                }}
+              >
                 List Item
               </button>
             </div>
           )}
-
+  
+          {/* Button to update existing listing */}
           {activeTab === "update" && (
-            <button onClick={updateListing} style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              backgroundColor: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}>
+            <button
+              onClick={updateListing}
+              style={{
+                padding: '10px 20px',
+                fontSize: '16px',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
               Update Listing
             </button>
           )}
+  
+          {/* Button to delete an existing listing */}
           {activeTab === "delete" && (
-            <button onClick={deleteListing} style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              backgroundColor: '#dc3545',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}>
+            <button
+              onClick={deleteListing}
+              style={{
+                padding: '10px 20px',
+                fontSize: '16px',
+                backgroundColor: '#dc3545',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
               Delete Listing
             </button>
           )}
