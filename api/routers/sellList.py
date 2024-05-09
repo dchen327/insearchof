@@ -16,7 +16,6 @@ import io
 from PIL import Image
 from pydantic import ValidationError
 
-
 load_dotenv()
 
 router = APIRouter(
@@ -77,7 +76,7 @@ async def update_listing(listing_id: str, update_data: ListingInformation):
     """
     item_ref = db.collection('items').document(listing_id)
     item = item_ref.get()
-    print(f"Fetching listing with ID: {listing_id}")  # Debug log
+    print(f"Fetching listing with ID: {listing_id}")
 
     if item.exists:
         item_data = item.to_dict()
@@ -87,7 +86,7 @@ async def update_listing(listing_id: str, update_data: ListingInformation):
         item_ref.set(item_data)
         return {"message": "Listing updated successfully"}
     else:
-        print("Listing not found in the database")  # Debug log
+        print("Listing not found in the database")
         raise HTTPException(status_code=404, detail="Listing not found")
 
 @router.delete("/delete/{listing_id}", response_model=dict)
@@ -99,14 +98,11 @@ async def delete_listing(listing_id: str, user_id: str):
     item = item_ref.get()
     if item.exists:
         item_data = item.to_dict()
-        # if item_data['user_id'] != user_id:
-        #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized to delete this listing.")
         item_ref.delete()
         return {"message": "Listing deleted successfully"}
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listing not found")
 
-# Utility function to sanitize strings (e.g., filenames, user IDs)
 def sanitize(input_string):
     """
     Sanitizes input string by removing newline characters and other disallowed characters.
